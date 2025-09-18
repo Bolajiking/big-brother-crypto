@@ -59,7 +59,7 @@ const LivepeerPlayer: React.FC<LivepeerPlayerProps> = ({
           maxMaxBufferLength: 60,
           liveSyncDurationCount: 3,
           liveMaxLatencyDurationCount: 5,
-          xhrSetup: (xhr, url) => {
+          xhrSetup: (xhr) => {
             // Handle CORS and redirects properly for Livepeer
             xhr.withCredentials = false;
             xhr.setRequestHeader('Accept', 'application/vnd.apple.mpegurl, application/x-mpegurl, application/octet-stream');

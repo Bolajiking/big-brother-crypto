@@ -3,6 +3,18 @@ const nextConfig = {
   // Disable source maps in production to avoid the missing sourcemap error
   productionBrowserSourceMaps: false,
   
+  // Image configuration
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'ui-avatars.com',
+        port: '',
+        pathname: '/api/**',
+      },
+    ],
+  },
+  
   // Webpack configuration
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {

@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+// import { NextRequest } from 'next/server';
 
 // This is a placeholder for socket.io integration
 // In a real implementation, you would need to set up a custom server

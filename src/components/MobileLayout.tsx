@@ -11,7 +11,9 @@ interface Camera {
   id: string;
   name: string;
   playbackId: string;
+  streamId: string;
   isActive: boolean;
+  description: string;
 }
 
 interface MobileLayoutProps {
@@ -22,8 +24,7 @@ interface MobileLayoutProps {
 
 const MobileLayout: React.FC<MobileLayoutProps> = ({
   cameras,
-  selectedPlaybackId,
-  onStreamClick
+  selectedPlaybackId
 }) => {
   const [activeView, setActiveView] = useState<'cameras' | 'chat' | 'interact'>('cameras');
   const [fullScreenStream, setFullScreenStream] = useState<{playbackId: string, cameraName: string} | null>(null);

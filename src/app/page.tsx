@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import LivepeerPlayer from '@/components/LivepeerPlayer';
@@ -221,9 +222,11 @@ const HomePage: React.FC = () => {
               onMouseEnter={() => setIsProfileOpen(true)}
               className="w-8 h-8 rounded-full overflow-hidden hover:ring-2 hover:ring-blue-400 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
-              <img
+              <Image
                 src="https://ui-avatars.com/api/?name=User&background=6b7280&color=fff&size=100&bold=true"
                 alt="User Profile"
+                width={32}
+                height={32}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   // Fallback to a simple generic avatar if image fails to load

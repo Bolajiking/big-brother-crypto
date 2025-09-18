@@ -15,7 +15,7 @@ interface ChatMessage {
 const Chat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [isConnected, setIsConnected] = useState(false);
+  const [, setIsConnected] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showSFXMenu, setShowSFXMenu] = useState(false);
   const [showTTSMenu, setShowTTSMenu] = useState(false);
