@@ -147,7 +147,7 @@ const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-900" suppressHydrationWarning>
       {/* Header with Navigation */}
-      <header className="bg-gray-800 border-b border-gray-700 p-4 relative" suppressHydrationWarning>
+      <header className="bg-gray-800 border-b border-gray-700 px-6 py-4 relative" suppressHydrationWarning>
         <div className="flex items-center justify-between w-full">
           {/* Logo */}
           <h1 className="text-2xl font-bold text-gray-200">BigBrotherCrypto</h1>
@@ -216,7 +216,7 @@ const HomePage: React.FC = () => {
           </div>
           
           {/* User Profile Dropdown */}
-          <div className="relative mr-8" ref={profileRef}>
+          <div className="relative mr-4" ref={profileRef}>
             <button
               onClick={toggleProfile}
               onMouseEnter={() => setIsProfileOpen(true)}
