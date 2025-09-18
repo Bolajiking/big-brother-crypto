@@ -3,7 +3,7 @@ const path = require('path');
 
 async function testStreamEndpoint(playbackId, cameraName) {
   try {
-    const streamUrl = `http://livepeercdn.studio/hls/${playbackId}/index.m3u8`;
+    const streamUrl = `https://playback.livepeer.studio/hls/${playbackId}/index.m3u8`;
     console.log(`🔍 Testing ${cameraName} stream endpoint...`);
     console.log(`   URL: ${streamUrl}`);
     

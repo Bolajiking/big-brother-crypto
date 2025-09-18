@@ -117,7 +117,7 @@ const HomePage: React.FC = () => {
 
   if (authLoading || isLoading || !isMounted) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center" suppressHydrationWarning>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400 mx-auto mb-4"></div>
           <p className="text-gray-300">Loading...</p>
@@ -133,11 +133,13 @@ const HomePage: React.FC = () => {
   // Render mobile layout for mobile devices
   if (isMobile) {
     return (
-      <MobileLayout
-        cameras={cameras}
-        selectedPlaybackId={selectedPlaybackId}
-        onStreamClick={handleStreamClick}
-      />
+      <div suppressHydrationWarning>
+        <MobileLayout
+          cameras={cameras}
+          selectedPlaybackId={selectedPlaybackId}
+          onStreamClick={handleStreamClick}
+        />
+      </div>
     );
   }
 

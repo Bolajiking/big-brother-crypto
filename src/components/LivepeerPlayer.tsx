@@ -41,7 +41,7 @@ const LivepeerPlayer: React.FC<LivepeerPlayerProps> = ({
       }
 
       // Use the correct Livepeer API endpoint
-      const url = `http://livepeercdn.studio/hls/${playbackId}/index.m3u8`;
+      const url = `https://playback.livepeer.studio/hls/${playbackId}/index.m3u8`;
       
       // Set a timeout to prevent hanging
       timeoutRef.current = setTimeout(() => {
