@@ -8,6 +8,7 @@ import MultiCamGrid from '@/components/MultiCamGrid';
 import Chat from '@/components/Chat';
 import InteractiveWidgets from '@/components/InteractiveWidgets';
 import ClientOnly from '@/components/ClientOnly';
+import MobileLayout from '@/components/MobileLayout';
 
 interface Camera {
   id: string;
@@ -26,12 +27,23 @@ const HomePage: React.FC = () => {
   const [fullViewStream, setFullViewStream] = useState<{playbackId: string, name: string} | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const { user, logout, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     setIsMounted(true);
+    
+    // Check if device is mobile
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   useEffect(() => {
@@ -116,6 +128,17 @@ const HomePage: React.FC = () => {
 
   if (!user) {
     return null; // Will redirect to login
+  }
+
+  // Render mobile layout for mobile devices
+  if (isMobile) {
+    return (
+      <MobileLayout
+        cameras={cameras}
+        selectedPlaybackId={selectedPlaybackId}
+        onStreamClick={handleStreamClick}
+      />
+    );
   }
 
   return (
