@@ -16,13 +16,11 @@ interface Camera {
 interface MainContentProps {
   selectedPlaybackId: string;
   cameras: Camera[];
-  onThumbnailClick: (playbackId: string) => void;
 }
 
 const MainContent: React.FC<MainContentProps> = ({
   selectedPlaybackId,
-  cameras,
-  onThumbnailClick
+  cameras
 }) => {
   return (
     <div className="h-full flex flex-col space-y-4">
@@ -35,7 +33,7 @@ const MainContent: React.FC<MainContentProps> = ({
       <div className="h-64">
         <MultiCamGrid 
           cameras={cameras}
-          onThumbnailClick={onThumbnailClick}
+          onStreamClick={() => {}}
           selectedPlaybackId={selectedPlaybackId}
         />
       </div>

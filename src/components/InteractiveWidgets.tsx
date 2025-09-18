@@ -26,7 +26,7 @@ const InteractiveWidgets: React.FC = () => {
           
           {/* Crypto Poll */}
           <div className="mb-6">
-            <h3 className="text-blue-400 font-semibold mb-3 text-sm">What's your favorite crypto?</h3>
+            <h3 className="text-blue-400 font-semibold mb-3 text-sm">What&apos;s your favorite crypto?</h3>
             <div className="space-y-2">
               <div className="flex items-center p-2 bg-gray-700 rounded hover:bg-gray-600 transition-colors">
                 <input 

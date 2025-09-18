@@ -133,7 +133,6 @@ const Chat: React.FC = () => {
   };
 
   const renderMessage = (msg: ChatMessage) => {
-    const isOwnMessage = msg.username === 'You';
     const usernameColor = getUsernameColor(msg.username);
     
     return (

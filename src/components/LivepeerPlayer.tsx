@@ -20,8 +20,6 @@ const LivepeerPlayer: React.FC<LivepeerPlayerProps> = ({
   const hlsRef = useRef<Hls | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
   const [isLive, setIsLive] = useState(false);
   useEffect(() => {
     if (!playbackId) return;
@@ -31,8 +29,6 @@ const LivepeerPlayer: React.FC<LivepeerPlayerProps> = ({
 
     // Validate playback ID format
     if (!playbackId || playbackId.length < 10) {
-      setHasError(true);
-      setErrorMessage('Invalid playback ID');
       setIsLoading(false);
       return;
     }
@@ -50,8 +46,6 @@ const LivepeerPlayer: React.FC<LivepeerPlayerProps> = ({
       // Set a timeout to prevent hanging
       timeoutRef.current = setTimeout(() => {
         if (isLoading) {
-          setHasError(true);
-          setErrorMessage('Stream timeout');
           setIsLoading(false);
         }
       }, 10000); // 10 second timeout
@@ -76,7 +70,6 @@ const LivepeerPlayer: React.FC<LivepeerPlayerProps> = ({
           }
           console.log('HLS manifest parsed successfully');
           setIsLoading(false);
-          setHasError(false);
           setIsLive(true);
         });
 
@@ -88,8 +81,6 @@ const LivepeerPlayer: React.FC<LivepeerPlayerProps> = ({
           // Only log non-fatal errors to reduce console spam
           if (data.fatal) {
             console.log('Stream not available for playback ID:', playbackId, 'Error details:', data);
-            setHasError(true);
-            setErrorMessage('Stream not available');
             setIsLoading(false);
             setIsLive(false);
           } else {
@@ -109,7 +100,6 @@ const LivepeerPlayer: React.FC<LivepeerPlayerProps> = ({
             timeoutRef.current = null;
           }
           setIsLoading(false);
-          setHasError(false);
           setIsLive(true);
         });
         video.addEventListener('error', () => {
@@ -117,8 +107,6 @@ const LivepeerPlayer: React.FC<LivepeerPlayerProps> = ({
             clearTimeout(timeoutRef.current);
             timeoutRef.current = null;
           }
-          setHasError(true);
-          setErrorMessage('Stream not available');
           setIsLoading(false);
           setIsLive(false);
         });
@@ -127,8 +115,6 @@ const LivepeerPlayer: React.FC<LivepeerPlayerProps> = ({
           clearTimeout(timeoutRef.current);
           timeoutRef.current = null;
         }
-        setHasError(true);
-        setErrorMessage('HLS not supported');
         setIsLoading(false);
         setIsLive(false);
       }
@@ -136,15 +122,11 @@ const LivepeerPlayer: React.FC<LivepeerPlayerProps> = ({
 
     const handleLoadStart = () => {
       setIsLoading(true);
-      setHasError(false);
-      setErrorMessage('');
       setIsLive(false);
     };
 
-    const handleError = (e: any) => {
+    const handleError = (e: Event) => {
       console.error('Video error:', e);
-      setHasError(true);
-      setErrorMessage('Video playback error');
       setIsLoading(false);
       setIsLive(false);
     };
@@ -166,7 +148,7 @@ const LivepeerPlayer: React.FC<LivepeerPlayerProps> = ({
         hlsRef.current = null;
       }
     };
-  }, [playbackId]);
+  }, [playbackId, isLoading]);
 
   return (
     <div 

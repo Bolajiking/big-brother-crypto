@@ -13,14 +13,12 @@ interface Camera {
 
 interface MultiCamGridProps {
   cameras: Camera[];
-  onThumbnailClick: (playbackId: string) => void;
   onStreamClick: (playbackId: string, cameraName: string) => void;
   selectedPlaybackId?: string;
 }
 
 const MultiCamGrid: React.FC<MultiCamGridProps> = ({
   cameras,
-  onThumbnailClick,
   onStreamClick,
   selectedPlaybackId
 }) => {

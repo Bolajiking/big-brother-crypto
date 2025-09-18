@@ -78,9 +78,6 @@ const HomePage: React.FC = () => {
     }
   }, [user]);
 
-  const handleThumbnailClick = (playbackId: string) => {
-    setSelectedPlaybackId(playbackId);
-  };
 
   const handleStreamClick = (playbackId: string, cameraName: string) => {
     setFullViewStream({ playbackId, name: cameraName });
@@ -128,8 +125,8 @@ const HomePage: React.FC = () => {
             <button 
               className="flex items-center gap-1 text-white px-3 py-1.5 rounded transition-colors text-sm"
               style={{ backgroundColor: '#2563eb' }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#1d4ed8'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = '#2563eb'}
+              onMouseEnter={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#1d4ed8'}
+              onMouseLeave={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#2563eb'}
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
@@ -140,8 +137,8 @@ const HomePage: React.FC = () => {
             <button 
               className="flex items-center gap-1 text-white px-3 py-1.5 rounded transition-colors text-sm"
               style={{ backgroundColor: '#16a34a' }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#15803d'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = '#16a34a'}
+              onMouseEnter={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#15803d'}
+              onMouseLeave={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#16a34a'}
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4zM14 13h-3v3H9v-3H6v-2h3V8h2v3h3v2z"/>
@@ -152,8 +149,8 @@ const HomePage: React.FC = () => {
             <button 
               className="flex items-center gap-1 text-white px-3 py-1.5 rounded transition-colors text-sm"
               style={{ backgroundColor: '#9333ea' }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#7c3aed'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = '#9333ea'}
+              onMouseEnter={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#7c3aed'}
+              onMouseLeave={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#9333ea'}
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z"/>
@@ -164,8 +161,8 @@ const HomePage: React.FC = () => {
             <button 
               className="flex items-center gap-1 text-white px-3 py-1.5 rounded transition-colors text-sm"
               style={{ backgroundColor: '#ea580c' }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#c2410c'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = '#ea580c'}
+              onMouseEnter={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#c2410c'}
+              onMouseLeave={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#ea580c'}
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M7 4V2c0-.55-.45-1-1-1s-1 .45-1 1v2H3c-.55 0-1 .45-1 1s.45 1 1 1h2v2c0 .55.45 1 1 1s1-.45 1-1V6h2c.55 0 1-.45 1-1s-.45-1-1-1H7zm10 0h-2V2c0-.55-.45-1-1-1s-1 .45-1 1v2h-2c-.55 0-1 .45-1 1s.45 1 1 1h2v2c0 .55.45 1 1 1s1-.45 1-1V6h2c.55 0 1-.45 1-1s-.45-1-1-1zM7 14c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
@@ -176,8 +173,8 @@ const HomePage: React.FC = () => {
             <button 
               className="flex items-center gap-1 text-white px-3 py-1.5 rounded transition-colors text-sm"
               style={{ backgroundColor: '#ca8a04' }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#a16207'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = '#ca8a04'}
+              onMouseEnter={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#a16207'}
+              onMouseLeave={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#ca8a04'}
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
@@ -288,7 +285,6 @@ const HomePage: React.FC = () => {
             /* Camera Grid */
             <MultiCamGrid
               cameras={cameras}
-              onThumbnailClick={handleThumbnailClick}
               onStreamClick={handleStreamClick}
               selectedPlaybackId={selectedPlaybackId}
             />

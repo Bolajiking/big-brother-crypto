@@ -11,8 +11,8 @@ interface User {
 
 interface Database {
   users: User[];
-  cameras: any[];
-  chatMessages: any[];
+  cameras: unknown[];
+  chatMessages: unknown[];
 }
 
 export async function POST(request: NextRequest) {

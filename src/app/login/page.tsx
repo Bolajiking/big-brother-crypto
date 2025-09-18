@@ -30,7 +30,7 @@ const LoginPage: React.FC = () => {
       } else {
         setError('Invalid username or password');
       }
-    } catch (error) {
+    } catch {
       setError('An error occurred during login');
     } finally {
       setIsLoading(false);

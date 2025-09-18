@@ -12,12 +12,12 @@ interface Camera {
 }
 
 interface Database {
-  users: any[];
+  users: unknown[];
   cameras: Camera[];
-  chatMessages: any[];
+  chatMessages: unknown[];
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Read database
     const dbPath = path.join(process.cwd(), 'db.json');
