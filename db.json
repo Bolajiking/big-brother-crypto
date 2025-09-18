@@ -1,0 +1,77 @@
+{
+  "users": [
+    {
+      "id": "user1",
+      "username": "cryptoFan1",
+      "password": "password123",
+      "createdAt": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "cameras": [
+    {
+      "id": "cam1",
+      "name": "Kitchen",
+      "playbackId": "32b49rq29siaxjlf",
+      "streamId": "32b47c8b-56c3-4a31-984f-be8d090bcb21",
+      "isActive": true,
+      "description": "Kitchen area camera"
+    },
+    {
+      "id": "cam2",
+      "name": "Garden",
+      "playbackId": "72c29f0j1c70dlig",
+      "streamId": "72c2312d-d214-4f3f-abf5-8ef1f2dd53dc",
+      "isActive": true,
+      "description": "Garden area camera"
+    },
+    {
+      "id": "cam3",
+      "name": "Lounge",
+      "playbackId": "6fd1lveinnzmgcao",
+      "streamId": "6fd1adb0-653e-4ec9-9618-e79a1bd4c650",
+      "isActive": true,
+      "description": "Lounge area camera"
+    },
+    {
+      "id": "cam4",
+      "name": "Pool",
+      "playbackId": "5fccqgu53l9ihfvl",
+      "streamId": "5fccc719-b682-41c3-86b3-152c4156be0a",
+      "isActive": true,
+      "description": "Pool area camera"
+    },
+    {
+      "id": "cam5",
+      "name": "Garage",
+      "playbackId": "0984i2pnvzyw33mf",
+      "streamId": "0984fe62-7578-4e95-b6d0-b3653cde13cc",
+      "isActive": true,
+      "description": "Garage area camera"
+    },
+    {
+      "id": "cam6",
+      "name": "Bedroom",
+      "playbackId": "f475d1g7kwzux65j",
+      "streamId": "f4750b12-b3c7-4d57-a888-4abed546b41e",
+      "isActive": true,
+      "description": "Bedroom area camera"
+    },
+    {
+      "id": "cam7",
+      "name": "Office",
+      "playbackId": "8a2b3c4d5e6f7g8h9",
+      "streamId": "8a2b3c4d-5e6f-7g8h-9i0j-k1l2m3n4o5p6",
+      "isActive": true,
+      "description": "Office area camera"
+    },
+    {
+      "id": "cam8",
+      "name": "Entrance",
+      "playbackId": "9z8y7x6w5v4u3t2s1",
+      "streamId": "9z8y7x6w-5v4u-3t2s-1r0q-p9o8n7m6l5k4",
+      "isActive": true,
+      "description": "Main entrance camera"
+    }
+  ],
+  "chatMessages": []
+}
