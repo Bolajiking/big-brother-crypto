@@ -29,13 +29,34 @@ const Chat: React.FC = () => {
 
   useEffect(() => {
     if (isMounted) {
-      // Simulate some initial messages
+      // Initialize with some demo messages to show color coding
       setMessages([
         {
           id: '1',
-          username: 'System',
-          message: 'Welcome to BigBrotherCrypto chat!',
-          timestamp: '2024-01-01T00:00:00.000Z',
+          username: 'Alice',
+          message: 'Hello everyone!',
+          timestamp: new Date(Date.now() - 300000).toISOString(), // 5 minutes ago
+          type: 'text'
+        },
+        {
+          id: '2',
+          username: 'Bob',
+          message: 'Hey Alice! 👋',
+          timestamp: new Date(Date.now() - 240000).toISOString(), // 4 minutes ago
+          type: 'text'
+        },
+        {
+          id: '3',
+          username: 'Charlie',
+          message: 'Great to see you all here!',
+          timestamp: new Date(Date.now() - 180000).toISOString(), // 3 minutes ago
+          type: 'text'
+        },
+        {
+          id: '4',
+          username: 'Diana',
+          message: 'This chat looks amazing! 🎉',
+          timestamp: new Date(Date.now() - 120000).toISOString(), // 2 minutes ago
           type: 'text'
         }
       ]);
@@ -128,29 +149,39 @@ const Chat: React.FC = () => {
 
   const getUsernameColor = (username: string) => {
     const colors = [
-      'text-red-400', 'text-blue-400', 'text-green-400', 'text-yellow-400',
-      'text-purple-400', 'text-pink-400', 'text-indigo-400', 'text-cyan-400',
-      'text-orange-400', 'text-teal-400', 'text-lime-400', 'text-rose-400'
+      '#ef4444', '#3b82f6', '#10b981', '#eab308',
+      '#8b5cf6', '#ec4899', '#6366f1', '#06b6d4',
+      '#f97316', '#14b8a6', '#84cc16', '#f43f5e',
+      '#10b981', '#8b5cf6', '#f59e0b', '#0ea5e9',
+      '#d946ef', '#64748b', '#71717a', '#a8a29e'
     ];
-    const hash = username.split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0);
-      return a & a;
-    }, 0);
-    return colors[Math.abs(hash) % colors.length];
+    
+    // Create a more random hash for better color distribution
+    let hash = 0;
+    for (let i = 0; i < username.length; i++) {
+      const char = username.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    
+    // Add some additional randomness based on username length
+    hash = Math.abs(hash) + username.length * 7;
+    
+    return colors[hash % colors.length];
   };
 
   const renderMessage = (msg: ChatMessage) => {
     const usernameColor = getUsernameColor(msg.username);
     
     return (
-      <div key={msg.id} className="border-b border-gray-700 py-2 px-3 hover:bg-gray-750 transition-colors">
+      <div key={msg.id} className="bg-gray-300 rounded-lg p-3 mb-2 hover:bg-gray-200 transition-colors">
         <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center space-x-2">
-            <span className={`text-xs font-bold ${usernameColor}`}>
+          <div className="flex items-center">
+            <span 
+              className="text-xs font-bold" 
+              style={{ color: usernameColor }}
+            >
               {msg.username}
-            </span>
-            <span className="text-xs text-gray-500">
-              {formatTime(msg.timestamp)}
             </span>
           </div>
           {msg.type !== 'text' && (
@@ -161,20 +192,25 @@ const Chat: React.FC = () => {
             </div>
           )}
         </div>
-        <div className={`text-xs ${
-          msg.type === 'emoji' 
-            ? 'text-2xl text-center py-2' 
-            : msg.type === 'sfx'
-            ? 'text-purple-300'
-            : msg.type === 'tts'
-            ? 'text-blue-300'
-            : 'text-gray-200'
-        }`}>
-          {msg.type === 'emoji' ? (
-            <div>{msg.emoji}</div>
-          ) : (
-            <div>{msg.message}</div>
-          )}
+        <div className="flex justify-between items-end">
+          <div className={`text-xs flex-1 ${
+            msg.type === 'emoji' 
+              ? 'text-2xl text-center py-2' 
+              : msg.type === 'sfx'
+              ? 'text-purple-600'
+              : msg.type === 'tts'
+              ? 'text-blue-600'
+              : 'text-gray-800'
+          }`}>
+            {msg.type === 'emoji' ? (
+              <div>{msg.emoji}</div>
+            ) : (
+              <div>{msg.message}</div>
+            )}
+          </div>
+          <span className="text-xs text-gray-600 ml-2">
+            {formatTime(msg.timestamp)}
+          </span>
         </div>
       </div>
     );
@@ -198,12 +234,6 @@ const Chat: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-gray-200 text-lg font-bold">Live Chat</h3>
-            <div className="flex items-center space-x-2 mt-1">
-              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-              <span className="text-sm text-gray-400">
-                {isConnected ? 'Connected' : 'Disconnected'}
-              </span>
-            </div>
           </div>
         </div>
       </div>
