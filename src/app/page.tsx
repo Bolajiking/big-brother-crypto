@@ -24,9 +24,14 @@ const HomePage: React.FC = () => {
   const [error, setError] = useState('');
   const [fullViewStream, setFullViewStream] = useState<{playbackId: string, name: string} | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const { user, logout, isLoading: authLoading } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -97,7 +102,7 @@ const HomePage: React.FC = () => {
   };
 
 
-  if (authLoading || isLoading) {
+  if (authLoading || isLoading || !isMounted) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
@@ -118,7 +123,7 @@ const HomePage: React.FC = () => {
       <header className="bg-gray-800 border-b border-gray-700 p-4 relative">
         <div className="flex items-center justify-between w-full">
           {/* Logo */}
-          <h1 className="text-2xl font-bold text-gray-200">Big Brother Crypto</h1>
+          <h1 className="text-2xl font-bold text-gray-200">BigBrotherCrypto</h1>
           
           {/* Navigation Buttons - Center */}
           <div className="flex items-center gap-3 absolute left-1/2 transform -translate-x-1/2">

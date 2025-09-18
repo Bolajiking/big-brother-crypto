@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Big Brother Crypto - Live Streaming Platform",
+  title: "BigBrotherCrypto - Live Streaming Platform",
   description: "Watch live streams from multiple camera feeds with real-time chat",
 };
 

@@ -1,4 +1,4 @@
-# Big Brother Crypto - Stream Endpoints Configuration
+# BigBrotherCrypto - Stream Endpoints Configuration
 
 ## 🎯 Stream Endpoint Format
 All playback URLs follow the format: `http://livepeercdn.studio/hls/{playbackId}/index.m3u8`

@@ -70,7 +70,7 @@ async function verifyAllStreamEndpoints() {
     const dbData = fs.readFileSync(dbPath, 'utf8');
     const db = JSON.parse(dbData);
 
-    console.log('🚀 Verifying Big Brother Crypto Stream Endpoints\n');
+    console.log('🚀 Verifying BigBrotherCrypto Stream Endpoints\n');
     console.log('=' .repeat(60));
     
     let totalTests = 0;
@@ -132,7 +132,7 @@ async function verifyAllStreamEndpoints() {
     
     if (successfulTests === totalTests) {
       console.log('\n🎉 All stream endpoints are properly configured and accessible!');
-      console.log('🚀 Your Big Brother Crypto surveillance platform is ready for streaming!');
+      console.log('🚀 Your BigBrotherCrypto surveillance platform is ready for streaming!');
     } else {
       console.log('\n⚠️  Some stream endpoints have issues. Check the details above.');
       console.log('💡 Note: Streams may not be accessible until you start streaming to them.');

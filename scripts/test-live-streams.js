@@ -76,7 +76,7 @@ async function testAllLiveStreams() {
     const dbData = fs.readFileSync(dbPath, 'utf8');
     const db = JSON.parse(dbData);
 
-    console.log('🚀 Testing Live Streams for Big Brother Crypto\n');
+    console.log('🚀 Testing Live Streams for BigBrotherCrypto\n');
     console.log('=' .repeat(70));
     
     let totalTests = 0;

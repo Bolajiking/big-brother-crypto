@@ -1,4 +1,4 @@
-# Big Brother Crypto - Live Streaming Guide
+# BigBrotherCrypto - Live Streaming Guide
 
 ## 🎯 Current Status
 - ✅ **All 8 stream endpoints are properly configured**
@@ -140,4 +140,4 @@ Once you start streaming to any of the RTMP endpoints, you'll see:
 - ✅ Full-screen stream viewing
 - ✅ Professional surveillance interface
 
-**Your Big Brother Crypto surveillance platform is ready for live streaming!** 🚀
+**Your BigBrotherCrypto surveillance platform is ready for live streaming!** 🚀

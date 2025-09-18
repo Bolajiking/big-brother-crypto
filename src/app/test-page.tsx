@@ -6,7 +6,7 @@ const TestPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-900">
       <header className="bg-gray-800 border-b border-gray-600 p-4">
-        <h1 className="text-2xl font-bold text-white">Big Brother Crypto - Test</h1>
+        <h1 className="text-2xl font-bold text-white">BigBrotherCrypto - Test</h1>
       </header>
       
       <div className="flex" style={{ height: 'calc(100vh - 80px)' }}>

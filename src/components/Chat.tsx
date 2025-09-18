@@ -19,22 +19,29 @@ const Chat: React.FC = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showSFXMenu, setShowSFXMenu] = useState(false);
   const [showTTSMenu, setShowTTSMenu] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Simulate some initial messages
-    setMessages([
-      {
-        id: '1',
-        username: 'System',
-        message: 'Welcome to Big Brother Crypto chat!',
-        timestamp: '2024-01-01T00:00:00.000Z',
-        type: 'text'
-      }
-    ]);
-    setIsConnected(true);
+    setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (isMounted) {
+      // Simulate some initial messages
+      setMessages([
+        {
+          id: '1',
+          username: 'System',
+          message: 'Welcome to BigBrotherCrypto chat!',
+          timestamp: '2024-01-01T00:00:00.000Z',
+          type: 'text'
+        }
+      ]);
+      setIsConnected(true);
+    }
+  }, [isMounted]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -173,6 +180,17 @@ const Chat: React.FC = () => {
     );
   };
 
+  if (!isMounted) {
+    return (
+      <div className="flex flex-col h-full bg-gray-800 p-4">
+        <div className="text-center text-gray-400">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-400 mx-auto mb-2"></div>
+          <p className="text-sm">Loading chat...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full bg-gray-800">
       {/* Header */}
@@ -186,9 +204,6 @@ const Chat: React.FC = () => {
                 {isConnected ? 'Connected' : 'Disconnected'}
               </span>
             </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-xs text-gray-500">{messages.length} messages</span>
           </div>
         </div>
       </div>
