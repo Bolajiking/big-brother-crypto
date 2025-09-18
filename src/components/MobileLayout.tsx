@@ -185,7 +185,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
             <MultiCamGrid
               cameras={cameras}
               onStreamClick={handleStreamClick}
-              selectedPlaybackId={selectedPlaybackId}
+              selectedPlaybackId={selectedPlaybackId || undefined}
             />
           </div>
         )}
@@ -197,7 +197,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
               <MultiCamGrid
                 cameras={cameras}
                 onStreamClick={handleStreamClick}
-                selectedPlaybackId={selectedPlaybackId}
+                selectedPlaybackId={selectedPlaybackId || undefined}
               />
             </div>
             <div className="h-1/2 bg-gray-800 border-t border-gray-700 relative">
@@ -221,7 +221,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
               <MultiCamGrid
                 cameras={cameras}
                 onStreamClick={handleStreamClick}
-                selectedPlaybackId={selectedPlaybackId}
+                selectedPlaybackId={selectedPlaybackId || undefined}
               />
             </div>
             <div className="h-1/2 bg-gray-800 border-t border-gray-700 relative">
