@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import MultiCamGrid from './MultiCamGrid';
 import Chat from './Chat';
 import InteractiveWidgets from './InteractiveWidgets';
@@ -41,10 +42,6 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
     setFullScreenStream(null);
   };
 
-  const handleBackToGrid = () => {
-    setFullScreenStream(null);
-    setActiveView('cameras');
-  };
 
   if (!isMounted) {
     return (
@@ -79,7 +76,6 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
         <div className="flex-1 relative">
           <LivepeerPlayer
             playbackId={fullScreenStream.playbackId}
-            cameraName={fullScreenStream.cameraName}
           />
         </div>
 
@@ -334,9 +330,11 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
               <div className="mt-8 pt-6 border-t border-gray-700">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 rounded-full overflow-hidden">
-                    <img
+                    <Image
                       src="https://ui-avatars.com/api/?name=User&background=6b7280&color=fff&size=100&bold=true"
                       alt="User Profile"
+                      width={40}
+                      height={40}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zz4KPHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiM2YjcyODAiLz4KPGNpcmNsZSBjeD0iNTAiIGN5PSIzNSIgcj0iMTUiIGZpbGw9IiNmZmYiLz4KPHBhdGggZD0iTTIwIDc1QzIwIDY1LjMzNTkgMjcuMzM1OSA1OCAzNyA1OEg2M0M3Mi42NjQxIDU4IDgwIDY1LjMzNTkgODAgNzVWMTBIMjBWNzVaIiBmaWxsPSIjZmZmIi8+Cjwvc3ZnPg==";
