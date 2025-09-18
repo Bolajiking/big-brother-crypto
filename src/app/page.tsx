@@ -7,6 +7,7 @@ import LivepeerPlayer from '@/components/LivepeerPlayer';
 import MultiCamGrid from '@/components/MultiCamGrid';
 import Chat from '@/components/Chat';
 import InteractiveWidgets from '@/components/InteractiveWidgets';
+import ClientOnly from '@/components/ClientOnly';
 
 interface Camera {
   id: string;
@@ -118,9 +119,9 @@ const HomePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-gray-900" suppressHydrationWarning>
       {/* Header with Navigation */}
-      <header className="bg-gray-800 border-b border-gray-700 p-4 relative">
+      <header className="bg-gray-800 border-b border-gray-700 p-4 relative" suppressHydrationWarning>
         <div className="flex items-center justify-between w-full">
           {/* Logo */}
           <h1 className="text-2xl font-bold text-gray-200">BigBrotherCrypto</h1>
@@ -255,14 +256,16 @@ const HomePage: React.FC = () => {
 
 
       {/* 3 Column Layout */}
-      <div className="flex" style={{ height: 'calc(100vh - 80px)' }}>
+      <div className="flex" style={{ height: 'calc(100vh - 80px)' }} suppressHydrationWarning>
         {/* Left Column - Interactive Polls */}
-        <div className="w-1/6 bg-gray-800 border-r border-gray-700 p-4 overflow-y-auto">
-          <InteractiveWidgets />
+        <div className="w-1/6 bg-gray-800 border-r border-gray-700 p-4 overflow-y-auto" suppressHydrationWarning>
+          <ClientOnly>
+            <InteractiveWidgets />
+          </ClientOnly>
         </div>
 
         {/* Middle Column - Stream Grid or Full View */}
-        <div className="w-2/3 bg-gray-900 p-4 overflow-y-auto relative">
+        <div className="w-2/3 bg-gray-900 p-4 overflow-y-auto relative" suppressHydrationWarning>
           {fullViewStream ? (
             /* Full View Stream */
             <div className="h-full flex flex-col">
@@ -288,17 +291,21 @@ const HomePage: React.FC = () => {
             </div>
           ) : (
             /* Camera Grid */
-            <MultiCamGrid
-              cameras={cameras}
-              onStreamClick={handleStreamClick}
-              selectedPlaybackId={selectedPlaybackId}
-            />
+            <ClientOnly>
+              <MultiCamGrid
+                cameras={cameras}
+                onStreamClick={handleStreamClick}
+                selectedPlaybackId={selectedPlaybackId}
+              />
+            </ClientOnly>
           )}
         </div>
 
         {/* Right Column - Chat */}
-        <div className="w-1/6 bg-gray-800 border-l border-gray-700">
-          <Chat />
+        <div className="w-1/6 bg-gray-800 border-l border-gray-700" suppressHydrationWarning>
+          <ClientOnly>
+            <Chat />
+          </ClientOnly>
         </div>
       </div>
     </div>

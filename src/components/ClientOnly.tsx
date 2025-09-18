@@ -1,13 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect, ReactNode } from 'react';
 
 interface ClientOnlyProps {
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
+  children: ReactNode;
+  fallback?: ReactNode;
 }
 
-const ClientOnly: React.FC<ClientOnlyProps> = ({ children, fallback = null }) => {
+const ClientOnly: React.FC<ClientOnlyProps> = ({ 
+  children, 
+  fallback = <div className="animate-pulse bg-gray-700 rounded h-8 w-full"></div> 
+}) => {
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
