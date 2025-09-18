@@ -218,7 +218,7 @@ const Chat: React.FC = () => {
 
   if (!isMounted) {
     return (
-      <div className="flex flex-col h-full bg-gray-800 p-4">
+      <div className="flex flex-col h-full bg-gray-800 p-4" suppressHydrationWarning>
         <div className="text-center text-gray-400">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-400 mx-auto mb-2"></div>
           <p className="text-sm">Loading chat...</p>
@@ -228,7 +228,7 @@ const Chat: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-800">
+    <div className="flex flex-col h-full bg-gray-800" suppressHydrationWarning>
       {/* Header */}
       <div className="p-4 border-b border-gray-700 flex-shrink-0">
         <div className="flex items-center justify-between">
