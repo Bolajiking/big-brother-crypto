@@ -30,7 +30,7 @@ const MultiCamGrid: React.FC<MultiCamGridProps> = ({
           {cameras.filter(c => c.isActive).length} cameras ready
         </div>
       </div>
-      <div className="grid grid-cols-4 gap-4 h-full overflow-y-auto">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 h-full overflow-y-auto">
         {cameras.map((camera) => (
           <div
             key={camera.id}
@@ -44,7 +44,7 @@ const MultiCamGrid: React.FC<MultiCamGridProps> = ({
             }`}
           >
             {/* Stream Thumbnail */}
-            <div className="relative h-64 w-full bg-black rounded-t overflow-hidden">
+            <div className="relative h-48 md:h-64 w-full bg-black rounded-t overflow-hidden">
               {/* Static Background - Always visible */}
               <div className="absolute inset-0 bg-black">
                 <div 
