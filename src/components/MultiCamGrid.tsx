@@ -24,7 +24,12 @@ const MultiCamGrid: React.FC<MultiCamGridProps> = ({
 }) => {
   return (
     <div className="h-full bg-gray-800 p-4 rounded">
-      <h2 className="text-gray-200 text-xl font-bold mb-4">Camera Feeds</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-gray-200 text-xl font-bold">Camera Feeds</h2>
+        <div className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
+          {cameras.filter(c => c.isActive).length} cameras ready
+        </div>
+      </div>
       <div className="grid grid-cols-4 gap-4 h-full overflow-y-auto">
         {cameras.map((camera) => (
           <div
@@ -76,7 +81,18 @@ const MultiCamGrid: React.FC<MultiCamGridProps> = ({
                 playsInline
                 loop
                 autoPlay
+                preload="metadata"
+                onLoadStart={() => {
+                  console.log(`Video load started for ${camera.name}`);
+                }}
+                onCanPlay={() => {
+                  console.log(`Video can play for ${camera.name}`);
+                }}
+                onPlaying={() => {
+                  console.log(`Video playing for ${camera.name}`);
+                }}
                 onError={(e) => {
+                  console.log(`Video error for ${camera.name}:`, e);
                   // Silently handle video errors - just hide the video
                   const target = e.target as HTMLVideoElement;
                   if (target) {
@@ -114,6 +130,17 @@ const MultiCamGrid: React.FC<MultiCamGridProps> = ({
       {cameras.length === 0 && (
         <div className="text-center text-gray-400 py-8">
           <p>No cameras available</p>
+        </div>
+      )}
+      
+      {cameras.length > 0 && cameras.every(c => !c.isActive) && (
+        <div className="text-center text-gray-400 py-8">
+          <div className="bg-gray-700 p-4 rounded-lg">
+            <p className="text-sm mb-2">📹 All cameras are ready for streaming</p>
+            <p className="text-xs text-gray-500">
+              Start streaming to RTMP endpoints to see live feeds
+            </p>
+          </div>
         </div>
       )}
     </div>

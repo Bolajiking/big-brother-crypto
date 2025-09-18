@@ -58,7 +58,12 @@ const LivepeerPlayer: React.FC<LivepeerPlayerProps> = ({
           maxBufferLength: 30,
           maxMaxBufferLength: 60,
           liveSyncDurationCount: 3,
-          liveMaxLatencyDurationCount: 5
+          liveMaxLatencyDurationCount: 5,
+          xhrSetup: (xhr, url) => {
+            // Handle CORS and redirects properly for Livepeer
+            xhr.withCredentials = false;
+            xhr.setRequestHeader('Accept', 'application/vnd.apple.mpegurl, application/x-mpegurl, application/octet-stream');
+          }
         });
 
         hlsRef.current = hls;
@@ -78,19 +83,60 @@ const LivepeerPlayer: React.FC<LivepeerPlayerProps> = ({
             clearTimeout(timeoutRef.current);
             timeoutRef.current = null;
           }
-          // Only log non-fatal errors to reduce console spam
+          
+          console.log('HLS Error:', {
+            type: data.type,
+            details: data.details,
+            fatal: data.fatal,
+            url: url,
+            playbackId: playbackId
+          });
+          
           if (data.fatal) {
-            console.log('Stream not available for playback ID:', playbackId, 'Error details:', data);
-            setIsLoading(false);
-            setIsLive(false);
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                console.log('Fatal network error, trying to recover...');
+                hls.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                console.log('Fatal media error, trying to recover...');
+                hls.recoverMediaError();
+                break;
+              default:
+                console.log('Fatal error, cannot recover');
+                setIsLoading(false);
+                setIsLive(false);
+                break;
+            }
           } else {
             // Non-fatal errors - stream might still work
-            console.log('Non-fatal HLS error:', data);
+            console.log('Non-fatal HLS error, continuing...');
           }
         });
 
         hls.loadSource(url);
         hls.attachMedia(video);
+        
+        // Add additional event listeners for better stream handling
+        video.addEventListener('loadstart', () => {
+          console.log('Video load started for playback ID:', playbackId);
+        });
+        
+        video.addEventListener('canplay', () => {
+          console.log('Video can play for playback ID:', playbackId);
+          setIsLoading(false);
+          setIsLive(true);
+        });
+        
+        video.addEventListener('playing', () => {
+          console.log('Video playing for playback ID:', playbackId);
+          setIsLive(true);
+        });
+        
+        video.addEventListener('waiting', () => {
+          console.log('Video waiting for playback ID:', playbackId);
+          setIsLoading(true);
+        });
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         // Native HLS support (Safari)
         video.src = url;
