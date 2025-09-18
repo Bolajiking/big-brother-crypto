@@ -3,7 +3,7 @@ const path = require('path');
 
 async function testStreamEndpoint(playbackId, cameraName) {
   try {
-    const streamUrl = `https://livepeercdn.com/hls/${playbackId}/index.m3u8`;
+    const streamUrl = `http://livepeercdn.studio/hls/${playbackId}/index.m3u8`;
     console.log(`🔍 Testing ${cameraName} stream endpoint...`);
     console.log(`   URL: ${streamUrl}`);
     
@@ -31,7 +31,7 @@ async function testStreamEndpoint(playbackId, cameraName) {
 
 async function testHLSManifest(playbackId, cameraName) {
   try {
-    const manifestUrl = `https://livepeercdn.com/hls/${playbackId}/index.m3u8`;
+    const manifestUrl = `http://livepeercdn.studio/hls/${playbackId}/index.m3u8`;
     console.log(`📋 Testing HLS manifest for ${cameraName}...`);
     
     const response = await fetch(manifestUrl);

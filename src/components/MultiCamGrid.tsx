@@ -68,7 +68,7 @@ const MultiCamGrid: React.FC<MultiCamGridProps> = ({
 
               {/* Live Video Overlay - Only when stream is active */}
               <video
-                src={`https://livepeercdn.com/hls/${camera.playbackId}/index.m3u8`}
+                src={`http://livepeercdn.studio/hls/${camera.playbackId}/index.m3u8`}
                 className={`w-full h-full object-cover pointer-events-none transition-opacity duration-300 ${
                   camera.isActive ? 'opacity-100' : 'opacity-0'
                 }`}
