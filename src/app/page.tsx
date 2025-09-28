@@ -150,27 +150,21 @@ const HomePage: React.FC = () => {
       <header className="bg-gray-800 border-b border-gray-700 px-6 py-4 relative" suppressHydrationWarning>
         <div className="flex items-center justify-between w-full">
           {/* Logo */}
-          <h1 className="text-2xl font-bold text-gray-200">BigBrotherCrypto</h1>
+          <h1 className="text-2xl font-bold text-gray-200 self-start">BigBrotherCrypto</h1>
           
           {/* Navigation Buttons - Center */}
-          <div className="flex items-center gap-3 absolute left-1/2 transform -translate-x-1/2">
+          <div className="flex items-center gap-4 justify-center">
             <button 
-              className="flex items-center gap-1 text-white px-3 py-1.5 rounded transition-colors text-sm"
-              style={{ backgroundColor: '#2563eb' }}
-              onMouseEnter={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#1d4ed8'}
-              onMouseLeave={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#2563eb'}
+              className="flex items-center gap-1 text-white px-3 py-1.5 rounded transition-colors text-sm bg-blue-600 hover:bg-blue-700"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
               </svg>
               INFO
             </button>
             
             <button 
-              className="flex items-center gap-1 text-white px-3 py-1.5 rounded transition-colors text-sm"
-              style={{ backgroundColor: '#16a34a' }}
-              onMouseEnter={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#15803d'}
-              onMouseLeave={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#16a34a'}
+              className="flex items-center gap-1 text-white px-3 py-1.5 rounded transition-colors text-sm bg-green-600 hover:bg-green-700"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4zM14 13h-3v3H9v-3H6v-2h3V8h2v3h3v2z"/>
@@ -179,10 +173,7 @@ const HomePage: React.FC = () => {
             </button>
             
             <button 
-              className="flex items-center gap-1 text-white px-3 py-1.5 rounded transition-colors text-sm"
-              style={{ backgroundColor: '#9333ea' }}
-              onMouseEnter={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#7c3aed'}
-              onMouseLeave={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#9333ea'}
+              className="flex items-center gap-1 text-white px-3 py-1.5 rounded transition-colors text-sm bg-purple-600 hover:bg-purple-700"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z"/>
@@ -191,10 +182,7 @@ const HomePage: React.FC = () => {
             </button>
             
             <button 
-              className="flex items-center gap-1 text-white px-3 py-1.5 rounded transition-colors text-sm"
-              style={{ backgroundColor: '#ea580c' }}
-              onMouseEnter={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#c2410c'}
-              onMouseLeave={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#ea580c'}
+              className="flex items-center gap-1 text-white px-3 py-1.5 rounded transition-colors text-sm bg-orange-600 hover:bg-orange-700"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M7 4V2c0-.55-.45-1-1-1s-1 .45-1 1v2H3c-.55 0-1 .45-1 1s.45 1 1 1h2v2c0 .55.45 1 1 1s1-.45 1-1V6h2c.55 0 1-.45 1-1s-.45-1-1-1H7zm10 0h-2V2c0-.55-.45-1-1-1s-1 .45-1 1v2h-2c-.55 0-1 .45-1 1s.45 1 1 1h2v2c0 .55.45 1 1 1s1-.45 1-1V6h2c.55 0 1-.45 1-1s-.45-1-1-1zM7 14c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
@@ -203,10 +191,7 @@ const HomePage: React.FC = () => {
             </button>
             
             <button 
-              className="flex items-center gap-1 text-white px-3 py-1.5 rounded transition-colors text-sm"
-              style={{ backgroundColor: '#ca8a04' }}
-              onMouseEnter={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#a16207'}
-              onMouseLeave={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#ca8a04'}
+              className="flex items-center gap-1 text-white px-3 py-1.5 rounded transition-colors text-sm bg-yellow-600 hover:bg-yellow-700"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
@@ -220,25 +205,17 @@ const HomePage: React.FC = () => {
             <button
               onClick={toggleProfile}
               onMouseEnter={() => setIsProfileOpen(true)}
-              className="w-8 h-8 rounded-full overflow-hidden hover:ring-2 hover:ring-blue-400 transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="w-8 h-8 rounded-full overflow-hidden hover:ring-2 hover:ring-blue-400 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center"
             >
-              <Image
-                src="https://ui-avatars.com/api/?name=User&background=6b7280&color=fff&size=100&bold=true"
-                alt="User Profile"
-                width={32}
-                height={32}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  // Fallback to a simple generic avatar if image fails to load
-                  e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjNmI3MjgwIi8+CjxjaXJjbGUgY3g9IjUwIiBjeT0iMzUiIHI9IjE1IiBmaWxsPSIjZmZmIi8+CjxwYXRoIGQ9Ik0yMCA3NUMyMCA2NS4zMzU5IDI3LjMzNTkgNTggMzcgNThINjNDNzIuNjY0MSA1OCA4MCA2NS4zMzU5IDgwIDc1VjEwMEgyMFY3NVoiIGZpbGw9IiNmZmYiLz4KPC9zdmc+";
-                }}
-              />
+              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12A3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5a3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97c0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1c0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"/>
+              </svg>
             </button>
 
             {/* Dropdown Menu */}
             {isProfileOpen && (
               <div 
-                className="absolute right-0 mt-3 w-48 bg-gray-800 rounded-lg shadow-xl border border-gray-600 py-2 z-50"
+                className="absolute right-0 mt-3 bg-gray-800 rounded-lg shadow-xl border border-gray-600 py-2 z-50"
                 onMouseEnter={() => setIsProfileOpen(true)}
                 onMouseLeave={() => setIsProfileOpen(false)}
               >

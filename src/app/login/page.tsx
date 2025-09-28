@@ -39,14 +39,14 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
-      <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-md border border-white/20">
+      <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-[80%]  border border-white/20">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">BigBrotherCrypto</h1>
           <p className="text-blue-200">Live Streaming Platform</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
+        <form onSubmit={handleSubmit} className="flex flex-col items-center w-full space-y-6">
+          <div className="w-full flex flex-col items-center">
             <label htmlFor="username" className="block text-sm font-medium text-white mb-2">
               Username
             </label>
@@ -55,14 +55,14 @@ const LoginPage: React.FC = () => {
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-[80%] px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter your username"
               required
               disabled={isLoading}
             />
           </div>
 
-          <div>
+          <div className="w-full flex flex-col items-center">
             <label htmlFor="password" className="block text-sm font-medium text-white mb-2">
               Password
             </label>
@@ -71,7 +71,7 @@ const LoginPage: React.FC = () => {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-[80%] px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter your password"
               required
               disabled={isLoading}
@@ -79,7 +79,7 @@ const LoginPage: React.FC = () => {
           </div>
 
           {error && (
-            <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3">
+            <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 w-[80%] flex justify-center items-center">
               <p className="text-red-200 text-sm">{error}</p>
             </div>
           )}
@@ -87,7 +87,7 @@ const LoginPage: React.FC = () => {
           <button
             type="submit"
             disabled={isLoading || !username || !password}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
+            className="w-[80%] bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
           >
             {isLoading ? (
               <div className="flex items-center justify-center">
@@ -100,7 +100,7 @@ const LoginPage: React.FC = () => {
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center w-full flex justify-center items-center">
           <p className="text-gray-300 text-sm">
             Demo credentials: <span className="text-blue-300">cryptoFan1</span> / <span className="text-blue-300">password123</span>
           </p>
