@@ -1,7 +1,9 @@
-import type { Metadata } from "next";
+"use cleint"
+
+// import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { PrivyProviderWrapper } from "@/lib/privy";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,10 +15,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "BigBrotherCrypto - Live Streaming Platform",
-  description: "Watch live streams from multiple camera feeds with real-time chat",
-};
+// export const metadata: Metadata = {
+//   title: "BigBrotherCrypto - Live Streaming Platform",
+//   description: "Watch live streams from multiple camera feeds with real-time chat",
+// };
 
 export default function RootLayout({
   children,
@@ -25,15 +27,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <title>Big brother</title>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <AuthProvider>
+        <PrivyProviderWrapper>
           <div suppressHydrationWarning>
             {children}
           </div>
-        </AuthProvider>
+        </PrivyProviderWrapper>
       </body>
     </html>
   );

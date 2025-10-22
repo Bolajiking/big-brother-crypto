@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { useAuth } from '@/contexts/AuthContext';
+import { usePrivy } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
 import LivepeerPlayer from '@/components/LivepeerPlayer';
 import MultiCamGrid from '@/components/MultiCamGrid';
@@ -30,7 +30,7 @@ const HomePage: React.FC = () => {
   const [isMounted, setIsMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
-  const { user, logout, isLoading: authLoading } = useAuth();
+  const { ready, authenticated, user, logout: privyLogout } = usePrivy();
   const router = useRouter();
 
   useEffect(() => {
@@ -48,10 +48,10 @@ const HomePage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (ready && !authenticated) {
       router.push('/login');
     }
-  }, [user, authLoading, router]);
+  }, [ready, authenticated, router]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -106,8 +106,8 @@ const HomePage: React.FC = () => {
     setFullViewStream(null);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await privyLogout();
     router.push('/login');
   };
 
@@ -116,7 +116,7 @@ const HomePage: React.FC = () => {
   };
 
 
-  if (authLoading || isLoading || !isMounted) {
+  if (!ready || isLoading || !isMounted) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center" suppressHydrationWarning>
         <div className="text-center">
@@ -127,7 +127,7 @@ const HomePage: React.FC = () => {
     );
   }
 
-  if (!user) {
+  if (!authenticated || !user) {
     return null; // Will redirect to login
   }
 
@@ -220,8 +220,12 @@ const HomePage: React.FC = () => {
                 onMouseLeave={() => setIsProfileOpen(false)}
               >
                 <div className="px-4 py-2 border-b border-gray-600">
-                  <div className="text-gray-200 text-sm font-medium">{user.username}</div>
-                  <div className="text-gray-400 text-xs">Online</div>
+                  <div className="text-gray-200 text-sm font-medium">
+                    {user.wallet?.address ? `${user.wallet.address.slice(0, 6)}...${user.wallet.address.slice(-4)}` : 'Wallet User'}
+                  </div>
+                  <div className="text-gray-400 text-xs">
+                    {user.email?.address ? user.email.address : 'Web3 User'}
+                  </div>
                 </div>
                 
                 <button className="w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 transition-colors text-sm">
