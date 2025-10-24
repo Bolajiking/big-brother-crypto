@@ -1,109 +1,69 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import React, { useEffect } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
 
 const LoginPage: React.FC = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { login, user } = useAuth();
+  const { ready, authenticated, login: privyLogin } = usePrivy();
   const router = useRouter();
 
   useEffect(() => {
-    if (user) {
+    if (ready && authenticated) {
       router.push('/');
     }
-  }, [user, router]);
+  }, [ready, authenticated, router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
-
+  const handleLogin = async () => {
     try {
-      const success = await login(username, password);
-      if (success) {
-        router.push('/');
-      } else {
-        setError('Invalid username or password');
-      }
-    } catch {
-      setError('An error occurred during login');
-    } finally {
-      setIsLoading(false);
+      await privyLogin();
+    } catch (error) {
+      console.error('Login error:', error);
     }
   };
 
+  if (!ready) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-[80%] border border-white/20 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
-      <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-[80%]  border border-white/20">
+      <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-[80%] border border-white/20">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">BigBrotherCrypto</h1>
           <p className="text-blue-200">Live Streaming Platform</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col items-center w-full space-y-6">
+        <div className="flex flex-col items-center w-full space-y-6">
           <div className="w-full flex flex-col items-center">
-            <label htmlFor="username" className="block text-sm font-medium text-white mb-2">
-              Username
-            </label>
-            <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-[80%] px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter your username"
-              required
-              disabled={isLoading}
-            />
+            <h2 className="text-2xl font-semibold text-white mb-4">Connect Your Wallet</h2>
+            <p className="text-gray-300 text-center mb-6">
+              Connect your wallet to access the live streaming platform. You can use MetaMask, WalletConnect, or other supported wallets.
+            </p>
           </div>
-
-          <div className="w-full flex flex-col items-center">
-            <label htmlFor="password" className="block text-sm font-medium text-white mb-2">
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-[80%] px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter your password"
-              required
-              disabled={isLoading}
-            />
-          </div>
-
-          {error && (
-            <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 w-[80%] flex justify-center items-center">
-              <p className="text-red-200 text-sm">{error}</p>
-            </div>
-          )}
 
           <button
-            type="submit"
-            disabled={isLoading || !username || !password}
-            className="w-[80%] bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
+            onClick={handleLogin}
+            className="w-[80%] bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-3"
           >
-            {isLoading ? (
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                Signing in...
-              </div>
-            ) : (
-              'Sign In'
-            )}
+            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M17.778 8.222c-4.296-4.296-11.26-4.296-15.556 0A1 1 0 01.808 6.808c5.076-5.076 13.308-5.076 18.384 0a1 1 0 01-1.414 1.414zM14.95 11.05c-3.124-3.124-8.19-3.124-11.314 0a1 1 0 01-1.414-1.414c4.01-4.01 10.51-4.01 14.52 0a1 1 0 01-1.414 1.414zM12.12 13.88c-1.171-1.171-3.073-1.171-4.244 0a1 1 0 01-1.415-1.415c2.051-2.051 5.378-2.051 7.429 0a1 1 0 01-1.415 1.415zM9 16a1 1 0 112 0 1 1 0 01-2 0z" clipRule="evenodd" />
+            </svg>
+            <span>Connect Wallet</span>
           </button>
-        </form>
 
-        <div className="mt-6 text-center w-full flex justify-center items-center">
-          <p className="text-gray-300 text-sm">
-            Demo credentials: <span className="text-blue-300">cryptoFan1</span> / <span className="text-blue-300">password123</span>
-          </p>
+          <div className="mt-6 text-center w-full">
+            <p className="text-gray-300 text-sm">
+              Supported wallets: MetaMask, WalletConnect, Coinbase Wallet, and more
+            </p>
+          </div>
         </div>
       </div>
     </div>
