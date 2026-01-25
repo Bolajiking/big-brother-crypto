@@ -1,0 +1,386 @@
+// Big Brother Crypto - Database Schema
+// Based on PRD v1.0
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserTier {
+  FREE
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+enum ContestantStatus {
+  ACTIVE
+  NOMINATED
+  EVICTED
+  WINNER
+}
+
+enum MarketType {
+  ELIMINATION
+  CHALLENGE
+  SOCIAL
+  PROP
+  WINNER
+}
+
+enum MarketStatus {
+  DRAFT
+  OPEN
+  CLOSED
+  SETTLED
+  CANCELLED
+}
+
+enum PredictionStatus {
+  PENDING
+  WON
+  LOST
+  CANCELLED
+  REFUNDED
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  BET
+  WIN
+  VOTE
+  REWARD
+  DAILY_LOGIN
+  WATCH_TIME
+  CHAT_BONUS
+  REFERRAL
+}
+
+enum VoteType {
+  SAVE
+  EVICT
+}
+
+// ============================================
+// CORE MODELS
+// ============================================
+
+model User {
+  id              String        @id @default(cuid())
+  privyId         String        @unique
+  walletAddress   String?       @unique
+  username        String        @unique
+  email           String?
+  avatarUrl       String?
+
+  // Currency balances
+  cloutBalance    Int           @default(500) // Free currency - starts with 500
+  stakesBalance   Int           @default(0)   // Paid currency
+
+  // User tier for vote multipliers
+  tier            UserTier      @default(FREE)
+
+  // Stats
+  totalWatchTime  Int           @default(0)   // In minutes
+  totalMessages   Int           @default(0)
+  lastLoginAt     DateTime?
+  lastCloutClaim  DateTime?     // For daily login bonus
+
+  // Relations
+  predictions     Prediction[]
+  votes           Vote[]
+  transactions    Transaction[]
+  chatMessages    ChatMessage[]
+  referredBy      User?         @relation("Referrals", fields: [referredById], references: [id])
+  referredById    String?
+  referrals       User[]        @relation("Referrals")
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([privyId])
+  @@index([walletAddress])
+}
+
+model Season {
+  id              String        @id @default(cuid())
+  name            String        // e.g., "Season 1"
+  description     String?
+  startDate       DateTime
+  endDate         DateTime?
+  isActive        Boolean       @default(true)
+  prizePool       Int           @default(0) // Grand prize in Naira
+
+  contestants     Contestant[]
+  markets         Market[]
+  votingWindows   VotingWindow[]
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model Contestant {
+  id              String            @id @default(cuid())
+  name            String
+  nickname        String?
+  bio             String?
+  photoUrl        String?
+  age             Int?
+  occupation      String?
+  state           String?           // Nigerian state
+
+  status          ContestantStatus  @default(ACTIVE)
+  isNominated     Boolean           @default(false)
+  isHoH           Boolean           @default(false) // Head of House
+  hasImmunity     Boolean           @default(false)
+
+  // Stats
+  daysInHouse     Int               @default(0)
+  nominationsSurvived Int           @default(0)
+  challengesWon   Int               @default(0)
+
+  evictedAt       DateTime?
+  evictionRank    Int?              // Position when evicted (e.g., 10th place)
+
+  seasonId        String
+  season          Season            @relation(fields: [seasonId], references: [id])
+
+  votes           Vote[]
+  marketOptions   MarketOption[]
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([seasonId])
+  @@index([status])
+}
+
+model Camera {
+  id              String        @id @default(cuid())
+  name            String
+  description     String?
+  playbackId      String        // Livepeer playback ID
+  streamId        String        // Livepeer stream ID
+  streamKey       String?       // For OBS streaming
+  isActive        Boolean       @default(true)
+  isLive          Boolean       @default(false)
+  viewerCount     Int           @default(0)
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+// ============================================
+// PREDICTION MARKETS
+// ============================================
+
+model Market {
+  id              String        @id @default(cuid())
+  title           String
+  description     String?
+  type            MarketType
+  status          MarketStatus  @default(DRAFT)
+
+  // Polymarket integration (optional)
+  polymarketId    String?       @unique
+
+  // Timing
+  opensAt         DateTime      @default(now())
+  closesAt        DateTime
+  settledAt       DateTime?
+
+  // Settlement
+  winningOptionId String?
+  totalVolume     Int           @default(0) // Total stakes bet
+
+  seasonId        String?
+  season          Season?       @relation(fields: [seasonId], references: [id])
+
+  options         MarketOption[]
+  predictions     Prediction[]
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([status])
+  @@index([type])
+  @@index([closesAt])
+}
+
+model MarketOption {
+  id              String        @id @default(cuid())
+  label           String        // e.g., "Kachi wins", "Yes", "Over 3"
+
+  // Odds (stored as percentage, e.g., 25 = 25% = 4.0x payout)
+  currentOdds     Float         @default(50)
+
+  // Volume tracking
+  totalStaked     Int           @default(0)
+
+  marketId        String
+  market          Market        @relation(fields: [marketId], references: [id], onDelete: Cascade)
+
+  // Optional link to contestant (for elimination markets)
+  contestantId    String?
+  contestant      Contestant?   @relation(fields: [contestantId], references: [id])
+
+  predictions     Prediction[]
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([marketId])
+}
+
+model Prediction {
+  id              String            @id @default(cuid())
+
+  userId          String
+  user            User              @relation(fields: [userId], references: [id])
+
+  marketId        String
+  market          Market            @relation(fields: [marketId], references: [id])
+
+  optionId        String
+  option          MarketOption      @relation(fields: [optionId], references: [id])
+
+  amount          Int               // Stakes wagered
+  oddsAtPurchase  Float             // Odds when prediction was made
+  potentialWin    Int               // Calculated payout if won
+
+  status          PredictionStatus  @default(PENDING)
+  settledAmount   Int?              // Actual payout (if won)
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([userId])
+  @@index([marketId])
+  @@index([status])
+}
+
+// ============================================
+// VOTING SYSTEM
+// ============================================
+
+model VotingWindow {
+  id              String        @id @default(cuid())
+  title           String        // e.g., "Week 3 Eviction Vote"
+
+  opensAt         DateTime
+  closesAt        DateTime
+  isActive        Boolean       @default(false)
+
+  // Results
+  resultsPublished Boolean      @default(false)
+
+  seasonId        String
+  season          Season        @relation(fields: [seasonId], references: [id])
+
+  votes           Vote[]
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([isActive])
+  @@index([seasonId])
+}
+
+model Vote {
+  id              String        @id @default(cuid())
+
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+
+  contestantId    String
+  contestant      Contestant    @relation(fields: [contestantId], references: [id])
+
+  windowId        String
+  window          VotingWindow  @relation(fields: [windowId], references: [id])
+
+  voteType        VoteType      @default(SAVE)
+  voteCount       Int           @default(1) // Can be multiplied by tier
+
+  // Payment
+  paidWithClout   Int           @default(0)
+  paidWithStakes  Int           @default(0)
+
+  createdAt       DateTime      @default(now())
+
+  @@unique([userId, contestantId, windowId]) // One vote per user per contestant per window
+  @@index([windowId])
+  @@index([contestantId])
+}
+
+// ============================================
+// TRANSACTIONS & PAYMENTS
+// ============================================
+
+model Transaction {
+  id              String          @id @default(cuid())
+
+  userId          String
+  user            User            @relation(fields: [userId], references: [id])
+
+  type            TransactionType
+
+  // Amounts (positive = credit, negative = debit)
+  cloutAmount     Int             @default(0)
+  stakesAmount    Int             @default(0)
+
+  // Naira amounts for deposits/withdrawals
+  nairaAmount     Int?            // In kobo (e.g., 200000 = ₦2,000)
+
+  // Payment provider reference
+  paystackRef     String?         @unique
+
+  description     String?
+  metadata        Json?           // Additional data (e.g., market ID for bets)
+
+  // Balance after transaction
+  cloutBalanceAfter   Int?
+  stakesBalanceAfter  Int?
+
+  createdAt       DateTime        @default(now())
+
+  @@index([userId])
+  @@index([type])
+  @@index([paystackRef])
+}
+
+// ============================================
+// CHAT & REAL-TIME
+// ============================================
+
+model ChatMessage {
+  id              String        @id @default(cuid())
+
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+
+  content         String
+
+  // Special message types
+  isEmoji         Boolean       @default(false)
+  isSfx           Boolean       @default(false)
+  isTts           Boolean       @default(false)
+
+  // Moderation
+  isDeleted       Boolean       @default(false)
+  deletedBy       String?
+
+  createdAt       DateTime      @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}

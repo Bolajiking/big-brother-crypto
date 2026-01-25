@@ -1,5 +1,5 @@
 {
-  "name": "big-brother-crypto",
+  "name": "star-factor",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,10 +7,25 @@
     "dev-server": "node server.js",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "dotenv -e .env.local -- npx tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "postinstall": "prisma generate",
+    "remotion:studio": "remotion studio",
+    "remotion:render": "remotion render HelloWorld out/video.mp4",
+    "remotion:preview": "remotion preview"
+  },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.2",
     "@privy-io/react-auth": "^3.4.0",
+    "@remotion/cli": "^4.0.409",
+    "@remotion/player": "^4.0.409",
     "@solana-program/memo": "^0.8.0",
     "@solana-program/system": "^0.8.0",
     "@solana-program/token": "^0.6.0",
@@ -18,13 +33,17 @@
     "@solana/spl-token": "^0.4.14",
     "@solana/wallet-adapter-base": "^0.9.27",
     "@solana/web3.js": "^1.98.4",
+    "@tanstack/react-query": "^5.90.16",
     "axios": "^1.12.2",
+    "dotenv": "^17.2.3",
     "hls.js": "^1.6.12",
-    "next": "15.5.3",
+    "next": "15.5.9",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "remotion": "^4.0.409",
     "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -32,10 +51,13 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.21",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9",
-    "eslint-config-next": "15.5.3",
+    "eslint-config-next": "15.5.9",
     "postcss": "^8.5.6",
+    "prisma": "^6.19.2",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
