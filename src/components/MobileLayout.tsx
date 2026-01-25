@@ -6,6 +6,7 @@ import MultiCamGrid from './MultiCamGrid';
 import Chat from './Chat';
 import InteractiveWidgets from './InteractiveWidgets';
 import LivepeerPlayer from './LivepeerPlayer';
+import { MarketCreationData } from '@/types/prediction';
 
 interface Camera {
   id: string;
@@ -20,11 +21,19 @@ interface MobileLayoutProps {
   cameras: Camera[];
   selectedPlaybackId: string | null;
   onStreamClick: (playbackId: string, cameraName: string) => void;
+  onRequireLogin?: () => void;
+  isAuthenticated?: boolean;
+  userEmail?: string;
+  onCreateMarket?: (data: MarketCreationData) => void;
 }
 
 const MobileLayout: React.FC<MobileLayoutProps> = ({
   cameras,
-  selectedPlaybackId
+  selectedPlaybackId,
+  onRequireLogin,
+  isAuthenticated = false,
+  userEmail,
+  onCreateMarket
 }) => {
   const [activeView, setActiveView] = useState<'cameras' | 'chat' | 'interact'>('cameras');
   const [fullScreenStream, setFullScreenStream] = useState<{playbackId: string, cameraName: string} | null>(null);
@@ -91,7 +100,11 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <Chat />
+            <Chat
+              onRequireLogin={() => onRequireLogin?.()}
+              isAuthenticated={isAuthenticated}
+              onCreateMarket={onCreateMarket}
+            />
           </div>
         )}
 
@@ -106,7 +119,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <InteractiveWidgets />
+            <InteractiveWidgets onRequireLogin={onRequireLogin} />
           </div>
         )}
 
@@ -209,7 +222,11 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-              <Chat />
+              <Chat
+                onRequireLogin={() => onRequireLogin?.()}
+                isAuthenticated={isAuthenticated}
+                onCreateMarket={onCreateMarket}
+              />
             </div>
           </div>
         )}
@@ -233,7 +250,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-              <InteractiveWidgets />
+              <InteractiveWidgets onRequireLogin={onRequireLogin} />
             </div>
           </div>
         )}

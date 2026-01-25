@@ -265,6 +265,12 @@ const WatchPage: React.FC = () => {
           cameras={cameras}
           selectedPlaybackId={selectedPlaybackId}
           onStreamClick={handleStreamClick}
+          onRequireLogin={() => requireLogin('interact with the platform')}
+          isAuthenticated={authenticated}
+          userEmail={user?.email?.address}
+          onCreateMarket={(data: MarketCreationData) => {
+            addMarket(data, user?.email?.address?.split('@')[0] || 'Anonymous');
+          }}
         />
         <LoginPromptModal
           isOpen={showLoginModal}
