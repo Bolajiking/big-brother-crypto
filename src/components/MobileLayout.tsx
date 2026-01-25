@@ -173,7 +173,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <h1 className="text-gray-200 text-lg font-bold">BigBrotherCrypto</h1>
+          <h1 className="text-gray-200 text-lg font-bold">Star Factor</h1>
           <div className="w-6"></div> {/* Spacer for centering */}
         </div>
       </header>

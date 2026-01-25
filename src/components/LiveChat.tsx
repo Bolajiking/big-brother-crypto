@@ -25,7 +25,7 @@ const LiveChat: React.FC = () => {
       {
         id: '1',
         username: 'System',
-        message: 'Welcome to BigBrotherCrypto live chat!',
+        message: 'Welcome to Star Factor live chat!',
         timestamp: new Date().toISOString()
       }
     ]);
