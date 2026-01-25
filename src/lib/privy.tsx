@@ -1,7 +1,6 @@
 'use client';
 
 import { PrivyProvider } from '@privy-io/react-auth';
-import { toSolanaWalletConnectors } from '@privy-io/react-auth/solana';
 
 // Export the PrivyProvider component with configuration
 export function PrivyProviderWrapper({ children }: { children: React.ReactNode }) {
@@ -10,16 +9,16 @@ export function PrivyProviderWrapper({ children }: { children: React.ReactNode }
       appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? ""}
       config={{
         appearance: {
-          theme: 'light' as const,
-          accentColor: '#676FFF',
-          loginMessage: 'BigBrotherCrypto',
-          showWalletLoginFirst: true,
-          walletChainType:"solana-only"
+          theme: 'dark' as const,
+          accentColor: '#6366f1',
+          loginMessage: 'Sign in to Star Factor',
+          showWalletLoginFirst: false,
         },
-        externalWallets: {solana: {connectors: toSolanaWalletConnectors()}},
-        loginMethods: ['wallet', 'email'],
+        loginMethods: ['email', 'google'],
         embeddedWallets: {
-          // createOnLogin: 'users-without-wallets',
+          ethereum: {
+            createOnLogin: 'users-without-wallets',
+          },
         },
       }}
     >

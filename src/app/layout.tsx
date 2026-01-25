@@ -1,4 +1,4 @@
-"use cleint"
+"use client"
 
 // import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -27,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <title>Big brother</title>
+      <title>Star Factor</title>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning

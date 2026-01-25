@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 const LoginPage: React.FC = () => {
   const { ready, authenticated, login: privyLogin } = usePrivy();
@@ -10,7 +11,7 @@ const LoginPage: React.FC = () => {
 
   useEffect(() => {
     if (ready && authenticated) {
-      router.push('/');
+      router.push('/watch');
     }
   }, [ready, authenticated, router]);
 
@@ -24,47 +25,104 @@ const LoginPage: React.FC = () => {
 
   if (!ready) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-[80%] border border-white/20 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-white">Loading...</p>
+      <div className="min-h-screen bg-sf-bg-primary flex items-center justify-center p-4">
+        <div className="glass-card p-8 max-w-md w-full text-center">
+          <div className="w-12 h-12 mx-auto mb-4 relative">
+            <div className="absolute inset-0 bg-gradient-primary rounded-xl animate-pulse opacity-50" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-6 h-6 border-2 border-sf-accent-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          </div>
+          <p className="text-sf-text-secondary">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
-      <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-[80%] border border-white/20">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">BigBrotherCrypto</h1>
-          <p className="text-blue-200">Live Streaming Platform</p>
+    <div className="min-h-screen bg-sf-bg-primary flex items-center justify-center p-4">
+      {/* Animated Background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 -left-32 w-[500px] h-[500px] bg-sf-accent-primary/15 rounded-full blur-[120px] animate-float" />
+        <div className="absolute bottom-1/4 -right-32 w-[500px] h-[500px] bg-sf-accent-secondary/15 rounded-full blur-[120px] animate-float" style={{ animationDelay: '-3s' }} />
+      </div>
+
+      {/* Grid Pattern */}
+      <div className="absolute inset-0 grid-pattern opacity-20" />
+
+      {/* Noise Overlay */}
+      <div className="noise-overlay" />
+
+      <div className="relative z-10 glass-card p-8 max-w-md w-full animate-fade-in-up">
+        {/* Back to Watch Link */}
+        <Link
+          href="/watch"
+          className="inline-flex items-center gap-2 text-sf-text-tertiary hover:text-white transition-colors mb-8 group"
+        >
+          <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Watch
+        </Link>
+
+        {/* Logo */}
+        <div className="text-center mb-10">
+          <div className="w-20 h-20 bg-gradient-primary rounded-2xl flex items-center justify-center font-bold text-2xl text-white mx-auto mb-6 shadow-sf-glow">
+            SF
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-3">Welcome to Star Factor</h1>
+          <p className="text-sf-text-secondary">Sign in to unlock all features</p>
         </div>
 
-        <div className="flex flex-col items-center w-full space-y-6">
-          <div className="w-full flex flex-col items-center">
-            <h2 className="text-2xl font-semibold text-white mb-4">Sign In</h2>
-            <p className="text-gray-300 text-center mb-6">
-              Sign In to access the live streaming platform. You can use phantom, solflare, or other solana wallets.
-            </p>
-          </div>
-
-          <button
-            onClick={handleLogin}
-            className="w-[80%] bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-3"
-          >
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M17.778 8.222c-4.296-4.296-11.26-4.296-15.556 0A1 1 0 01.808 6.808c5.076-5.076 13.308-5.076 18.384 0a1 1 0 01-1.414 1.414zM14.95 11.05c-3.124-3.124-8.19-3.124-11.314 0a1 1 0 01-1.414-1.414c4.01-4.01 10.51-4.01 14.52 0a1 1 0 01-1.414 1.414zM12.12 13.88c-1.171-1.171-3.073-1.171-4.244 0a1 1 0 01-1.415-1.415c2.051-2.051 5.378-2.051 7.429 0a1 1 0 01-1.415 1.415zM9 16a1 1 0 112 0 1 1 0 01-2 0z" clipRule="evenodd" />
-            </svg>
-            <span>Sign In</span>
-          </button>
-
-          <div className="mt-6 text-center w-full">
-            <p className="text-gray-300 text-sm">
-              All solana wallets are supported
-            </p>
-          </div>
+        {/* Benefits */}
+        <div className="space-y-4 mb-10">
+          {[
+            {
+              icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
+              text: 'Chat with other viewers',
+              color: 'sf-accent-primary'
+            },
+            {
+              icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+              text: 'Place predictions & win Stakes',
+              color: 'sf-accent-secondary'
+            },
+            {
+              icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+              text: 'Vote to save your favorites',
+              color: 'pink-400'
+            },
+            {
+              icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+              text: 'Earn Clout & cash out winnings',
+              color: 'sf-status-success'
+            }
+          ].map((benefit, i) => (
+            <div key={i} className="flex items-center gap-4 text-sf-text-secondary group">
+              <div className={`w-10 h-10 bg-${benefit.color}/10 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-${benefit.color}/20 transition-colors`}>
+                <svg className={`w-5 h-5 text-${benefit.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={benefit.icon} />
+                </svg>
+              </div>
+              <span className="text-sm group-hover:text-white transition-colors">{benefit.text}</span>
+            </div>
+          ))}
         </div>
+
+        {/* Sign In Button */}
+        <button
+          onClick={handleLogin}
+          className="w-full btn-primary py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-3 mb-6"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+          </svg>
+          Sign In
+        </button>
+
+        <p className="text-sf-text-muted text-sm text-center">
+          Sign in with Email or Google
+        </p>
       </div>
     </div>
   );
