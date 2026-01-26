@@ -30,7 +30,7 @@ export default function RootLayout({
         <meta property="og:url" content="https://starfactor.tv/" />
         <meta property="og:title" content="Star Factor - Africa's First Interactive Reality TV" />
         <meta property="og:description" content="Africa's first Interactive Reality TV platform. Watch, Predict, Earn" />
-        <meta property="og:image" content="https://starfactor.tv/og-image.png" />
+        <meta property="og:image" content="https://starfactor.tv/starfactor.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="1200" />
         <meta property="og:site_name" content="Star Factor" />
@@ -40,7 +40,7 @@ export default function RootLayout({
         <meta name="twitter:url" content="https://starfactor.tv/" />
         <meta name="twitter:title" content="Star Factor - Africa's First Interactive Reality TV" />
         <meta name="twitter:description" content="Africa's first Interactive Reality TV platform. Watch, Predict, Earn" />
-        <meta name="twitter:image" content="https://starfactor.tv/og-image.png" />
+        <meta name="twitter:image" content="https://starfactor.tv/starfactor.png" />
         <meta name="twitter:site" content="@starfactortv" />
         <meta name="twitter:creator" content="@starfactortv" />
 
@@ -48,7 +48,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#0a0a0f" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/og-image.png" />
+        <link rel="apple-touch-icon" href="/starfactor.png" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
