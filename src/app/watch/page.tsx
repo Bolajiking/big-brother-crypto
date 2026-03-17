@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import Link from 'next/link';
+import Image from 'next/image';
 import LivepeerPlayer from '@/components/LivepeerPlayer';
 import MultiCamGrid from '@/components/MultiCamGrid';
 import Chat from '@/components/Chat';
@@ -42,10 +43,10 @@ const LoginPromptModal: React.FC<{
       />
 
       {/* Modal */}
-      <div className="relative glass-card p-8 max-w-md w-full mx-4 shadow-sf-xl animate-scale-in">
+      <div className="relative glass-card border-2 border-sf-glass-border rounded-3xl p-8 max-w-md w-full mx-4 shadow-sf-xl animate-scale-in">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-sf-bg-tertiary hover:bg-sf-bg-hover flex items-center justify-center text-sf-text-tertiary hover:text-white transition-all"
+          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-sf-bg-tertiary hover:bg-sf-bg-hover flex items-center justify-center text-sf-text-tertiary hover:text-white transition-all"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -59,7 +60,7 @@ const LoginPromptModal: React.FC<{
             </svg>
           </div>
 
-          <h3 className="text-2xl font-bold text-white mb-3">Sign In Required</h3>
+          <h3 className="text-2xl font-black uppercase text-white mb-3">Sign In Required</h3>
           <p className="text-sf-text-secondary mb-8">
             Please sign in to {action}. Create a free account to unlock all features.
           </p>
@@ -67,13 +68,13 @@ const LoginPromptModal: React.FC<{
           <div className="space-y-3">
             <button
               onClick={onLogin}
-              className="w-full btn-primary py-4 rounded-xl font-semibold text-lg"
+              className="w-full btn-primary py-4 rounded-full font-bold uppercase tracking-wider text-lg"
             >
               Sign In
             </button>
             <button
               onClick={onClose}
-              className="w-full btn-secondary py-3 rounded-xl font-medium"
+              className="w-full btn-secondary py-3 rounded-full font-bold uppercase tracking-wider"
             >
               Continue Watching
             </button>
@@ -251,7 +252,7 @@ const WatchPage: React.FC = () => {
               <div className="w-8 h-8 border-2 border-sf-accent-primary border-t-transparent rounded-full animate-spin" />
             </div>
           </div>
-          <p className="text-sf-text-secondary font-medium">Loading Star Factor...</p>
+          <p className="text-sf-text-secondary font-bold uppercase tracking-wider">Loading Star Factor...</p>
         </div>
       </div>
     );
@@ -293,14 +294,12 @@ const WatchPage: React.FC = () => {
       />
 
       {/* Header */}
-      <header className="bg-sf-bg-secondary/80 backdrop-blur-glass border-b border-sf-glass-border px-6 py-3 sticky top-0 z-40" suppressHydrationWarning>
+      <header className="bg-sf-bg-secondary/80 backdrop-blur-glass border-b-2 border-sf-glass-border px-6 py-3 sticky top-0 z-40" suppressHydrationWarning>
         <div className="flex items-center justify-between w-full">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 bg-gradient-primary rounded-xl flex items-center justify-center font-bold text-sm shadow-sf-glow-button group-hover:shadow-sf-glow-button-hover transition-all">
-              SF
-            </div>
-            <span className="text-xl font-bold gradient-text">
+            <Image src="/starfff.png" alt="Star Factor" width={32} height={32} className="w-8 h-8 rounded-full" />
+            <span className="text-xl font-black uppercase tracking-tight text-white">
               Star Factor
             </span>
           </Link>
@@ -308,18 +307,17 @@ const WatchPage: React.FC = () => {
           {/* Navigation Buttons - Center */}
           <nav className="flex items-center gap-2">
             {[
-              { label: 'INFO', icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', color: 'sf-accent-primary', active: false },
               { label: 'WATCH', icon: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z', color: 'sf-status-success', active: true },
               { label: 'PLAY', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', color: 'sf-accent-secondary', onClick: () => requireLogin('place predictions') },
-              { label: 'MERCH', icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z', color: 'sf-status-warning', active: false },
+              { label: 'PREDICT', icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6', color: 'sf-accent-primary', onClick: () => requireLogin('access predictions') },
             ].map((item) => (
               <button
                 key={item.label}
                 onClick={item.onClick}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 text-xs font-bold uppercase tracking-wider transition-all ${
                   item.active
-                    ? `bg-${item.color}/20 text-${item.color} ring-1 ring-${item.color}/30`
-                    : 'text-sf-text-tertiary hover:text-white hover:bg-sf-glass-bg'
+                    ? `bg-${item.color}/20 text-${item.color} border-${item.color}/30`
+                    : 'text-sf-text-tertiary hover:text-white hover:bg-sf-glass-bg border-sf-glass-border'
                 }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -346,7 +344,7 @@ const WatchPage: React.FC = () => {
                   <button
                     onClick={toggleProfile}
                     onMouseEnter={() => setIsProfileOpen(true)}
-                    className="w-10 h-10 rounded-xl glass hover:bg-sf-glass-bg-hover flex items-center justify-center transition-all group"
+                    className="w-10 h-10 rounded-full glass hover:bg-sf-glass-bg-hover flex items-center justify-center transition-all group"
                   >
                     <svg className="w-5 h-5 text-sf-text-tertiary group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -357,7 +355,7 @@ const WatchPage: React.FC = () => {
                   {/* Dropdown Menu */}
                   {isProfileOpen && (
                     <div
-                      className="absolute right-0 mt-2 dropdown min-w-[220px] animate-scale-in"
+                      className="absolute right-0 mt-2 dropdown min-w-[220px] rounded-3xl border-2 border-sf-glass-border animate-scale-in"
                       onMouseEnter={() => setIsProfileOpen(true)}
                       onMouseLeave={() => setIsProfileOpen(false)}
                     >
@@ -410,7 +408,7 @@ const WatchPage: React.FC = () => {
               /* Login Button for unauthenticated users */
               <button
                 onClick={handleLogin}
-                className="btn-primary px-5 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2"
+                className="btn-primary px-5 py-2.5 rounded-full font-bold uppercase tracking-wider text-xs flex items-center gap-2"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
@@ -425,7 +423,7 @@ const WatchPage: React.FC = () => {
       {/* Error Display */}
       {error && (
         <div className="mx-6 mt-4">
-          <div className="glass-card p-4 border-sf-status-error/30 bg-sf-status-error/10">
+          <div className="glass-card border-2 rounded-3xl p-4 border-sf-status-error/30 bg-sf-status-error/10">
             <div className="flex items-center gap-3 text-sf-status-error">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -442,10 +440,10 @@ const WatchPage: React.FC = () => {
         <div className="w-80 bg-sf-bg-secondary border-r border-sf-glass-border overflow-hidden flex flex-col" suppressHydrationWarning>
           {/* Tab Header */}
           <div className="p-3 border-b border-sf-glass-border">
-            <div className="flex items-center bg-sf-bg-tertiary rounded-xl p-1">
+            <div className="flex items-center bg-sf-bg-tertiary rounded-full p-1">
               <button
                 onClick={() => setLeftPanelTab('predictions')}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
                   leftPanelTab === 'predictions'
                     ? 'bg-sf-accent-primary text-white shadow-sf-glow-button'
                     : 'text-sf-text-tertiary hover:text-white'
@@ -456,12 +454,12 @@ const WatchPage: React.FC = () => {
                 </svg>
                 Predictions
                 {markets.length > 0 && (
-                  <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded text-xs">{markets.filter(m => m.status === 'active').length}</span>
+                  <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-full text-xs">{markets.filter(m => m.status === 'active').length}</span>
                 )}
               </button>
               <button
                 onClick={() => setLeftPanelTab('polls')}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
                   leftPanelTab === 'polls'
                     ? 'bg-sf-accent-secondary text-white shadow-sf-glow-button'
                     : 'text-sf-text-tertiary hover:text-white'
@@ -507,12 +505,12 @@ const WatchPage: React.FC = () => {
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center gap-3">
                   <div className="live-dot" />
-                  <h2 className="text-xl font-bold text-white">{fullViewStream.name}</h2>
+                  <h2 className="text-xl font-black uppercase text-white">{fullViewStream.name}</h2>
                   <span className="badge badge-live">LIVE</span>
                 </div>
                 <button
                   onClick={handleCloseFullView}
-                  className="btn-secondary px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2"
+                  className="btn-secondary px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-2"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -522,7 +520,7 @@ const WatchPage: React.FC = () => {
               </div>
 
               {/* Full size video player */}
-              <div className="flex-1 bg-sf-bg-secondary rounded-2xl overflow-hidden border border-sf-glass-border shadow-sf-lg">
+              <div className="flex-1 bg-sf-bg-secondary rounded-3xl overflow-hidden border-2 border-sf-glass-border shadow-sf-lg">
                 <LivepeerPlayer
                   playbackId={fullViewStream.playbackId}
                   isMainPlayer={true}
@@ -535,19 +533,19 @@ const WatchPage: React.FC = () => {
             <div className="h-full p-4 overflow-y-auto hide-scrollbar">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-lg font-semibold text-white">Live Cameras</h2>
+                  <h2 className="text-lg font-black uppercase text-white">Live Cameras</h2>
                   <span className="badge badge-live flex items-center gap-1.5">
                     <span className="live-dot !w-2 !h-2" />
                     {cameras.length} Active
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button className="btn-ghost p-2 rounded-lg">
+                  <button className="btn-ghost p-2 rounded-full">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                     </svg>
                   </button>
-                  <button className="btn-ghost p-2 rounded-lg">
+                  <button className="btn-ghost p-2 rounded-full">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                     </svg>
@@ -568,7 +566,7 @@ const WatchPage: React.FC = () => {
         {/* Right Column - Chat */}
         <div className="w-80 bg-sf-bg-secondary border-l border-sf-glass-border overflow-hidden flex flex-col" suppressHydrationWarning>
           <div className="p-4 border-b border-sf-glass-border">
-            <h2 className="text-sm font-semibold text-sf-text-secondary uppercase tracking-wider flex items-center gap-2">
+            <h2 className="text-xs font-bold text-sf-text-secondary uppercase tracking-[0.15em] flex items-center gap-2">
               <svg className="w-4 h-4 text-sf-accent-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>

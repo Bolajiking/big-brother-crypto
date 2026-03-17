@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 // FAQ Data
 const faqData = [
@@ -10,7 +11,7 @@ const faqData = [
     questions: [
       {
         q: 'What is Star Factor?',
-        a: 'Star Factor is Africa\'s first live interactive reality game show. It\'s a 24/7 live-streamed competition where contestants live together in a house for 60 days, competing for a $30,000 grand prize. What makes us unique is the deep viewer interaction through prediction markets and voting — your engagement directly shapes the outcome of the show.'
+        a: 'Star Factor is Africa\'s first live interactive reality game show. It\'s a 24/7 live-streamed competition where contestants live together in a house for 60 days, competing for a $30,000 grand prize. Your engagement directly shapes the outcome of the show through prediction markets and voting.'
       },
       {
         q: 'When does Season 1 start?',
@@ -18,7 +19,7 @@ const faqData = [
       },
       {
         q: 'Is the platform easy to use?',
-        a: 'Absolutely! We\'ve designed the platform to be as simple as using any regular app. You can watch, vote, and participate using your local currency. Everything works seamlessly with instant payouts and transparent transactions.'
+        a: 'Absolutely. We\'ve designed Star Factor to feel as simple as any regular app. Watch, vote, and participate using your local currency. Instant payouts, transparent transactions, zero friction.'
       },
       {
         q: 'Is this legal?',
@@ -31,27 +32,19 @@ const faqData = [
     questions: [
       {
         q: 'How do I watch the show?',
-        a: 'Simply create a free account on our platform. You\'ll get access to 8 live camera feeds streaming 24/7. You can watch on any device - phone, tablet, laptop, or smart TV through our web app.'
+        a: 'Create a free account and you\'ll get instant access to 8 live camera feeds streaming 24/7. Watch on any device — phone, tablet, laptop, or smart TV through our web app.'
       },
       {
-        q: 'What is Clout and how do I earn it?',
-        a: 'Clout is our free currency that you earn just by engaging with the platform. You get 500 Clout when you sign up, 50 Clout daily for logging in, 10 Clout per hour of watching, and 1 Clout per chat message (max 50/day). Use Clout to vote and participate in polls.'
+        q: 'What are Clout and Stakes?',
+        a: 'Clout is our free currency — earn it by watching, chatting, and logging in daily. Stakes is our premium currency — buy it with Naira to unlock bigger bets and premium features. Both currencies let you interact with the show.'
       },
       {
-        q: 'What are Stakes and why would I buy them?',
-        a: 'Stakes are our premium currency that you purchase with your local currency. Use Stakes to place predictions on show outcomes (who gets evicted, who wins challenges, etc.). If your prediction is correct, you win more Stakes that can be cashed out to your bank account. Stakes also give you more powerful votes.'
+        q: 'How do prediction markets work?',
+        a: 'Prediction markets let you bet on show outcomes — who wins challenges, who gets evicted, who starts drama. Create your own markets or bet on existing ones. Win Stakes when your predictions are correct.'
       },
       {
-        q: 'How do predictions work?',
-        a: 'Every week, we open prediction markets on various outcomes - who will be evicted, who will win Head of House, will certain events happen, etc. You place Stakes on the outcome you believe will happen. The odds determine your potential payout. If you\'re right, you win!'
-      },
-      {
-        q: 'How does voting work?',
-        a: 'When contestants are nominated for eviction, you can vote to save your favorites using Clout or Stakes. Higher-tier members get vote multipliers (up to 3x for Platinum tier). The contestant with the fewest votes gets evicted.'
-      },
-      {
-        q: 'Can I cash out my winnings?',
-        a: 'Yes! Any Stakes you win from correct predictions can be withdrawn directly to your bank account. Withdrawals are processed within 24 hours. Minimum withdrawal is 100 Stakes.'
+        q: 'Can I really earn money?',
+        a: 'Yes. Win prediction markets, accumulate Stakes, and cash out to your bank account via Paystack. Top predictors on our leaderboard also earn weekly prizes.'
       },
     ]
   },
@@ -59,684 +52,827 @@ const faqData = [
     category: 'For Contestants',
     questions: [
       {
-        q: 'How do I apply to be a contestant?',
-        a: 'Applications will open 3 months before Season 1. Join our waitlist and select "Contestant" to be notified when applications open. You\'ll need to submit a video audition, complete an application form, and go through our selection process.'
+        q: 'How do I apply?',
+        a: 'Click "Apply Now" and complete our multi-step application. You\'ll need to provide personal details, answer personality questions, and submit a 1-2 minute video showing us why you\'d be an unforgettable housemate.'
       },
       {
-        q: 'What are the requirements to apply?',
-        a: 'You must be a Nigerian citizen between 21-40 years old, available for 60 consecutive days, have no criminal record, pass a medical and psychological evaluation, and be ready to live in the house with no contact with the outside world.'
+        q: 'What are the requirements?',
+        a: 'You must be at least 21 years old, a Nigerian citizen or resident, available for 60 days of filming, and comfortable being filmed 24/7. No serious health conditions that would prevent participation.'
       },
       {
-        q: 'Do contestants get paid?',
-        a: 'All contestants receive a weekly stipend during their time in the house. The winner takes home the $30,000 grand prize. Additionally, popular contestants often receive brand deals and sponsorships after the show.'
-      },
-      {
-        q: 'What happens in the house?',
-        a: 'Contestants live together, compete in weekly challenges, form alliances, and try to avoid eviction. Every week, contestants nominate each other for eviction, and viewers vote to save their favorites. The last person standing wins the grand prize.'
+        q: 'What\'s the prize?',
+        a: 'The Season 1 grand prize is $30,000, plus brand partnership opportunities and the exposure of being on Africa\'s most-watched interactive show.'
       },
     ]
   },
   {
-    category: 'Payments & Security',
+    category: 'About Star Factor',
     questions: [
       {
-        q: 'How do I add funds to my account?',
-        a: 'You can add funds using any debit card, bank transfer, or mobile money through our secure payment partners. We offer packages starting from as low as $5 with bonus Stakes for larger purchases.'
+        q: 'Who built this?',
+        a: 'Star Factor is a Chainfren product. Chainfren unlocks digital wealth for creators and brands by equipping them with tools, strategy, and platforms to thrive in the global onchain economy.'
+      },
+      {
+        q: 'What makes Star Factor different from Big Brother?',
+        a: 'Star Factor puts real power in the viewers\' hands through prediction markets, skill-based betting, and transparent onchain voting. You don\'t just watch — you play, predict, and earn.'
       },
       {
         q: 'Is my money safe?',
-        a: 'Absolutely. All payments are processed through trusted and secure payment providers. Your funds are held securely and you can withdraw at any time. All transactions are transparent and verifiable.'
-      },
-      {
-        q: 'What are the membership tiers?',
-        a: 'We have 5 tiers: Free (1x vote power), Bronze (1.5x), Silver (2x), Gold (2.5x), and Platinum (3x). Higher tiers give you more voting power. You upgrade by spending Stakes on the platform - the more you engage, the higher your tier.'
-      },
-      {
-        q: 'Are there any hidden fees?',
-        a: 'No hidden fees. You see exactly what you\'re paying and what you\'re getting. A small processing fee applies for deposits (typically 1-2%), and there\'s no fee for withdrawals.'
-      },
-    ]
-  },
-  {
-    category: 'Technical',
-    questions: [
-      {
-        q: 'What devices can I use to watch?',
-        a: 'Star Factor works on any device with a modern web browser - smartphones, tablets, laptops, and desktop computers. We recommend Chrome, Safari, or Firefox for the best experience. A dedicated mobile app is coming soon.'
-      },
-      {
-        q: 'How much data does streaming use?',
-        a: 'Our adaptive streaming technology adjusts quality based on your connection. On average, expect about 500MB-1GB per hour of HD viewing. You can also choose lower quality settings to save data.'
-      },
-      {
-        q: 'Can I watch offline or download clips?',
-        a: 'The live streams require an internet connection. However, we\'ll have a highlights section where you can watch key moments. Download features may be added in future updates.'
+        a: 'All payments are processed through Paystack, Nigeria\'s most trusted payment provider. Your funds are protected and withdrawals are instant to your bank account.'
       },
     ]
   },
 ];
 
-const LandingPage: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [userType, setUserType] = useState<'viewer' | 'contestant' | 'investor' | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [openFaq, setOpenFaq] = useState<string | null>(null);
-  const [activeCategory, setActiveCategory] = useState('General');
-  const [scrolled, setScrolled] = useState(false);
+// Scroll-triggered animation hook
+function useInView(options = {}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isInView, setIsInView] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.1, rootMargin: '-60px', ...options }
+    );
+
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
   }, []);
 
-  const handleWaitlistSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !userType) return;
+  return { ref, isInView };
+}
 
-    setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setSubmitted(true);
-    setIsSubmitting(false);
+// FadeUp component for scroll animations
+const FadeUp: React.FC<{ children: React.ReactNode; delay?: number; className?: string }> = ({ children, delay = 0, className = '' }) => {
+  const { ref, isInView } = useInView();
+  return (
+    <div
+      ref={ref}
+      className={className}
+      style={{
+        opacity: isInView ? 1 : 0,
+        transform: isInView ? 'translateY(0)' : 'translateY(40px)',
+        transition: `all 0.7s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s`,
+      }}
+    >
+      {children}
+    </div>
+  );
+};
+
+// Token distribution data
+const tokenomics = [
+  { label: 'Community & Rewards', pct: 35, color: '#5ACDFF', bg: 'bg-[#5ACDFF]' },
+  { label: 'Ecosystem Growth', pct: 25, color: '#CBF0B8', bg: 'bg-[#CBF0B8]' },
+  { label: 'Team & Advisors', pct: 20, color: '#8DAAFF', bg: 'bg-[#8DAAFF]' },
+  { label: 'Investors', pct: 15, color: '#E6D9FF', bg: 'bg-[#E6D9FF]' },
+  { label: 'Reserve', pct: 5, color: '#A6D234', bg: 'bg-[#A6D234]' },
+];
+
+const LandingPage: React.FC = () => {
+  const [openFaq, setOpenFaq] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState('General');
+  const [email, setEmail] = useState('');
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const toggleFaq = (id: string) => {
+    setOpenFaq(openFaq === id ? null : id);
   };
 
-  return (
-    <div className="min-h-screen bg-sf-bg-primary text-white overflow-x-hidden">
-      {/* Noise Overlay */}
-      <div className="noise-overlay" />
+  if (!isMounted) return null;
 
-      {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? 'bg-sf-bg-primary/80 backdrop-blur-glass border-b border-sf-glass-border' : 'bg-transparent'
-      }`}>
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center font-bold text-lg shadow-sf-glow-button">
-              SF
-            </div>
-            <span className="text-xl font-bold gradient-text">
-              Star Factor
-            </span>
-          </div>
-          <div className="hidden md:flex items-center gap-8">
-            <a href="#how-it-works" className="text-sf-text-tertiary hover:text-white transition-colors text-sm font-medium">How It Works</a>
-            <Link href="/apply" className="text-sf-text-tertiary hover:text-white transition-colors text-sm font-medium">Apply</Link>
-            <a href="#investors" className="text-sf-text-tertiary hover:text-white transition-colors text-sm font-medium">Partners</a>
-            <a href="#faq" className="text-sf-text-tertiary hover:text-white transition-colors text-sm font-medium">FAQ</a>
-            <Link
-              href="/watch"
-              className="bg-gradient-primary hover:shadow-sf-glow-button-hover px-5 py-2.5 rounded-xl font-medium text-sm transition-all hover:-translate-y-0.5"
-            >
-              Launch App
+  const currentFaq = faqData.find(c => c.category === activeCategory);
+
+  return (
+    <div className="min-h-screen bg-sf-bg-primary overflow-hidden">
+      {/* ============ NAVIGATION ============ */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-sf-bg-primary/90 backdrop-blur-xl border-b-2 border-sf-glass-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 transition-transform group-hover:scale-110">
+                <Image src="/starfff.png" alt="Star Factor" width={40} height={40} className="w-full h-full object-cover" />
+              </div>
+              <span className="text-lg font-black text-white uppercase tracking-tight">
+                Star Factor
+              </span>
             </Link>
+
+            {/* Desktop Nav Links */}
+            <div className="hidden md:flex items-center gap-1">
+              {[
+                { label: 'WATCH', href: '/watch' },
+                { label: 'PREDICT', href: '/watch' },
+                { label: 'APPLY', href: '/apply' },
+              ].map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="px-4 py-2 text-sm font-bold text-sf-text-tertiary hover:text-white uppercase tracking-wider transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="flex items-center gap-3">
+              <Link
+                href="/login"
+                className="hidden sm:inline-flex text-sm font-bold text-sf-text-secondary hover:text-white uppercase tracking-wider transition-colors px-4 py-2"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/watch"
+                className="btn-primary px-6 py-2.5 text-sm"
+              >
+                Watch Live
+              </Link>
+            </div>
           </div>
-          {/* Mobile Menu Button */}
-          <button className="md:hidden p-2 glass rounded-lg">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-            </svg>
-          </button>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
-        {/* Animated Background Orbs */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 -left-32 w-[500px] h-[500px] bg-sf-accent-primary/20 rounded-full blur-[120px] animate-float" />
-          <div className="absolute bottom-1/4 -right-32 w-[500px] h-[500px] bg-sf-accent-secondary/20 rounded-full blur-[120px] animate-float" style={{ animationDelay: '-3s' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-sf-accent-primary/5 via-transparent to-transparent rounded-full" />
+      {/* ============ HERO SECTION ============ */}
+      <section className="relative pt-32 pb-20 sm:pt-40 sm:pb-28 overflow-hidden">
+        {/* Background Effects — full spectrum orbs */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-10 left-1/4 w-[700px] h-[700px] bg-[#4357F6]/10 rounded-full blur-[160px]" />
+          <div className="absolute top-40 right-1/5 w-[400px] h-[400px] bg-[#5ACDFF]/8 rounded-full blur-[120px]" />
+          <div className="absolute bottom-0 left-1/3 w-[500px] h-[500px] bg-[#CBF0B8]/5 rounded-full blur-[140px]" />
+          <div className="absolute bottom-20 right-10 w-[300px] h-[300px] bg-[#E6D9FF]/6 rounded-full blur-[100px]" />
+          <div className="absolute inset-0 dot-grid" />
         </div>
 
-        {/* Grid Pattern */}
-        <div className="absolute inset-0 grid-pattern opacity-30" />
-
-        <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
-          {/* Live Badge */}
-          <div className="inline-flex items-center gap-2 glass rounded-full px-5 py-2 mb-8 animate-fade-in-down">
-            <span className="live-dot" />
-            <span className="text-sf-status-live text-sm font-medium">Coming Soon - Season 1</span>
-          </div>
-
-          <h1 className="text-5xl md:text-7xl lg:text-hero font-bold mb-8 leading-[1.1] tracking-tight animate-fade-in-up">
-            Africa&apos;s First
-            <br />
-            <span className="gradient-text">
-              Interactive Reality Show
-            </span>
-          </h1>
-
-          <p className="text-lg md:text-xl text-sf-text-secondary max-w-2xl mx-auto mb-12 leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-            24/7 live streaming. Predict outcomes. Vote for your favorites.
-            Win real money. Your engagement shapes the show.
-          </p>
-
-          {/* Prize Pool - Glass Card */}
-          <div className="glass-card inline-flex items-center gap-6 px-10 py-6 mb-12 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-            <div className="text-left">
-              <span className="text-sf-text-tertiary text-sm font-medium uppercase tracking-wider">Season 1 Grand Prize</span>
-              <div className="text-4xl md:text-5xl font-bold gradient-text mt-1">$30,000</div>
-            </div>
-            <div className="w-px h-16 bg-sf-glass-border" />
-            <div className="text-left">
-              <span className="text-sf-text-tertiary text-sm font-medium uppercase tracking-wider">Duration</span>
-              <div className="text-4xl md:text-5xl font-bold text-white mt-1">60 Days</div>
-            </div>
-          </div>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-            <a
-              href="#waitlist"
-              className="w-full sm:w-auto btn-primary px-10 py-4 rounded-2xl font-semibold text-lg shadow-sf-glow-button hover:shadow-sf-glow-button-hover hover:-translate-y-1 transition-all"
-            >
-              Join the Waitlist
-            </a>
-            <Link
-              href="/watch"
-              className="w-full sm:w-auto btn-secondary px-10 py-4 rounded-2xl font-semibold text-lg"
-            >
-              Preview App
-            </Link>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-            {[
-              { value: '8', label: 'Live Cameras', color: 'text-sf-accent-primary' },
-              { value: '24/7', label: 'Live Streaming', color: 'text-sf-accent-secondary' },
-              { value: '12', label: 'Contestants', color: 'text-pink-400' },
-              { value: '60', label: 'Days of Drama', color: 'text-sf-status-success' },
-            ].map((stat, i) => (
-              <div key={i} className="glass-card glass-card-hover p-6 group cursor-default transition-all">
-                <div className={`text-3xl md:text-4xl font-bold ${stat.color} mb-1 group-hover:scale-110 transition-transform`}>
-                  {stat.value}
-                </div>
-                <div className="text-sf-text-tertiary text-sm">{stat.label}</div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-4xl mx-auto">
+            {/* Badge */}
+            <FadeUp>
+              <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full border-2 border-[#5ACDFF]/30 bg-[#5ACDFF]/8 mb-8">
+                <span className="w-2 h-2 bg-[#5ACDFF] rounded-full animate-pulse" />
+                <span className="text-[#5ACDFF] text-xs font-bold uppercase tracking-[0.15em]">Season 1 Coming Q2 2026</span>
               </div>
-            ))}
-          </div>
-        </div>
+            </FadeUp>
 
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce-slow">
-          <div className="w-6 h-10 border-2 border-sf-text-muted rounded-full p-1">
-            <div className="w-1.5 h-2.5 bg-sf-text-tertiary rounded-full mx-auto animate-pulse" />
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section id="how-it-works" className="py-32 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-sf-bg-secondary/50 to-transparent" />
-
-        <div className="relative max-w-7xl mx-auto px-6">
-          <div className="text-center mb-20">
-            <span className="badge badge-live mb-4 inline-block">How It Works</span>
-            <h2 className="text-4xl md:text-display font-bold mb-6">
-              Watch. Predict. <span className="gradient-text">Win.</span>
-            </h2>
-            <p className="text-sf-text-secondary text-lg max-w-2xl mx-auto">
-              Experience reality TV like never before. Your engagement directly impacts the show.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6 mb-20">
-            {[
-              {
-                icon: (
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                ),
-                title: 'Watch 24/7',
-                description: '8 live cameras streaming around the clock. Never miss a moment of the action, drama, and unexpected twists.',
-                gradient: 'from-sf-accent-primary/20 to-sf-accent-primary/5',
-                borderColor: 'hover:border-sf-accent-primary/50',
-                iconBg: 'bg-sf-accent-primary/10',
-                iconColor: 'text-sf-accent-primary'
-              },
-              {
-                icon: (
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                ),
-                title: 'Predict & Win',
-                description: 'Place predictions on weekly evictions, challenges, and showmances. Get it right and win real Stakes you can cash out.',
-                gradient: 'from-sf-accent-secondary/20 to-sf-accent-secondary/5',
-                borderColor: 'hover:border-sf-accent-secondary/50',
-                iconBg: 'bg-sf-accent-secondary/10',
-                iconColor: 'text-sf-accent-secondary'
-              },
-              {
-                icon: (
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                ),
-                title: 'Vote to Save',
-                description: 'Your vote decides who stays and who goes. Use Clout or Stakes to vote with multipliers based on your tier.',
-                gradient: 'from-pink-500/20 to-pink-500/5',
-                borderColor: 'hover:border-pink-500/50',
-                iconBg: 'bg-pink-500/10',
-                iconColor: 'text-pink-400'
-              },
-            ].map((card, i) => (
-              <div
-                key={i}
-                className={`relative group p-8 rounded-2xl border border-sf-glass-border ${card.borderColor} transition-all duration-300 hover:-translate-y-2 overflow-hidden`}
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-100 transition-opacity`} />
-                <div className="relative">
-                  <div className={`w-16 h-16 ${card.iconBg} rounded-2xl flex items-center justify-center mb-6 ${card.iconColor} group-hover:scale-110 transition-transform`}>
-                    {card.icon}
-                  </div>
-                  <h3 className="text-xl font-bold mb-3">{card.title}</h3>
-                  <p className="text-sf-text-secondary leading-relaxed">{card.description}</p>
-                </div>
+            {/* Logo */}
+            <FadeUp delay={0.08}>
+              <div className="w-28 h-28 sm:w-36 sm:h-36 mx-auto mb-8 rounded-full overflow-hidden shadow-sf-glow-lg ring-2 ring-sf-accent-primary/30">
+                <Image src="/starfff.png" alt="Star Factor" width={144} height={144} className="w-full h-full object-cover" priority />
               </div>
-            ))}
-          </div>
+            </FadeUp>
 
-          {/* Two Currency System */}
-          <div className="gradient-border p-px rounded-3xl overflow-hidden">
-            <div className="bg-sf-bg-secondary rounded-3xl p-8 md:p-12">
-              <div className="grid md:grid-cols-2 gap-12 items-center">
-                <div>
-                  <span className="badge badge-success mb-4 inline-block">Dual Currency</span>
-                  <h3 className="text-3xl md:text-title font-bold mb-6">Two Ways to Play</h3>
-                  <p className="text-sf-text-secondary mb-8 leading-relaxed">
-                    Our unique dual-currency system lets you engage for free or go premium for bigger rewards.
-                  </p>
-                  <div className="space-y-6">
-                    <div className="flex items-start gap-4 group">
-                      <div className="w-14 h-14 bg-sf-accent-primary/10 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-sf-accent-primary/20 transition-colors">
-                        <span className="text-sf-accent-primary font-bold text-xl">C</span>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-sf-accent-primary mb-1">Clout (Free)</h4>
-                        <p className="text-sf-text-tertiary text-sm">Earn by watching, chatting, and logging in daily. Use to vote and participate.</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-4 group">
-                      <div className="w-14 h-14 bg-sf-status-success/10 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-sf-status-success/20 transition-colors">
-                        <span className="text-sf-status-success font-bold text-xl">S</span>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-sf-status-success mb-1">Stakes (Premium)</h4>
-                        <p className="text-sf-text-tertiary text-sm">Purchase with your local currency. Use for predictions and premium votes. Cash out your winnings.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            {/* Headline */}
+            <FadeUp delay={0.16}>
+              <h1 className="text-hero text-white mb-6 leading-[1.05]">
+                WATCH. PREDICT.{' '}
+                <span className="gradient-text-cyan">EARN.</span>
+              </h1>
+            </FadeUp>
 
-                {/* Wallet Preview */}
-                <div className="relative">
-                  <div className="glass-card p-6 shadow-sf-xl">
-                    <div className="flex items-center justify-between mb-6">
-                      <span className="text-sf-text-tertiary text-sm font-medium">Your Wallet</span>
-                      <span className="badge badge-warning">GOLD TIER</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                      <div className="bg-sf-bg-tertiary rounded-xl p-4">
-                        <div className="text-sf-text-muted text-xs mb-1 uppercase tracking-wider">Clout</div>
-                        <div className="text-2xl font-bold text-sf-accent-primary">2,450</div>
-                      </div>
-                      <div className="bg-sf-bg-tertiary rounded-xl p-4">
-                        <div className="text-sf-text-muted text-xs mb-1 uppercase tracking-wider">Stakes</div>
-                        <div className="text-2xl font-bold text-sf-status-success">850</div>
-                      </div>
-                    </div>
-                    <button className="w-full btn-primary py-3 rounded-xl font-medium">
-                      Add Funds
-                    </button>
-                  </div>
-                  {/* Decorative glow */}
-                  <div className="absolute -inset-4 bg-gradient-primary opacity-10 blur-2xl -z-10 rounded-3xl" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* For Contestants Section */}
-      <section id="contestants" className="py-32 relative">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
-            <div>
-              <span className="badge inline-flex items-center gap-2 bg-pink-500/10 text-pink-400 mb-6">
-                <span className="live-dot !bg-pink-400" />
-                Applications Open
-              </span>
-              <h2 className="text-4xl md:text-display font-bold mb-6 leading-tight">
-                Ready to Be
-                <br />
-                <span className="text-pink-400">Africa&apos;s Next Star?</span>
-              </h2>
-              <p className="text-sf-text-secondary text-lg mb-10 leading-relaxed">
-                We&apos;re looking for bold, entertaining, and authentic personalities to compete for the grand prize.
-                Do you have what it takes to survive 60 days in the house?
+            {/* Subheadline */}
+            <FadeUp delay={0.24}>
+              <p className="text-lg sm:text-xl text-sf-text-secondary max-w-2xl mx-auto mb-10 leading-relaxed">
+                Africa&apos;s first interactive reality TV platform. Cameras streaming 24/7.
+                Prediction markets where your knowledge pays. Real money. Real drama. Real rewards.
               </p>
+            </FadeUp>
 
-              <div className="space-y-4 mb-10">
-                {[
-                  'Nigerian citizen, 21-40 years old',
-                  'Available for 60 consecutive days',
-                  'Big personality, camera-ready',
-                  'Ready to entertain millions'
-                ].map((req, i) => (
-                  <div key={i} className="flex items-center gap-3 group">
-                    <div className="w-6 h-6 bg-sf-status-success/10 rounded-full flex items-center justify-center group-hover:bg-sf-status-success/20 transition-colors">
-                      <svg className="w-3.5 h-3.5 text-sf-status-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span className="text-sf-text-secondary group-hover:text-white transition-colors">{req}</span>
-                  </div>
-                ))}
-              </div>
-
-              <Link
-                href="/apply"
-                className="inline-flex items-center gap-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 px-8 py-4 rounded-2xl font-semibold text-lg transition-all hover:-translate-y-1 shadow-lg shadow-pink-500/25"
-              >
-                Apply Now
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
-            </div>
-
-            {/* Contestant Grid Preview */}
-            <div className="grid grid-cols-3 gap-3">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div
-                  key={i}
-                  className={`aspect-square rounded-2xl bg-gradient-to-br ${
-                    i === 1 ? 'from-pink-500/20 to-purple-500/10 col-span-2 row-span-2' :
-                    i === 2 ? 'from-sf-accent-primary/20 to-cyan-500/10' :
-                    i === 3 ? 'from-sf-status-success/20 to-emerald-500/10' :
-                    i === 4 ? 'from-sf-status-warning/20 to-orange-500/10' :
-                    i === 5 ? 'from-sf-status-error/20 to-pink-500/10' :
-                    'from-sf-accent-secondary/20 to-indigo-500/10'
-                  } border border-sf-glass-border hover:border-sf-glass-border-hover flex items-center justify-center transition-all hover:scale-105 cursor-pointer group`}
+            {/* CTA Buttons */}
+            <FadeUp delay={0.32}>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link
+                  href="/watch"
+                  className="btn-primary px-10 py-4 text-base shadow-sf-glow-button hover:shadow-sf-glow-button-hover"
                 >
-                  <span className="text-4xl opacity-30 group-hover:opacity-50 transition-opacity">?</span>
-                </div>
-              ))}
-            </div>
+                  Start Watching
+                </Link>
+                <Link
+                  href="/apply"
+                  className="btn-secondary px-10 py-4 text-base"
+                >
+                  Apply as Contestant
+                </Link>
+              </div>
+            </FadeUp>
           </div>
         </div>
       </section>
 
-      {/* For Investors Section */}
-      <section id="investors" className="py-32 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-sf-bg-secondary/50 to-transparent" />
-
-        <div className="relative max-w-7xl mx-auto px-6">
-          <div className="text-center mb-20">
-            <span className="badge badge-success mb-4 inline-block">Partnership Opportunities</span>
-            <h2 className="text-4xl md:text-display font-bold mb-6">
-              Partner With <span className="text-sf-status-success">Us</span>
-            </h2>
-            <p className="text-sf-text-secondary text-lg max-w-2xl mx-auto">
-              Join the future of entertainment in Africa. We&apos;re building the next generation of interactive media.
-            </p>
+      {/* ============ STATS BAR ============ */}
+      <section className="relative py-2 px-4 sm:px-6 lg:px-8">
+        <FadeUp>
+          <div className="max-w-5xl mx-auto rounded-3xl border-2 p-8 sm:p-12 relative overflow-hidden"
+            style={{ background: 'linear-gradient(135deg, #0C1D4D 0%, #112758 100%)', borderColor: 'rgba(141,170,255,0.15)' }}
+          >
+            {/* colorful corner accents */}
+            <div className="absolute top-0 left-0 w-32 h-32 bg-[#5ACDFF]/10 rounded-full blur-[60px]" />
+            <div className="absolute bottom-0 right-0 w-32 h-32 bg-[#CBF0B8]/10 rounded-full blur-[60px]" />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 relative">
+              {[
+                { value: '8', label: 'Live Cameras', color: 'text-[#5ACDFF]', border: 'border-[#5ACDFF]/20', bg: 'bg-[#5ACDFF]/8' },
+                { value: '$30K', label: 'Grand Prize', color: 'text-[#CBF0B8]', border: 'border-[#CBF0B8]/20', bg: 'bg-[#CBF0B8]/8' },
+                { value: '60', label: 'Days Live', color: 'text-[#E6D9FF]', border: 'border-[#E6D9FF]/20', bg: 'bg-[#E6D9FF]/8' },
+                { value: '24/7', label: 'Non-Stop', color: 'text-[#8DAAFF]', border: 'border-[#8DAAFF]/20', bg: 'bg-[#8DAAFF]/8' },
+              ].map((stat, i) => (
+                <div key={i} className={`text-center rounded-2xl border-2 ${stat.border} ${stat.bg} py-5 px-4`}>
+                  <div className={`text-3xl sm:text-4xl font-black ${stat.color}`}>{stat.value}</div>
+                  <div className="text-xs font-bold uppercase tracking-[0.15em] text-sf-text-tertiary mt-2">{stat.label}</div>
+                </div>
+              ))}
+            </div>
           </div>
+        </FadeUp>
+      </section>
 
-          {/* Entertainment & Creator Economy */}
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
+      {/* ============ HOW IT WORKS ============ */}
+      <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <FadeUp>
+            <div className="text-center mb-16">
+              <span className="overline mb-4 block">How It Works</span>
+              <h2 className="text-display text-white">
+                YOUR SHOW.{' '}
+                <span className="gradient-text">YOUR RULES.</span>
+              </h2>
+            </div>
+          </FadeUp>
+
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { value: '500M+', label: 'Target African Youth', color: 'text-sf-accent-primary' },
-              { value: '$2.1B', label: 'African Creator Economy (28.5% CAGR)', color: 'text-sf-accent-secondary' },
-              { value: '85%', label: 'Mobile-First Audience', color: 'text-sf-status-success' },
-            ].map((stat, i) => (
-              <div key={i} className="glass-card text-center p-8">
-                <div className={`text-4xl md:text-5xl font-bold ${stat.color} mb-2`}>{stat.value}</div>
-                <div className="text-sf-text-tertiary">{stat.label}</div>
-              </div>
+              {
+                step: '01',
+                title: 'WATCH LIVE',
+                desc: 'Tune into 8 camera feeds streaming 24/7. Follow your favorite contestants from the kitchen to the garden, the lounge to the bedroom.',
+                accentText: 'text-[#5ACDFF]',
+                accentBg: 'bg-[#5ACDFF]/12',
+                accentBorder: 'border-[#5ACDFF]/25',
+                stepBg: 'bg-[#5ACDFF]',
+                icon: (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                ),
+              },
+              {
+                step: '02',
+                title: 'PREDICT & BET',
+                desc: 'Create prediction markets or bet on existing ones. Who wins the next challenge? Who gets evicted? Put your knowledge to work.',
+                accentText: 'text-[#8DAAFF]',
+                accentBg: 'bg-[#8DAAFF]/12',
+                accentBorder: 'border-[#8DAAFF]/25',
+                stepBg: 'bg-[#8DAAFF]',
+                icon: (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                ),
+              },
+              {
+                step: '03',
+                title: 'EARN REWARDS',
+                desc: 'Win prediction markets and cash out to your bank account. Top predictors earn weekly prizes. Your engagement pays — literally.',
+                accentText: 'text-[#CBF0B8]',
+                accentBg: 'bg-[#CBF0B8]/12',
+                accentBorder: 'border-[#CBF0B8]/25',
+                stepBg: 'bg-[#CBF0B8]',
+                icon: (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ),
+              },
+            ].map((item, i) => (
+              <FadeUp key={i} delay={i * 0.08}>
+                <div className={`rounded-3xl border-2 ${item.accentBorder} ${item.accentBg} p-7 sm:p-8 h-full group hover:scale-[1.02] transition-all duration-300`}>
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className={`w-12 h-12 rounded-2xl bg-sf-bg-primary/50 border-2 ${item.accentBorder} flex items-center justify-center flex-shrink-0 group-hover:rotate-6 transition-transform`}>
+                      <span className={item.accentText}>{item.icon}</span>
+                    </div>
+                    <div className={`w-9 h-9 rounded-full ${item.stepBg} flex items-center justify-center flex-shrink-0`}>
+                      <span className="text-xs font-black text-sf-bg-primary">{item.step}</span>
+                    </div>
+                  </div>
+                  <h3 className={`text-lg font-black uppercase tracking-tight mb-3 ${item.accentText}`}>{item.title}</h3>
+                  <p className="text-sf-text-tertiary text-sm leading-relaxed">{item.desc}</p>
+                </div>
+              </FadeUp>
             ))}
           </div>
-
-          {/* Prediction & Betting Markets */}
-          <div className="mb-16">
-            <div className="text-center mb-6">
-              <span className="text-sf-text-muted text-sm uppercase tracking-wider">Prediction Markets Opportunity</span>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                { value: '$11.3B', label: 'Africa Gambling TAM by 2032', color: 'text-pink-400' },
-                { value: '27.5M', label: 'Users by 2029', color: 'text-cyan-400' },
-                { value: '12.5%', label: 'Annual Growth', color: 'text-emerald-400' },
-              ].map((stat, i) => (
-                <div key={i} className="glass-card text-center p-5">
-                  <div className={`text-2xl md:text-3xl font-bold ${stat.color} mb-1`}>{stat.value}</div>
-                  <div className="text-sf-text-muted text-xs">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Sponsors */}
-            <div className="relative group p-8 rounded-2xl border border-sf-accent-primary/20 hover:border-sf-accent-primary/40 transition-all overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-sf-accent-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative">
-                <h3 className="text-xl font-bold mb-4 text-sf-accent-primary">Brand Sponsors</h3>
-                <p className="text-sf-text-secondary mb-6">
-                  Reach millions of engaged viewers through native integrations, challenges, and product placements.
-                </p>
-                <ul className="space-y-3 text-sf-text-tertiary">
-                  <li className="flex items-center gap-2">
-                    <span className="text-sf-accent-primary">-</span> In-show brand challenges
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-sf-accent-primary">-</span> Sponsored prediction markets
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-sf-accent-primary">-</span> Exclusive viewer rewards
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Investors */}
-            <div className="relative group p-8 rounded-2xl border border-sf-status-success/20 hover:border-sf-status-success/40 transition-all overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-sf-status-success/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative">
-                <h3 className="text-xl font-bold mb-4 text-sf-status-success">Investors</h3>
-                <p className="text-sf-text-secondary mb-6">
-                  We&apos;re raising our seed round to scale production and expand across Africa.
-                </p>
-                <ul className="space-y-3 text-sf-text-tertiary">
-                  <li className="flex items-center gap-2">
-                    <span className="text-sf-status-success">-</span> Interactive entertainment pioneer
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-sf-status-success">-</span> Massive African youth market
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-sf-status-success">-</span> Proven entertainment format
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div className="text-center mt-12">
-            <a
-              href="mailto:partners@starfactor.ng"
-              className="inline-flex items-center gap-3 btn-secondary px-8 py-4 rounded-2xl font-semibold text-lg"
-            >
-              Get in Touch
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            </a>
-          </div>
         </div>
       </section>
 
-      {/* Waitlist Section */}
-      <section id="waitlist" className="py-32">
-        <div className="max-w-3xl mx-auto px-6">
-          <div className="gradient-border p-px rounded-3xl overflow-hidden">
-            <div className="bg-sf-bg-secondary rounded-3xl p-8 md:p-12">
-              <div className="text-center mb-10">
-                <h2 className="text-3xl md:text-title font-bold mb-4">
-                  Join the Waitlist
-                </h2>
-                <p className="text-sf-text-secondary">
-                  Be the first to know when Season 1 launches. Early supporters get exclusive perks.
-                </p>
-              </div>
+      {/* ============ FEATURES GRID ============ */}
+      <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <FadeUp>
+            <div className="text-center mb-16">
+              <span className="overline mb-4 block">Platform Features</span>
+              <h2 className="text-display text-white">
+                BUILT FOR{' '}
+                <span className="gradient-text-cyan">THE CULTURE.</span>
+              </h2>
+            </div>
+          </FadeUp>
 
-              {submitted ? (
-                <div className="text-center py-8">
-                  <div className="w-20 h-20 bg-sf-status-success/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <svg className="w-10 h-10 text-sf-status-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              {
+                title: '8 Live Cameras',
+                desc: 'Full coverage of the house. Kitchen, garden, lounge, pool, garage, bedroom, office, and entrance. Never miss a moment.',
+                bg: 'bg-[#5ACDFF]/12',
+                borderColor: 'border-[#5ACDFF]/25',
+                iconColor: 'text-[#5ACDFF]',
+                icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />,
+              },
+              {
+                title: 'Prediction Markets',
+                desc: 'Create and bet on markets for any show event. Odds update in real-time. Win big with the right calls.',
+                bg: 'bg-[#4357F6]/12',
+                borderColor: 'border-[#4357F6]/25',
+                iconColor: 'text-[#8DAAFF]',
+                icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />,
+              },
+              {
+                title: 'Live Chat',
+                desc: 'Talk with other viewers in real-time. React with emoji, trigger sound effects, and create prediction markets from chat.',
+                bg: 'bg-[#E6D9FF]/10',
+                borderColor: 'border-[#E6D9FF]/25',
+                iconColor: 'text-[#E6D9FF]',
+                icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />,
+              },
+              {
+                title: 'Instant Payouts',
+                desc: 'Cash out winnings directly to your bank account via Paystack. No delays, no hidden fees, no middlemen.',
+                bg: 'bg-[#CBF0B8]/10',
+                borderColor: 'border-[#CBF0B8]/25',
+                iconColor: 'text-[#CBF0B8]',
+                icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />,
+              },
+              {
+                title: 'Voting Power',
+                desc: 'Vote to save your favorite contestants from eviction. Tier up for multiplied vote power — from 1x to 3x.',
+                bg: 'bg-[#8DAAFF]/12',
+                borderColor: 'border-[#8DAAFF]/25',
+                iconColor: 'text-[#8DAAFF]',
+                icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,
+              },
+              {
+                title: 'Dual Currency',
+                desc: 'Earn free Clout by watching and chatting. Buy Stakes with Naira for premium bets. Both currencies unlock the full experience.',
+                bg: 'bg-[#A6D234]/10',
+                borderColor: 'border-[#A6D234]/25',
+                iconColor: 'text-[#A6D234]',
+                icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
+              },
+            ].map((feature, i) => (
+              <FadeUp key={i} delay={i * 0.06}>
+                <div className={`rounded-3xl border-2 ${feature.borderColor} ${feature.bg} p-7 h-full group hover:scale-[1.02] transition-all duration-300`}>
+                  <div className="w-12 h-12 rounded-2xl bg-sf-bg-primary/60 border-2 border-sf-glass-border flex items-center justify-center mb-5 group-hover:rotate-6 transition-transform">
+                    <svg className={`w-6 h-6 ${feature.iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      {feature.icon}
                     </svg>
                   </div>
-                  <h3 className="text-xl font-bold text-sf-status-success mb-2">You&apos;re on the list!</h3>
-                  <p className="text-sf-text-tertiary">We&apos;ll notify you when applications open.</p>
+                  <h3 className={`text-base font-black uppercase tracking-tight mb-2 ${feature.iconColor}`}>{feature.title}</h3>
+                  <p className="text-sf-text-tertiary text-sm leading-relaxed">{feature.desc}</p>
                 </div>
-              ) : (
-                <form onSubmit={handleWaitlistSubmit} className="space-y-6">
-                  {/* User Type Selection */}
-                  <div>
-                    <label className="block text-sm text-sf-text-tertiary mb-3 font-medium">I&apos;m interested as a...</label>
-                    <div className="grid grid-cols-3 gap-3">
-                      {[
-                        { type: 'viewer', emoji: '👀', label: 'Viewer', color: 'blue' },
-                        { type: 'contestant', emoji: '🌟', label: 'Contestant', color: 'pink' },
-                        { type: 'investor', emoji: '💼', label: 'Partner', color: 'green' },
-                      ].map((option) => (
-                        <button
-                          key={option.type}
-                          type="button"
-                          onClick={() => setUserType(option.type as 'viewer' | 'contestant' | 'investor')}
-                          className={`p-4 rounded-xl border transition-all ${
-                            userType === option.type
-                              ? option.color === 'blue'
-                                ? 'bg-sf-accent-primary/10 border-sf-accent-primary text-sf-accent-primary'
-                                : option.color === 'pink'
-                                ? 'bg-pink-500/10 border-pink-500 text-pink-400'
-                                : 'bg-sf-status-success/10 border-sf-status-success text-sf-status-success'
-                              : 'bg-sf-bg-tertiary border-sf-glass-border text-sf-text-tertiary hover:border-sf-glass-border-hover'
-                          }`}
-                        >
-                          <div className="text-2xl mb-1">{option.emoji}</div>
-                          <div className="text-sm font-medium">{option.label}</div>
-                        </button>
-                      ))}
+              </FadeUp>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============ MARKET OPPORTUNITY ============ */}
+      <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[500px] h-[500px] bg-[#5ACDFF]/6 rounded-full blur-[150px]" />
+          <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[400px] h-[400px] bg-[#CBF0B8]/6 rounded-full blur-[120px]" />
+        </div>
+
+        <div className="max-w-7xl mx-auto relative">
+          <FadeUp>
+            <div className="text-center mb-16">
+              <span className="text-[0.625rem] font-bold uppercase tracking-[0.15em] text-[#5ACDFF] block mb-4">Market Opportunity</span>
+              <h2 className="text-display text-white">
+                THE NUMBERS{' '}
+                <span style={{ background: 'linear-gradient(to right, #5ACDFF, #CBF0B8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                  DON&apos;T LIE.
+                </span>
+              </h2>
+              <p className="text-sf-text-secondary mt-4 max-w-2xl mx-auto">
+                Africa&apos;s entertainment economy is exploding. Star Factor sits at the intersection of three massive, untapped markets.
+              </p>
+            </div>
+          </FadeUp>
+
+          {/* Big market stat cards */}
+          <div className="grid gap-2 sm:grid-cols-3 mb-8">
+            {[
+              {
+                value: '$17B',
+                label: 'African Streaming Market by 2027',
+                sub: 'Growing at 18% CAGR',
+                color: '#5ACDFF',
+                bg: 'bg-[#5ACDFF]/10',
+                border: 'border-[#5ACDFF]/25',
+              },
+              {
+                value: '600M+',
+                label: 'African Mobile Users',
+                sub: 'World\'s fastest-growing internet population',
+                color: '#CBF0B8',
+                bg: 'bg-[#CBF0B8]/10',
+                border: 'border-[#CBF0B8]/25',
+              },
+              {
+                value: '$3B+',
+                label: 'Africa Prediction Market TAM',
+                sub: 'Largely unaddressed by existing platforms',
+                color: '#E6D9FF',
+                bg: 'bg-[#E6D9FF]/10',
+                border: 'border-[#E6D9FF]/25',
+              },
+            ].map((m, i) => (
+              <FadeUp key={i} delay={i * 0.1}>
+                <div className={`rounded-3xl border-2 ${m.border} ${m.bg} p-8 text-center group hover:scale-[1.02] transition-all`}>
+                  <div className="text-4xl sm:text-5xl font-black mb-3" style={{ color: m.color }}>{m.value}</div>
+                  <div className="text-sm font-bold text-white uppercase tracking-wide mb-2">{m.label}</div>
+                  <div className="text-xs text-sf-text-muted">{m.sub}</div>
+                </div>
+              </FadeUp>
+            ))}
+          </div>
+
+          {/* Why now section */}
+          <FadeUp delay={0.2}>
+            <div className="rounded-3xl border-2 border-[#8DAAFF]/20 bg-[#8DAAFF]/6 p-8 sm:p-10">
+              <div className="grid sm:grid-cols-2 gap-8 items-center">
+                <div>
+                  <span className="text-[0.625rem] font-bold uppercase tracking-[0.15em] text-[#8DAAFF] block mb-3">Why Now</span>
+                  <h3 className="text-2xl font-black uppercase text-white mb-4 leading-tight">
+                    THE PERFECT STORM
+                  </h3>
+                  <p className="text-sf-text-secondary text-sm leading-relaxed mb-6">
+                    Reality TV is Africa&apos;s most-watched content format. Mobile penetration is at an all-time high. Crypto rails make instant micropayments possible. Star Factor is the first product built to capture all three tailwinds simultaneously.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {['Nigeria 🇳🇬', 'Ghana 🇬🇭', 'Kenya 🇰🇪', 'South Africa 🇿🇦'].map(c => (
+                      <span key={c} className="px-3 py-1.5 rounded-full border-2 border-[#8DAAFF]/25 bg-[#8DAAFF]/10 text-[#8DAAFF] text-xs font-bold">{c}</span>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: 'Season 1 Contestants', value: '20', color: '#5ACDFF' },
+                    { label: 'Launch Markets', value: '4', color: '#CBF0B8' },
+                    { label: 'Prize Pool S1', value: '$30K', color: '#E6D9FF' },
+                    { label: 'Camera Feeds', value: '8 HD', color: '#8DAAFF' },
+                  ].map((item, i) => (
+                    <div key={i} className="bg-sf-bg-tertiary/60 border-2 border-sf-glass-border rounded-2xl p-4 text-center">
+                      <div className="text-2xl font-black mb-1" style={{ color: item.color }}>{item.value}</div>
+                      <div className="text-[0.625rem] font-bold uppercase tracking-[0.12em] text-sf-text-muted">{item.label}</div>
                     </div>
-                  </div>
-
-                  {/* Email Input */}
-                  <div>
-                    <label className="block text-sm text-sf-text-tertiary mb-2 font-medium">Email address</label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      required
-                      className="input-primary w-full py-4 text-base"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={!email || !userType || isSubmitting}
-                    className="w-full btn-primary py-4 rounded-xl font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
-                  >
-                    {isSubmitting ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        Joining...
-                      </span>
-                    ) : 'Join Waitlist'}
-                  </button>
-                </form>
-              )}
-
-              {/* Early Perks */}
-              <div className="mt-10 pt-8 border-t border-sf-glass-border">
-                <div className="text-center text-sm text-sf-text-muted mb-4">Early supporters get:</div>
-                <div className="flex flex-wrap justify-center gap-3">
-                  {['500 Free Clout', 'Early Access', 'Exclusive Merch'].map((perk) => (
-                    <span key={perk} className="badge bg-sf-bg-tertiary text-sf-text-tertiary">{perk}</span>
                   ))}
                 </div>
               </div>
             </div>
+          </FadeUp>
+        </div>
+      </section>
+
+      {/* ============ TOKENOMICS ============ */}
+      <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <FadeUp>
+            <div className="text-center mb-16">
+              <span className="text-[0.625rem] font-bold uppercase tracking-[0.15em] text-[#CBF0B8] block mb-4">Token Economics</span>
+              <h2 className="text-display text-white">
+                CLOUT &amp;{' '}
+                <span style={{ background: 'linear-gradient(to right, #CBF0B8, #5ACDFF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                  STAKES.
+                </span>
+              </h2>
+              <p className="text-sf-text-secondary mt-4 max-w-2xl mx-auto">
+                Two currencies power the Star Factor economy. Clout fuels free participation. Stakes powers real-money prediction markets.
+              </p>
+            </div>
+          </FadeUp>
+
+          <div className="grid lg:grid-cols-2 gap-4 mb-4">
+            {/* Clout Card */}
+            <FadeUp>
+              <div className="rounded-3xl border-2 border-[#8DAAFF]/25 bg-[#8DAAFF]/8 p-8 h-full">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-12 h-12 rounded-2xl bg-[#8DAAFF]/20 border-2 border-[#8DAAFF]/30 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-[#8DAAFF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-lg font-black uppercase text-[#8DAAFF]">CLOUT</div>
+                    <div className="text-xs text-sf-text-muted font-bold uppercase tracking-wider">Free Currency</div>
+                  </div>
+                </div>
+                <div className="space-y-3 mb-6">
+                  {[
+                    { action: 'Daily Login', reward: '+50 Clout' },
+                    { action: 'Watch 1 hour', reward: '+25 Clout' },
+                    { action: 'Send a chat message', reward: '+2 Clout' },
+                    { action: 'Prediction market win', reward: '+100–500 Clout' },
+                  ].map((row, i) => (
+                    <div key={i} className="flex items-center justify-between py-2.5 border-b border-[#8DAAFF]/10 last:border-0">
+                      <span className="text-sm text-sf-text-secondary">{row.action}</span>
+                      <span className="text-sm font-bold text-[#8DAAFF]">{row.reward}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-sf-bg-primary/40 rounded-2xl border border-[#8DAAFF]/15 p-4">
+                  <p className="text-xs text-sf-text-muted leading-relaxed">Clout is earned, never bought. Use it to vote, tip contestants, react in chat, and unlock platform features.</p>
+                </div>
+              </div>
+            </FadeUp>
+
+            {/* Stakes Card */}
+            <FadeUp delay={0.1}>
+              <div className="rounded-3xl border-2 border-[#CBF0B8]/25 bg-[#CBF0B8]/8 p-8 h-full">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-12 h-12 rounded-2xl bg-[#CBF0B8]/20 border-2 border-[#CBF0B8]/30 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-[#CBF0B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-lg font-black uppercase text-[#CBF0B8]">STAKES</div>
+                    <div className="text-xs text-sf-text-muted font-bold uppercase tracking-wider">Premium Currency</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  {[
+                    { label: '100 Stakes', price: '₦500', badge: 'Starter' },
+                    { label: '500 Stakes', price: '₦2,000', badge: 'Popular' },
+                    { label: '1,500 Stakes', price: '₦5,000', badge: 'Value' },
+                    { label: '5,000 Stakes', price: '₦15,000', badge: 'Pro' },
+                  ].map((tier, i) => (
+                    <div key={i} className={`rounded-2xl border-2 p-3 text-center ${i === 1 ? 'border-[#CBF0B8]/50 bg-[#CBF0B8]/15' : 'border-[#CBF0B8]/15 bg-sf-bg-tertiary/40'}`}>
+                      <div className={`text-[0.625rem] font-bold uppercase tracking-wider mb-1.5 ${i === 1 ? 'text-[#CBF0B8]' : 'text-sf-text-muted'}`}>{tier.badge}</div>
+                      <div className="text-sm font-black text-white">{tier.label}</div>
+                      <div className={`text-xs font-bold mt-1 ${i === 1 ? 'text-[#CBF0B8]' : 'text-sf-text-tertiary'}`}>{tier.price}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-sf-bg-primary/40 rounded-2xl border border-[#CBF0B8]/15 p-4">
+                  <p className="text-xs text-sf-text-muted leading-relaxed">Stakes = real money. Buy with Naira via Paystack. Win prediction markets and cash out instantly to your bank.</p>
+                </div>
+              </div>
+            </FadeUp>
+          </div>
+
+          {/* Distribution Bar */}
+          <FadeUp delay={0.2}>
+            <div className="rounded-3xl border-2 border-[#5ACDFF]/20 bg-[#5ACDFF]/6 p-8">
+              <div className="mb-6">
+                <span className="text-[0.625rem] font-bold uppercase tracking-[0.15em] text-[#5ACDFF]">Stakes Allocation</span>
+                <h3 className="text-xl font-black text-white uppercase mt-1">TOKEN DISTRIBUTION</h3>
+              </div>
+              {/* Stacked bar */}
+              <div className="flex rounded-full overflow-hidden h-5 mb-6 gap-0.5">
+                {tokenomics.map((t, i) => (
+                  <div
+                    key={i}
+                    className="h-full transition-all"
+                    style={{ width: `${t.pct}%`, backgroundColor: t.color, opacity: 0.85 }}
+                    title={`${t.label}: ${t.pct}%`}
+                  />
+                ))}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {tokenomics.map((t, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: t.color }} />
+                    <div>
+                      <div className="text-[0.625rem] font-bold uppercase tracking-wider text-sf-text-muted">{t.pct}%</div>
+                      <div className="text-xs text-sf-text-secondary leading-tight">{t.label}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </FadeUp>
+        </div>
+      </section>
+
+      {/* ============ INVESTOR SECTION ============ */}
+      <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-[#E6D9FF]/6 rounded-full blur-[160px]" />
+          <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-[#5ACDFF]/6 rounded-full blur-[120px]" />
+        </div>
+
+        <div className="max-w-7xl mx-auto relative">
+          <FadeUp>
+            <div className="text-center mb-16">
+              <span className="text-[0.625rem] font-bold uppercase tracking-[0.15em] text-[#E6D9FF] block mb-4">For Investors</span>
+              <h2 className="text-display text-white">
+                BACK THE{' '}
+                <span style={{ background: 'linear-gradient(to right, #E6D9FF, #8DAAFF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                  FUTURE.
+                </span>
+              </h2>
+              <p className="text-sf-text-secondary mt-4 max-w-2xl mx-auto">
+                Star Factor is raising its seed round to fund Season 1 production, platform development, and market expansion across West Africa.
+              </p>
+            </div>
+          </FadeUp>
+
+          {/* Investment highlights */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
+            {[
+              { label: 'Revenue Model', value: '3x', sub: 'Revenue streams', color: '#E6D9FF', border: 'border-[#E6D9FF]/25', bg: 'bg-[#E6D9FF]/8' },
+              { label: 'Launch Markets', value: '4', sub: 'African countries', color: '#5ACDFF', border: 'border-[#5ACDFF]/25', bg: 'bg-[#5ACDFF]/8' },
+              { label: 'Prize Pool S1', value: '$30K', sub: 'Grand prize', color: '#CBF0B8', border: 'border-[#CBF0B8]/25', bg: 'bg-[#CBF0B8]/8' },
+              { label: 'Break-even', value: 'S2', sub: 'Season 2 target', color: '#8DAAFF', border: 'border-[#8DAAFF]/25', bg: 'bg-[#8DAAFF]/8' },
+            ].map((item, i) => (
+              <FadeUp key={i} delay={i * 0.08}>
+                <div className={`rounded-3xl border-2 ${item.border} ${item.bg} p-7 text-center group hover:scale-[1.02] transition-all`}>
+                  <div className="text-xs font-bold uppercase tracking-[0.12em] text-sf-text-muted mb-2">{item.label}</div>
+                  <div className="text-3xl font-black mb-2" style={{ color: item.color }}>{item.value}</div>
+                  <div className="text-xs text-sf-text-secondary font-medium">{item.sub}</div>
+                </div>
+              </FadeUp>
+            ))}
+          </div>
+
+          {/* Revenue + Use of Funds */}
+          <div className="grid lg:grid-cols-2 gap-4">
+            {/* Revenue Streams */}
+            <FadeUp>
+              <div className="rounded-3xl border-2 border-[#E6D9FF]/20 bg-[#E6D9FF]/6 p-8 h-full">
+                <span className="text-[0.625rem] font-bold uppercase tracking-[0.15em] text-[#E6D9FF] block mb-3">Revenue Streams</span>
+                <h3 className="text-xl font-black uppercase text-white mb-6">HOW WE EARN</h3>
+                <div className="space-y-4">
+                  {[
+                    {
+                      source: 'Stakes Sales',
+                      desc: 'Platform takes 10% of all Stakes purchases. Primary revenue driver.',
+                      share: '60%',
+                      color: '#E6D9FF',
+                    },
+                    {
+                      source: 'Prediction Market Fees',
+                      desc: '5% rake on all resolved prediction market pools.',
+                      share: '25%',
+                      color: '#8DAAFF',
+                    },
+                    {
+                      source: 'Brand Sponsorships',
+                      desc: 'In-show product placements and branded challenges.',
+                      share: '15%',
+                      color: '#5ACDFF',
+                    },
+                  ].map((rev, i) => (
+                    <div key={i} className="flex items-start gap-4 pb-4 border-b border-[#E6D9FF]/10 last:border-0 last:pb-0">
+                      <div className="w-12 h-12 rounded-2xl bg-sf-bg-primary/50 border-2 border-sf-glass-border flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-black" style={{ color: rev.color }}>{rev.share}</span>
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-white mb-1">{rev.source}</div>
+                        <div className="text-xs text-sf-text-muted leading-relaxed">{rev.desc}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </FadeUp>
+
+            {/* Use of Funds */}
+            <FadeUp delay={0.1}>
+              <div className="rounded-3xl border-2 border-[#5ACDFF]/20 bg-[#5ACDFF]/6 p-8 h-full">
+                <span className="text-[0.625rem] font-bold uppercase tracking-[0.15em] text-[#5ACDFF] block mb-3">Use of Funds</span>
+                <h3 className="text-xl font-black uppercase text-white mb-6">WHERE IT GOES</h3>
+                <div className="space-y-3">
+                  {[
+                    { label: 'Production & House Setup', pct: 45, color: '#5ACDFF' },
+                    { label: 'Platform & Tech', pct: 25, color: '#8DAAFF' },
+                    { label: 'Marketing & Growth', pct: 20, color: '#CBF0B8' },
+                    { label: 'Operations & Legal', pct: 10, color: '#E6D9FF' },
+                  ].map((item, i) => (
+                    <div key={i}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xs font-bold text-sf-text-secondary">{item.label}</span>
+                        <span className="text-xs font-black" style={{ color: item.color }}>{item.pct}%</span>
+                      </div>
+                      <div className="h-2 bg-sf-bg-tertiary rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{ width: `${item.pct}%`, backgroundColor: item.color, opacity: 0.8 }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 pt-6 border-t border-[#5ACDFF]/15">
+                  <p className="text-xs text-sf-text-muted leading-relaxed mb-4">
+                    Interested in backing Africa&apos;s most ambitious entertainment platform? We&apos;re building for the long term.
+                  </p>
+                  <a
+                    href="mailto:invest@chainfren.com"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-full border-2 border-[#5ACDFF]/40 bg-[#5ACDFF]/10 text-[#5ACDFF] text-xs font-bold uppercase tracking-wider hover:bg-[#5ACDFF]/20 transition-all"
+                  >
+                    Contact Investor Relations
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            </FadeUp>
           </div>
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section id="faq" className="py-32 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-sf-bg-secondary/50 to-transparent" />
-
-        <div className="relative max-w-4xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-display font-bold mb-6">
-              Frequently Asked <span className="gradient-text">Questions</span>
-            </h2>
-            <p className="text-sf-text-secondary text-lg">
-              Everything you need to know about Star Factor
-            </p>
-          </div>
+      {/* ============ FAQ SECTION ============ */}
+      <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
+          <FadeUp>
+            <div className="text-center mb-12">
+              <span className="overline mb-4 block">Got Questions?</span>
+              <h2 className="text-display text-white">
+                EVERYTHING YOU{' '}
+                <span className="gradient-text">NEED TO KNOW.</span>
+              </h2>
+            </div>
+          </FadeUp>
 
           {/* Category Tabs */}
-          <div className="flex flex-wrap justify-center gap-2 mb-10">
-            {faqData.map((cat) => (
-              <button
-                key={cat.category}
-                onClick={() => setActiveCategory(cat.category)}
-                className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                  activeCategory === cat.category
-                    ? 'bg-gradient-primary text-white shadow-sf-glow-button'
-                    : 'bg-sf-bg-tertiary text-sf-text-tertiary hover:bg-sf-bg-hover hover:text-white'
-                }`}
-              >
-                {cat.category}
-              </button>
-            ))}
-          </div>
+          <FadeUp delay={0.08}>
+            <div className="flex flex-wrap justify-center gap-2 mb-8">
+              {faqData.map((cat, i) => {
+                const tabColors = ['border-[#4357F6]', 'border-[#5ACDFF]', 'border-[#CBF0B8]', 'border-[#E6D9FF]'];
+                const tabActiveBgs = ['bg-[#4357F6]', 'bg-[#5ACDFF]', 'bg-[#CBF0B8]', 'bg-[#E6D9FF]'];
+                const tabActiveTexts = ['text-white', 'text-sf-bg-primary', 'text-sf-bg-primary', 'text-sf-bg-primary'];
+                return (
+                  <button
+                    key={cat.category}
+                    onClick={() => {
+                      setActiveCategory(cat.category);
+                      setOpenFaq(null);
+                    }}
+                    className={`px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-[0.1em] transition-all border-2 ${
+                      activeCategory === cat.category
+                        ? `${tabActiveBgs[i]} ${tabActiveTexts[i]} ${tabColors[i]}`
+                        : 'bg-transparent text-sf-text-tertiary border-sf-glass-border hover:border-sf-glass-border-hover hover:text-white'
+                    }`}
+                  >
+                    {cat.category}
+                  </button>
+                );
+              })}
+            </div>
+          </FadeUp>
 
           {/* FAQ Accordion */}
-          <div className="space-y-3">
-            {faqData
-              .find((cat) => cat.category === activeCategory)
-              ?.questions.map((faq, index) => {
-                const faqId = `${activeCategory}-${index}`;
-                const isOpen = openFaq === faqId;
+          <div className="space-y-2">
+            {currentFaq?.questions.map((faq, index) => {
+              const faqId = `${activeCategory}-${index}`;
+              const isOpen = openFaq === faqId;
 
-                return (
+              return (
+                <FadeUp key={faqId} delay={index * 0.06}>
                   <div
-                    key={faqId}
-                    className={`glass-card overflow-hidden transition-all ${
-                      isOpen ? 'ring-1 ring-sf-accent-primary/50' : ''
+                    className={`rounded-3xl border-2 transition-all duration-300 overflow-hidden ${
+                      isOpen
+                        ? 'bg-[#8DAAFF]/10 border-[#8DAAFF]/35'
+                        : 'bg-sf-bg-secondary border-sf-glass-border hover:border-sf-glass-border-hover'
                     }`}
                   >
                     <button
-                      onClick={() => setOpenFaq(isOpen ? null : faqId)}
-                      className="w-full flex items-center justify-between p-5 text-left hover:bg-sf-glass-bg transition-colors"
+                      onClick={() => toggleFaq(faqId)}
+                      className="w-full px-6 py-5 flex items-center justify-between text-left"
                     >
-                      <span className="font-medium pr-4">{faq.q}</span>
-                      <div className={`w-8 h-8 rounded-lg bg-sf-bg-tertiary flex items-center justify-center flex-shrink-0 transition-all ${isOpen ? 'bg-sf-accent-primary/10 rotate-180' : ''}`}>
+                      <span className={`text-sm font-bold pr-4 ${isOpen ? 'text-white' : 'text-sf-text-secondary'}`}>
+                        {faq.q}
+                      </span>
+                      <div
+                        className={`w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
+                          isOpen
+                            ? 'bg-[#8DAAFF] border-[#8DAAFF] rotate-180'
+                            : 'bg-[#8DAAFF]/15 border-[#8DAAFF]/25'
+                        }`}
+                      >
                         <svg
-                          className={`w-4 h-4 ${isOpen ? 'text-sf-accent-primary' : 'text-sf-text-tertiary'}`}
+                          className={`w-4 h-4 ${isOpen ? 'text-sf-bg-primary' : 'text-[#8DAAFF]'}`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -745,90 +881,116 @@ const LandingPage: React.FC = () => {
                         </svg>
                       </div>
                     </button>
-                    <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-96' : 'max-h-0'}`}>
-                      <div className="px-5 pb-5 text-sf-text-secondary leading-relaxed">
+                    <div
+                      className="overflow-hidden transition-all duration-300"
+                      style={{
+                        maxHeight: isOpen ? '200px' : '0',
+                        opacity: isOpen ? 1 : 0,
+                      }}
+                    >
+                      <p className="px-6 pb-5 text-sm text-sf-text-tertiary leading-relaxed">
                         {faq.a}
-                      </div>
+                      </p>
                     </div>
                   </div>
-                );
-              })}
-          </div>
-
-          {/* Still have questions? */}
-          <div className="mt-16 text-center">
-            <p className="text-sf-text-tertiary mb-4">Still have questions?</p>
-            <a
-              href="mailto:support@starfactor.ng"
-              className="inline-flex items-center gap-3 btn-secondary px-6 py-3 rounded-xl font-medium"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              Contact Support
-            </a>
+                </FadeUp>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-16 border-t border-sf-glass-border">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-12 mb-12">
-            <div className="md:col-span-2">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center font-bold text-xl shadow-sf-glow-button">
-                  SF
-                </div>
-                <span className="text-2xl font-bold">Star Factor</span>
-              </div>
-              <p className="text-sf-text-tertiary max-w-md leading-relaxed">
-                Africa&apos;s first live interactive reality game show. Watch, predict, vote, and win.
+      {/* ============ CTA SECTION ============ */}
+      <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
+        <FadeUp>
+          <div className="max-w-4xl mx-auto rounded-3xl border-2 border-[#5ACDFF]/25 p-8 sm:p-14 text-center relative overflow-hidden"
+            style={{ background: 'linear-gradient(135deg, rgba(90,205,255,0.06) 0%, rgba(203,240,184,0.04) 50%, rgba(230,217,255,0.06) 100%)' }}
+          >
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#5ACDFF]/10 rounded-full blur-[100px]" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#CBF0B8]/10 rounded-full blur-[100px]" />
+
+            <div className="relative z-10">
+              <span className="text-[0.625rem] font-bold uppercase tracking-[0.15em] text-[#5ACDFF] block mb-4">Join the Waitlist</span>
+              <h2 className="text-display text-white mb-4">
+                DON&apos;T MISS SEASON 1.
+              </h2>
+              <p className="text-sf-text-secondary text-base mb-8 max-w-lg mx-auto">
+                Be the first to know when Star Factor goes live. Early access members get <span className="text-[#CBF0B8] font-bold">500 bonus Clout</span>.
               </p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-6 text-sf-text-secondary">Links</h4>
-              <ul className="space-y-4 text-sf-text-tertiary">
-                <li><a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a></li>
-                <li><Link href="/apply" className="hover:text-white transition-colors">Apply as Contestant</Link></li>
-                <li><a href="#investors" className="hover:text-white transition-colors">Partners</a></li>
-                <li><a href="#faq" className="hover:text-white transition-colors">FAQ</a></li>
-                <li><a href="#waitlist" className="hover:text-white transition-colors">Join Waitlist</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-6 text-sf-text-secondary">Connect</h4>
-              <div className="flex gap-3">
-                {[
-                  { label: 'X', url: 'https://x.com/starfactortv' },
-                  { label: 'IG', url: 'https://instagram.com/starfactorlive' },
-                  { label: 'TT', url: '#' },
-                  { label: 'DC', url: '#' }
-                ].map((social) => (
-                  <a
-                    key={social.label}
-                    href={social.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-11 h-11 glass rounded-xl flex items-center justify-center text-sf-text-tertiary hover:text-white hover:bg-sf-glass-bg-hover transition-all"
-                  >
-                    {social.label}
-                  </a>
-                ))}
+
+              <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  className="input-primary flex-1 py-3.5 px-5 rounded-full text-sm"
+                />
+                <button className="btn-primary px-8 py-3.5 text-sm whitespace-nowrap">
+                  Join Waitlist
+                </button>
               </div>
             </div>
           </div>
-          <div className="divider mb-8" />
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-sf-text-muted text-sm">
-              <p>&copy; 2026 Star Factor. All rights reserved.</p>
-              <span className="hidden md:inline">•</span>
-              <p>Built by <a href="https://x.com/chainfren" target="_blank" rel="noopener noreferrer" className="text-sf-accent-primary hover:text-sf-accent-secondary transition-colors">chainfren</a></p>
+        </FadeUp>
+      </section>
+
+      {/* ============ FOOTER ============ */}
+      <footer className="border-t-2 border-sf-glass-border py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex flex-col items-center md:items-start gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full overflow-hidden">
+                  <Image src="/starfff.png" alt="Star Factor" width={32} height={32} className="w-full h-full object-cover" />
+                </div>
+                <span className="text-sm font-black text-white uppercase tracking-tight">Star Factor</span>
+              </div>
+              <span className="text-xs text-sf-text-muted font-medium">
+                Built by <span className="text-[#8DAAFF] font-bold">Chainfren</span>
+              </span>
             </div>
-            <div className="flex gap-6 text-sm text-sf-text-muted">
-              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+
+            <div className="flex items-center gap-6">
+              {[
+                { label: 'Watch', href: '/watch' },
+                { label: 'Apply', href: '/apply' },
+                { label: 'Invest', href: 'mailto:invest@chainfren.com' },
+                { label: 'FAQ', href: '#faq' },
+              ].map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className="text-xs font-bold text-sf-text-tertiary hover:text-white uppercase tracking-wider transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
             </div>
+
+            <div className="flex items-center gap-3">
+              {[
+                { label: 'X', href: 'https://x.com/starfactortv', color: 'hover:text-[#5ACDFF] hover:border-[#5ACDFF]/40' },
+                { label: 'IG', href: 'https://instagram.com/starfactorlive', color: 'hover:text-[#E6D9FF] hover:border-[#E6D9FF]/40' },
+                { label: 'YT', href: 'https://youtube.com', color: 'hover:text-[#FF6B6B] hover:border-[#FF6B6B]/40' },
+              ].map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`w-10 h-10 rounded-full border-2 border-sf-glass-border flex items-center justify-center text-sf-text-muted text-xs font-bold transition-all ${social.color}`}
+                >
+                  {social.label}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-8 pt-8 border-t border-sf-glass-border text-center">
+            <p className="text-xs text-sf-text-muted">
+              &copy; {new Date().getFullYear()} Star Factor. A Chainfren Product. All rights reserved.
+            </p>
           </div>
         </div>
       </footer>

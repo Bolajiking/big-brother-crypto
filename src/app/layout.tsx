@@ -1,18 +1,7 @@
 "use client"
 
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { PrivyProviderWrapper } from "@/lib/privy";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export default function RootLayout({
   children,
@@ -24,6 +13,10 @@ export default function RootLayout({
       <head>
         <title>Star Factor - Africa&apos;s First Interactive Reality TV</title>
         <meta name="description" content="Africa's first Interactive Reality TV platform. Watch, Predict, Earn" />
+
+        {/* Inter Display Font */}
+        <link rel="preconnect" href="https://rsms.me/" />
+        <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
 
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
@@ -45,13 +38,14 @@ export default function RootLayout({
         <meta name="twitter:creator" content="@starfactortv" />
 
         {/* Additional Meta */}
-        <meta name="theme-color" content="#0a0a0f" />
+        <meta name="theme-color" content="#08153C" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/starfactor.png" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className="antialiased"
+        style={{ fontFamily: "'Inter', 'Inter Display', system-ui, -apple-system, sans-serif" }}
         suppressHydrationWarning
       >
         <PrivyProviderWrapper>

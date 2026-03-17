@@ -90,10 +90,10 @@ const PredictionMarkets: React.FC<PredictionMarketsProps> = ({
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+            className={`px-4 py-1.5 rounded-full border-2 text-xs font-bold uppercase tracking-wider transition-all ${
               filter === f
-                ? 'bg-sf-accent-primary/20 text-sf-accent-primary ring-1 ring-sf-accent-primary/30'
-                : 'bg-sf-bg-tertiary text-sf-text-tertiary hover:text-white'
+                ? 'bg-sf-accent-primary/20 text-sf-accent-primary border-sf-accent-primary/30'
+                : 'bg-sf-bg-tertiary text-sf-text-tertiary hover:text-white border-sf-glass-border'
             }`}
           >
             {f === 'trending' && '🔥'} {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -105,12 +105,12 @@ const PredictionMarkets: React.FC<PredictionMarketsProps> = ({
       <div className="flex-1 space-y-3 overflow-y-auto hide-scrollbar">
         {activeMarkets.length === 0 ? (
           <div className="text-center py-8">
-            <div className="w-16 h-16 mx-auto mb-4 bg-sf-bg-tertiary rounded-2xl flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-sf-bg-tertiary rounded-3xl border-2 border-sf-glass-border flex items-center justify-center">
               <svg className="w-8 h-8 text-sf-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <p className="text-sf-text-secondary text-sm mb-2">No active markets</p>
+            <p className="text-sf-text-secondary text-sm font-bold uppercase tracking-wider mb-2">No Active Markets</p>
             <p className="text-sf-text-muted text-xs">Create one in chat with /predict</p>
           </div>
         ) : (
@@ -121,8 +121,8 @@ const PredictionMarkets: React.FC<PredictionMarketsProps> = ({
             return (
               <div
                 key={market.id}
-                className={`glass-card p-3 transition-all cursor-pointer ${
-                  isExpanded ? 'ring-1 ring-sf-accent-primary/50' : 'hover:bg-sf-glass-bg-hover'
+                className={`bg-sf-bg-tertiary/50 border-2 rounded-3xl p-3 transition-all cursor-pointer ${
+                  isExpanded ? 'border-sf-accent-primary/50' : 'border-sf-glass-border hover:border-sf-glass-border-hover'
                 }`}
                 onClick={() => setSelectedMarket(isExpanded ? null : market.id)}
               >
@@ -137,7 +137,7 @@ const PredictionMarkets: React.FC<PredictionMarketsProps> = ({
                         by {market.creatorUsername}
                       </span>
                     </div>
-                    <p className="text-sm font-medium text-white leading-tight line-clamp-2">
+                    <p className="text-sm font-bold text-white leading-tight line-clamp-2">
                       {market.question}
                     </p>
                   </div>
@@ -177,7 +177,7 @@ const PredictionMarkets: React.FC<PredictionMarketsProps> = ({
                             setSelectedOption(isSelected ? null : option.id);
                           }
                         }}
-                        className={`relative overflow-hidden rounded-xl transition-all ${
+                        className={`relative overflow-hidden rounded-2xl transition-all ${
                           isExpanded
                             ? isSelected
                               ? 'ring-2 ring-sf-accent-primary bg-sf-accent-primary/10'
@@ -243,10 +243,10 @@ const PredictionMarkets: React.FC<PredictionMarketsProps> = ({
                               <button
                                 key={amount}
                                 onClick={() => setBetAmount(amount)}
-                                className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                className={`flex-1 py-1.5 rounded-full border-2 text-xs font-bold transition-all ${
                                   betAmount === amount
-                                    ? 'bg-sf-accent-primary text-white'
-                                    : 'bg-sf-bg-tertiary text-sf-text-tertiary hover:text-white'
+                                    ? 'bg-sf-accent-primary text-white border-sf-accent-primary'
+                                    : 'bg-sf-bg-tertiary text-sf-text-tertiary hover:text-white border-sf-glass-border'
                                 }`}
                               >
                                 {amount}
@@ -270,9 +270,9 @@ const PredictionMarkets: React.FC<PredictionMarketsProps> = ({
                         <button
                           onClick={() => handlePlaceBet(market.id)}
                           disabled={betAmount > userBalance}
-                          className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                          className={`w-full py-2.5 rounded-full text-sm font-bold uppercase tracking-wider transition-all ${
                             betAmount > userBalance
-                              ? 'bg-sf-bg-tertiary text-sf-text-muted cursor-not-allowed'
+                              ? 'bg-sf-bg-tertiary text-sf-text-muted cursor-not-allowed border-2 border-sf-glass-border'
                               : 'btn-primary'
                           }`}
                         >
@@ -294,15 +294,15 @@ const PredictionMarkets: React.FC<PredictionMarketsProps> = ({
 
       {/* Create Market CTA */}
       <div className="mt-4 pt-4 border-t border-sf-glass-border">
-        <div className="glass-card p-3 bg-gradient-to-r from-sf-accent-primary/5 to-sf-accent-secondary/5">
+        <div className="border-2 border-sf-glass-border rounded-3xl p-3 bg-gradient-to-r from-sf-accent-primary/5 to-sf-accent-secondary/5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-primary flex items-center justify-center flex-shrink-0">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
             </div>
             <div>
-              <p className="text-sm font-medium text-white">Create a Market</p>
+              <p className="text-sm font-bold uppercase tracking-wider text-white">Create a Market</p>
               <p className="text-xs text-sf-text-muted">Type <code className="text-sf-accent-primary">/predict</code> in chat</p>
             </div>
           </div>

@@ -311,7 +311,7 @@ const Chat: React.FC<ChatProps> = ({ onRequireLogin, isAuthenticated = true, onC
         <div className="flex items-start gap-3">
           {/* Avatar */}
           <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
             style={{ backgroundColor: usernameColor + '30', color: usernameColor }}
           >
             {msg.username.charAt(0).toUpperCase()}
@@ -400,11 +400,11 @@ const Chat: React.FC<ChatProps> = ({ onRequireLogin, isAuthenticated = true, onC
       <div className="p-4 border-t border-sf-glass-border flex-shrink-0">
         {/* Sign in prompt for unauthenticated users */}
         {!isAuthenticated && (
-          <div className="mb-4 p-4 glass-card text-center">
+          <div className="mb-4 p-4 border-2 border-sf-glass-border rounded-3xl text-center bg-sf-bg-tertiary/50">
             <p className="text-sf-text-secondary text-sm mb-3">Sign in to join the conversation</p>
             <button
               onClick={onRequireLogin}
-              className="btn-primary px-5 py-2 rounded-xl text-sm font-medium"
+              className="btn-primary px-5 py-2 rounded-full text-sm font-bold uppercase tracking-wider"
             >
               Sign In to Chat
             </button>
@@ -456,7 +456,7 @@ const Chat: React.FC<ChatProps> = ({ onRequireLogin, isAuthenticated = true, onC
 
         {/* Emoji Picker */}
         {showEmojiPicker && isAuthenticated && (
-          <div className="mb-3 p-3 glass-card animate-scale-in">
+          <div className="mb-3 p-3 border-2 border-sf-glass-border rounded-3xl bg-sf-bg-tertiary/50 animate-scale-in">
             <div className="grid grid-cols-8 gap-1">
               {emojis.map((emoji, index) => (
                 <button
@@ -473,7 +473,7 @@ const Chat: React.FC<ChatProps> = ({ onRequireLogin, isAuthenticated = true, onC
 
         {/* SFX Menu */}
         {showSFXMenu && isAuthenticated && (
-          <div className="mb-3 p-3 glass-card animate-scale-in">
+          <div className="mb-3 p-3 border-2 border-sf-glass-border rounded-3xl bg-sf-bg-tertiary/50 animate-scale-in">
             <div className="grid grid-cols-2 gap-2">
               {sfxOptions.map((sfx, index) => (
                 <button
@@ -490,7 +490,7 @@ const Chat: React.FC<ChatProps> = ({ onRequireLogin, isAuthenticated = true, onC
 
         {/* TTS Menu */}
         {showTTSMenu && isAuthenticated && (
-          <div className="mb-3 p-3 glass-card animate-scale-in">
+          <div className="mb-3 p-3 border-2 border-sf-glass-border rounded-3xl bg-sf-bg-tertiary/50 animate-scale-in">
             <div className="flex gap-2">
               <input
                 ref={inputRef}
@@ -503,7 +503,7 @@ const Chat: React.FC<ChatProps> = ({ onRequireLogin, isAuthenticated = true, onC
               <button
                 onClick={handleTTSClick}
                 disabled={!newMessage.trim()}
-                className="btn-primary px-4 py-2 rounded-xl text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-primary px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 🎤 Send
               </button>
@@ -525,7 +525,7 @@ const Chat: React.FC<ChatProps> = ({ onRequireLogin, isAuthenticated = true, onC
           <button
             type="submit"
             disabled={!newMessage.trim() || !isAuthenticated}
-            className="btn-primary px-5 py-3 rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary px-5 py-3 rounded-full font-bold disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -541,10 +541,10 @@ const Chat: React.FC<ChatProps> = ({ onRequireLogin, isAuthenticated = true, onC
             className="absolute inset-0 bg-black/80 backdrop-blur-md"
             onClick={() => setShowPredictModal(false)}
           />
-          <div className="relative glass-card p-6 max-w-md w-full mx-4 shadow-sf-xl animate-scale-in">
+          <div className="relative bg-sf-bg-secondary border-2 border-sf-glass-border rounded-3xl p-6 max-w-md w-full mx-4 shadow-sf-xl animate-scale-in">
             <button
               onClick={() => setShowPredictModal(false)}
-              className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-sf-bg-tertiary hover:bg-sf-bg-hover flex items-center justify-center text-sf-text-tertiary hover:text-white transition-all"
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-sf-bg-tertiary hover:bg-sf-bg-hover flex items-center justify-center text-sf-text-tertiary hover:text-white transition-all"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -552,13 +552,13 @@ const Chat: React.FC<ChatProps> = ({ onRequireLogin, isAuthenticated = true, onC
             </button>
 
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-primary rounded-2xl flex items-center justify-center">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">Create Prediction Market</h3>
+                <h3 className="text-lg font-black uppercase tracking-wider text-white">Create Market</h3>
                 <p className="text-sf-text-muted text-sm">Let others bet on your prediction</p>
               </div>
             </div>
@@ -584,10 +584,10 @@ const Chat: React.FC<ChatProps> = ({ onRequireLogin, isAuthenticated = true, onC
                     <button
                       key={cat}
                       onClick={() => setPredictCategory(cat)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all capitalize ${
+                      className={`px-3 py-1.5 rounded-full border-2 text-xs font-bold uppercase tracking-wider transition-all ${
                         predictCategory === cat
-                          ? 'bg-sf-accent-primary text-white'
-                          : 'bg-sf-bg-tertiary text-sf-text-tertiary hover:text-white'
+                          ? 'bg-sf-accent-primary text-white border-sf-accent-primary'
+                          : 'bg-sf-bg-tertiary text-sf-text-tertiary hover:text-white border-sf-glass-border'
                       }`}
                     >
                       {cat}
@@ -642,10 +642,10 @@ const Chat: React.FC<ChatProps> = ({ onRequireLogin, isAuthenticated = true, onC
                     <button
                       key={hours}
                       onClick={() => setPredictDuration(hours)}
-                      className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${
+                      className={`flex-1 py-2 rounded-full border-2 text-xs font-bold transition-all ${
                         predictDuration === hours
-                          ? 'bg-sf-accent-primary text-white'
-                          : 'bg-sf-bg-tertiary text-sf-text-tertiary hover:text-white'
+                          ? 'bg-sf-accent-primary text-white border-sf-accent-primary'
+                          : 'bg-sf-bg-tertiary text-sf-text-tertiary hover:text-white border-sf-glass-border'
                       }`}
                     >
                       {hours}h
@@ -658,7 +658,7 @@ const Chat: React.FC<ChatProps> = ({ onRequireLogin, isAuthenticated = true, onC
               <button
                 onClick={handleCreateMarket}
                 disabled={!predictQuestion.trim() || predictOptions.filter(o => o.trim()).length < 2}
-                className="w-full btn-primary py-3 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                className="w-full btn-primary py-3 rounded-full font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed mt-2"
               >
                 Create Market
               </button>

@@ -3,16 +3,9 @@ const nextConfig = {
   // Disable source maps in production to avoid the missing sourcemap error
   productionBrowserSourceMaps: false,
   
-  // Experimental features for better Turbopack support
-  experimental: {
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
-      },
-    },
+  // Turbopack root directory (resolves workspace detection)
+  turbopack: {
+    root: process.cwd(),
   },
   
   // Image configuration

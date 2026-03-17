@@ -180,7 +180,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
       }}
     >
       {/* Glass morphism backdrop */}
-      <div className="absolute inset-0 bg-sf-bg-secondary/95 backdrop-blur-xl border-t border-sf-glass-border rounded-t-3xl shadow-2xl" />
+      <div className="absolute inset-0 bg-sf-bg-secondary/95 backdrop-blur-xl border-t-2 border-sf-glass-border rounded-t-3xl shadow-2xl" />
 
       {/* Content container */}
       <div className="relative h-full flex flex-col">
@@ -212,7 +212,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
               )}
             </div>
             <div>
-              <h3 className="text-white font-semibold text-sm">
+              <h3 className="text-white font-bold uppercase tracking-wider text-sm">
                 {type === 'chat' ? 'Live Chat' : 'Interact'}
               </h3>
               <p className="text-sf-text-muted text-xs">
@@ -225,10 +225,10 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
 
           <div className="flex items-center gap-2">
             {/* Height toggle buttons */}
-            <div className="flex items-center gap-1 bg-sf-bg-tertiary rounded-lg p-1">
+            <div className="flex items-center gap-1 bg-sf-bg-tertiary rounded-full p-1">
               <button
                 onClick={() => setOverlayHeight('collapsed')}
-                className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${
+                className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
                   overlayHeight === 'collapsed'
                     ? 'bg-sf-accent-primary text-white'
                     : 'text-sf-text-muted hover:text-white'
@@ -240,7 +240,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
               </button>
               <button
                 onClick={() => setOverlayHeight('half')}
-                className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${
+                className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
                   overlayHeight === 'half'
                     ? 'bg-sf-accent-primary text-white'
                     : 'text-sf-text-muted hover:text-white'
@@ -252,7 +252,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
               </button>
               <button
                 onClick={() => setOverlayHeight('full')}
-                className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${
+                className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
                   overlayHeight === 'full'
                     ? 'bg-sf-accent-primary text-white'
                     : 'text-sf-text-muted hover:text-white'
@@ -267,7 +267,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
             {/* Close button */}
             <button
               onClick={closeOverlay}
-              className="w-8 h-8 rounded-xl bg-sf-bg-tertiary flex items-center justify-center text-sf-text-muted hover:text-white hover:bg-sf-status-error/20 transition-colors"
+              className="w-8 h-8 rounded-full bg-sf-bg-tertiary flex items-center justify-center text-sf-text-muted hover:text-white hover:bg-sf-status-error/20 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -297,11 +297,11 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
     return (
       <div className="h-screen bg-black flex flex-col" suppressHydrationWarning>
         {/* Header */}
-        <div className="flex-shrink-0 bg-sf-bg-secondary/90 backdrop-blur-sm border-b border-sf-glass-border p-4">
+        <div className="flex-shrink-0 bg-sf-bg-secondary/90 backdrop-blur-sm border-2 border-sf-glass-border p-4">
           <div className="flex items-center justify-between">
             <button
               onClick={handleCloseFullScreen}
-              className="flex items-center gap-2 text-sf-text-secondary hover:text-white px-3 py-2 rounded-xl bg-sf-bg-tertiary hover:bg-sf-bg-hover transition-colors"
+              className="flex items-center gap-2 text-sf-text-secondary hover:text-white px-3 py-2 rounded-full border-2 border-sf-glass-border bg-sf-bg-tertiary hover:bg-sf-bg-hover transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -327,7 +327,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
         )}
 
         {/* Footer Navigation */}
-        <footer className="flex-shrink-0 bg-sf-bg-secondary/95 backdrop-blur-xl border-t border-sf-glass-border safe-area-bottom">
+        <footer className="flex-shrink-0 bg-sf-bg-secondary/95 backdrop-blur-xl border-2 border-sf-glass-border safe-area-bottom">
           <div className="flex justify-around py-3 px-4">
             <button
               onClick={() => toggleOverlay('chat')}
@@ -345,7 +345,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
                   <span className="absolute -top-1 -right-1 w-2 h-2 bg-sf-status-live rounded-full animate-pulse" />
                 )}
               </div>
-              <span className="text-xs font-medium">Chat</span>
+              <span className="font-bold uppercase tracking-wider text-[0.625rem]">Chat</span>
             </button>
 
             <button
@@ -355,7 +355,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
               </svg>
-              <span className="text-xs font-medium">Grid</span>
+              <span className="font-bold uppercase tracking-wider text-[0.625rem]">Grid</span>
             </button>
 
             <button
@@ -369,7 +369,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
-              <span className="text-xs font-medium">Interact</span>
+              <span className="font-bold uppercase tracking-wider text-[0.625rem]">Interact</span>
             </button>
           </div>
         </footer>
@@ -381,7 +381,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
   return (
     <div className="h-screen bg-sf-bg-primary flex flex-col" suppressHydrationWarning>
       {/* Header */}
-      <header className="flex-shrink-0 bg-sf-bg-secondary/95 backdrop-blur-xl border-b border-sf-glass-border px-4 py-3">
+      <header className="flex-shrink-0 bg-sf-bg-secondary/95 backdrop-blur-xl border-2 border-sf-glass-border px-4 py-3">
         <div className="flex items-center justify-between">
           <button
             onClick={() => setIsSideNavOpen(true)}
@@ -392,11 +392,8 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
             </svg>
           </button>
 
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sf-accent-primary to-sf-accent-secondary flex items-center justify-center">
-              <span className="text-white font-bold text-xs">SF</span>
-            </div>
-            <h1 className="text-white font-bold">Star Factor</h1>
+          <div className="flex items-center">
+            <Image src="/starfff.png" alt="Star Factor" width={32} height={32} className="w-8 h-8 rounded-full" />
           </div>
 
           <div className="flex items-center gap-2">
@@ -430,19 +427,16 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
           />
 
           {/* Side Navigation Panel */}
-          <div className="absolute left-0 top-0 h-full w-72 bg-sf-bg-secondary border-r border-sf-glass-border shadow-2xl animate-slide-in-left">
+          <div className="absolute left-0 top-0 h-full w-72 bg-sf-bg-secondary rounded-r-3xl border-r-2 border-sf-glass-border shadow-2xl animate-slide-in-left">
             <div className="p-5 h-full flex flex-col">
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sf-accent-primary to-sf-accent-secondary flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">SF</span>
-                  </div>
-                  <span className="text-white font-bold">Menu</span>
+                <div className="flex items-center">
+                  <Image src="/starfff.png" alt="Star Factor" width={40} height={40} className="w-10 h-10 rounded-full" />
                 </div>
                 <button
                   onClick={() => setIsSideNavOpen(false)}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-sf-text-muted hover:text-white hover:bg-sf-bg-tertiary transition-colors"
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-sf-text-muted hover:text-white hover:bg-sf-bg-tertiary transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -461,9 +455,9 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
                 ].map((item) => (
                   <button
                     key={item.label}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sf-text-secondary hover:text-white hover:bg-sf-bg-tertiary transition-colors text-left"
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sf-text-secondary hover:text-white hover:bg-sf-bg-tertiary transition-colors text-left"
                   >
-                    <div className={`w-9 h-9 rounded-lg bg-${item.color}/10 flex items-center justify-center`}>
+                    <div className={`w-9 h-9 rounded-xl bg-${item.color}/10 flex items-center justify-center`}>
                       {item.icon === 'home' && (
                         <svg className={`w-5 h-5 text-${item.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -496,8 +490,8 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
               </nav>
 
               {/* User Profile Section */}
-              <div className="pt-4 border-t border-sf-glass-border">
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-sf-bg-tertiary">
+              <div className="pt-4 border-t-2 border-sf-glass-border">
+                <div className="flex items-center gap-3 p-3 rounded-2xl border-2 border-sf-glass-border bg-sf-bg-tertiary">
                   <div className="w-10 h-10 rounded-full overflow-hidden bg-sf-bg-hover">
                     <Image
                       src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff&size=100&bold=true"
@@ -527,7 +521,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
       )}
 
       {/* Footer Navigation */}
-      <footer className="flex-shrink-0 bg-sf-bg-secondary/95 backdrop-blur-xl border-t border-sf-glass-border safe-area-bottom">
+      <footer className="flex-shrink-0 bg-sf-bg-secondary/95 backdrop-blur-xl border-2 border-sf-glass-border safe-area-bottom">
         <div className="flex justify-around py-3 px-4">
           <button
             onClick={() => toggleOverlay('chat')}
@@ -545,7 +539,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-sf-status-live rounded-full animate-pulse" />
               )}
             </div>
-            <span className="text-xs font-medium">Chat</span>
+            <span className="font-bold uppercase tracking-wider text-[0.625rem]">Chat</span>
           </button>
 
           <button
@@ -562,7 +556,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
-            <span className="text-xs font-medium">Cameras</span>
+            <span className="font-bold uppercase tracking-wider text-[0.625rem]">Cameras</span>
           </button>
 
           <button
@@ -576,7 +570,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
-            <span className="text-xs font-medium">Interact</span>
+            <span className="font-bold uppercase tracking-wider text-[0.625rem]">Interact</span>
           </button>
         </div>
       </footer>

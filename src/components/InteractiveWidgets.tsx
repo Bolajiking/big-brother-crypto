@@ -42,8 +42,8 @@ const InteractiveWidgets: React.FC<InteractiveWidgetsProps> = ({ onRequireLogin 
     <div className="h-full bg-sf-bg-secondary flex flex-col">
       <div className="flex-1 overflow-y-auto hide-scrollbar p-4 space-y-4">
         {/* Live Polls Section */}
-        <div className="glass-card p-4">
-          <h2 className="text-white text-base font-semibold mb-4 flex items-center gap-2">
+        <div className="border-2 border-sf-glass-border rounded-3xl p-4">
+          <h2 className="text-white text-base font-black uppercase tracking-wider mb-4 flex items-center gap-2">
             <span className="w-2 h-2 bg-sf-status-live rounded-full animate-pulse"></span>
             Live Polls
           </h2>
@@ -153,12 +153,12 @@ const InteractiveWidgets: React.FC<InteractiveWidgetsProps> = ({ onRequireLogin 
           <button
             onClick={handleVote}
             disabled={!selectedContestant && !selectedEvent}
-            className={`w-full py-3 rounded-xl font-semibold text-sm transition-all ${
+            className={`w-full py-3 rounded-full font-bold uppercase tracking-wider text-sm transition-all ${
               voted
                 ? 'bg-sf-status-success text-white'
                 : (selectedContestant || selectedEvent)
                   ? 'btn-primary'
-                  : 'bg-sf-bg-tertiary text-sf-text-muted cursor-not-allowed'
+                  : 'bg-sf-bg-tertiary text-sf-text-muted cursor-not-allowed border-2 border-sf-glass-border'
             }`}
           >
             {voted ? 'Vote Submitted!' : 'Submit Vote'}
@@ -166,8 +166,8 @@ const InteractiveWidgets: React.FC<InteractiveWidgetsProps> = ({ onRequireLogin 
         </div>
 
         {/* Leaderboards */}
-        <div className="glass-card p-4">
-          <h2 className="text-white text-base font-semibold mb-4 flex items-center gap-2">
+        <div className="border-2 border-sf-glass-border rounded-3xl p-4">
+          <h2 className="text-white text-base font-black uppercase tracking-wider mb-4 flex items-center gap-2">
             <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-14a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V4z" clipRule="evenodd" />
             </svg>
@@ -177,7 +177,7 @@ const InteractiveWidgets: React.FC<InteractiveWidgetsProps> = ({ onRequireLogin 
             {leaderboardData.map((user) => (
               <div
                 key={user.rank}
-                className={`flex items-center justify-between p-3 rounded-xl border transition-all hover:scale-[1.02] ${getRankStyle(user.rank)}`}
+                className={`flex items-center justify-between p-3 rounded-2xl border-2 transition-all hover:scale-[1.02] ${getRankStyle(user.rank)}`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${
@@ -197,27 +197,27 @@ const InteractiveWidgets: React.FC<InteractiveWidgetsProps> = ({ onRequireLogin 
         </div>
 
         {/* System Status */}
-        <div className="glass-card p-4">
-          <h2 className="text-white text-base font-semibold mb-4 flex items-center gap-2">
+        <div className="border-2 border-sf-glass-border rounded-3xl p-4">
+          <h2 className="text-white text-base font-black uppercase tracking-wider mb-4 flex items-center gap-2">
             <div className="w-2 h-2 bg-sf-status-success rounded-full"></div>
             System Status
           </h2>
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-sf-bg-tertiary rounded-xl p-3">
-              <div className="text-sf-text-muted text-xs mb-1">Cameras</div>
-              <div className="text-sf-status-success font-semibold">8/8 Online</div>
+            <div className="bg-sf-bg-tertiary rounded-2xl p-3 border border-sf-glass-border">
+              <div className="text-sf-text-muted text-[0.625rem] font-bold uppercase tracking-[0.15em] mb-1">Cameras</div>
+              <div className="text-sf-status-success font-bold">8/8 Online</div>
             </div>
-            <div className="bg-sf-bg-tertiary rounded-xl p-3">
-              <div className="text-sf-text-muted text-xs mb-1">Quality</div>
-              <div className="text-sf-status-success font-semibold">HD</div>
+            <div className="bg-sf-bg-tertiary rounded-2xl p-3 border border-sf-glass-border">
+              <div className="text-sf-text-muted text-[0.625rem] font-bold uppercase tracking-[0.15em] mb-1">Quality</div>
+              <div className="text-sf-status-success font-bold">HD</div>
             </div>
-            <div className="bg-sf-bg-tertiary rounded-xl p-3">
-              <div className="text-sf-text-muted text-xs mb-1">Viewers</div>
-              <div className="text-white font-semibold">247</div>
+            <div className="bg-sf-bg-tertiary rounded-2xl p-3 border border-sf-glass-border">
+              <div className="text-sf-text-muted text-[0.625rem] font-bold uppercase tracking-[0.15em] mb-1">Viewers</div>
+              <div className="text-white font-bold">247</div>
             </div>
-            <div className="bg-sf-bg-tertiary rounded-xl p-3">
-              <div className="text-sf-text-muted text-xs mb-1">Uptime</div>
-              <div className="text-white font-semibold">99.9%</div>
+            <div className="bg-sf-bg-tertiary rounded-2xl p-3 border border-sf-glass-border">
+              <div className="text-sf-text-muted text-[0.625rem] font-bold uppercase tracking-[0.15em] mb-1">Uptime</div>
+              <div className="text-white font-bold">99.9%</div>
             </div>
           </div>
         </div>
@@ -238,7 +238,7 @@ const InteractiveWidgets: React.FC<InteractiveWidgetsProps> = ({ onRequireLogin 
               href={social.href}
               target="_blank"
               rel="noopener noreferrer"
-              className={`w-9 h-9 rounded-xl flex items-center justify-center text-sf-text-tertiary transition-all text-xs font-bold ${social.hoverColor}`}
+              className={`w-9 h-9 rounded-full flex items-center justify-center text-sf-text-tertiary transition-all text-xs font-bold ${social.hoverColor}`}
             >
               {social.icon}
             </a>

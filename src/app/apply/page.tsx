@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface FormData {
   // Section 1: Your Details
@@ -203,31 +204,34 @@ const ApplyPage: React.FC = () => {
   };
 
   const inputClass = (field: keyof FormData) =>
-    `w-full bg-gray-800/50 border ${errors[field] ? 'border-red-500' : 'border-gray-700'} rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition-colors`;
+    `w-full bg-sf-bg-tertiary border-2 ${errors[field] ? 'border-red-500' : 'border-sf-glass-border'} rounded-2xl px-4 py-3 text-white placeholder-sf-text-muted focus:outline-none focus:border-sf-accent-primary transition-colors`;
 
   const textareaClass = (field: keyof FormData) =>
-    `w-full bg-gray-800/50 border ${errors[field] ? 'border-red-500' : 'border-gray-700'} rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition-colors min-h-[100px] resize-none`;
+    `w-full bg-sf-bg-tertiary border-2 ${errors[field] ? 'border-red-500' : 'border-sf-glass-border'} rounded-2xl px-4 py-3 text-white placeholder-sf-text-muted focus:outline-none focus:border-sf-accent-primary transition-colors min-h-[100px] resize-none`;
+
+  const selectClass = (field: keyof FormData) =>
+    `w-full bg-sf-bg-tertiary border-2 ${errors[field] ? 'border-red-500' : 'border-sf-glass-border'} rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-sf-accent-primary transition-colors`;
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center px-6">
+      <div className="min-h-screen bg-sf-bg-primary text-white flex items-center justify-center px-6">
         <div className="max-w-md w-full text-center">
-          <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-20 h-20 bg-sf-accent-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-sf-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold mb-4">Application Submitted!</h1>
-          <p className="text-gray-400 mb-8">
+          <h1 className="text-3xl font-black uppercase tracking-tight mb-4 text-white">Application Submitted!</h1>
+          <p className="text-sf-text-secondary mb-8">
             Thank you for applying to Star Factor Season 1! We&apos;ll review your application and contact you if you&apos;re shortlisted for the next stage.
           </p>
           <div className="space-y-4">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-sf-text-muted">
               Check your email ({formData.email}) for a confirmation.
             </p>
             <Link
               href="/"
-              className="inline-block bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-400 hover:to-pink-400 px-8 py-3 rounded-xl font-semibold transition-all"
+              className="btn-primary inline-block rounded-full px-8 py-3 font-bold uppercase tracking-wider transition-all"
             >
               Back to Home
             </Link>
@@ -238,19 +242,23 @@ const ApplyPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-sf-bg-primary text-white">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-gray-950/90 backdrop-blur-md border-b border-gray-800">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-sf-bg-primary/90 backdrop-blur-md border-b border-sf-glass-border">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-pink-500 rounded-lg flex items-center justify-center font-bold text-xl">
-              SF
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
+          <Link href="/" className="flex items-center gap-3">
+            <Image
+              src="/starfff.png"
+              alt="Star Factor"
+              width={40}
+              height={40}
+              className="rounded-full"
+            />
+            <span className="text-xl font-black uppercase tracking-tight text-white">
               Star Factor
             </span>
           </Link>
-          <span className="text-sm text-gray-400">Season 1 Application</span>
+          <span className="text-[0.625rem] font-bold uppercase tracking-[0.15em] text-sf-accent-secondary">Season 1 Application</span>
         </div>
       </header>
 
@@ -259,38 +267,52 @@ const ApplyPage: React.FC = () => {
         <div className="max-w-2xl mx-auto">
           {/* Title */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">
-              <span className="bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
-                Contestant Application
-              </span>
+            <p className="text-[0.625rem] font-bold uppercase tracking-[0.15em] text-sf-accent-secondary mb-3">Apply Now</p>
+            <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tight mb-2 text-white">
+              Contestant Application
             </h1>
-            <p className="text-gray-400">Lagos - 6 Weeks - 24/7 Live Streaming - Win Real Money</p>
+            <p className="text-sf-text-secondary">Lagos - 6 Weeks - 24/7 Live Streaming - Win Real Money</p>
           </div>
 
           {/* Progress Bar */}
           <div className="mb-8">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-400">Step {currentStep} of {totalSteps}</span>
-              <span className="text-sm text-gray-400">{Math.round((currentStep / totalSteps) * 100)}% complete</span>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-bold uppercase tracking-wider text-sf-text-secondary">Step {currentStep} of {totalSteps}</span>
+              <span className="text-sm font-bold text-sf-accent-secondary">{Math.round((currentStep / totalSteps) * 100)}%</span>
             </div>
-            <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+            <div className="h-2 bg-sf-bg-tertiary rounded-full overflow-hidden border border-sf-glass-border">
               <div
-                className="h-full bg-gradient-to-r from-orange-500 to-pink-500 transition-all duration-300"
+                className="h-full bg-gradient-to-r from-sf-accent-primary to-sf-cyan transition-all duration-300"
                 style={{ width: `${(currentStep / totalSteps) * 100}%` }}
               />
+            </div>
+            {/* Step indicators */}
+            <div className="flex justify-between mt-3">
+              {Array.from({ length: totalSteps }, (_, i) => i + 1).map(step => (
+                <div
+                  key={step}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                    step <= currentStep
+                      ? 'bg-sf-accent-primary text-white'
+                      : 'bg-sf-bg-tertiary border-2 border-sf-glass-border text-sf-text-muted'
+                  }`}
+                >
+                  {step}
+                </div>
+              ))}
             </div>
           </div>
 
           {/* Form Container */}
-          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6 md:p-8">
+          <div className="border-2 border-sf-glass-border rounded-3xl bg-sf-bg-secondary p-6 md:p-8">
             {/* Step 1: Your Details */}
             {currentStep === 1 && (
               <div className="space-y-6">
-                <h2 className="text-xl font-bold text-orange-400 mb-4">1. Your Details</h2>
+                <h2 className="text-xl font-bold uppercase tracking-wider text-sf-accent-secondary mb-4">1. Your Details</h2>
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Full Name *</label>
+                    <label className="block text-sm font-bold text-sf-text-secondary mb-2">Full Name *</label>
                     <input
                       type="text"
                       value={formData.fullName}
@@ -301,7 +323,7 @@ const ApplyPage: React.FC = () => {
                     {errors.fullName && <p className="text-red-400 text-xs mt-1">{errors.fullName}</p>}
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Nickname / Stage Name</label>
+                    <label className="block text-sm font-bold text-sf-text-secondary mb-2">Nickname / Stage Name</label>
                     <input
                       type="text"
                       value={formData.nickname}
@@ -314,7 +336,7 @@ const ApplyPage: React.FC = () => {
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Age * (Must be 21+)</label>
+                    <label className="block text-sm font-bold text-sf-text-secondary mb-2">Age * (Must be 21+)</label>
                     <input
                       type="number"
                       value={formData.age}
@@ -326,11 +348,11 @@ const ApplyPage: React.FC = () => {
                     {errors.age && <p className="text-red-400 text-xs mt-1">{errors.age}</p>}
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Gender *</label>
+                    <label className="block text-sm font-bold text-sf-text-secondary mb-2">Gender *</label>
                     <select
                       value={formData.gender}
                       onChange={e => updateField('gender', e.target.value)}
-                      className={inputClass('gender')}
+                      className={selectClass('gender')}
                     >
                       <option value="">Select gender</option>
                       <option value="male">Male</option>
@@ -344,7 +366,7 @@ const ApplyPage: React.FC = () => {
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">City / State *</label>
+                    <label className="block text-sm font-bold text-sf-text-secondary mb-2">City / State *</label>
                     <input
                       type="text"
                       value={formData.cityState}
@@ -355,7 +377,7 @@ const ApplyPage: React.FC = () => {
                     {errors.cityState && <p className="text-red-400 text-xs mt-1">{errors.cityState}</p>}
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Occupation *</label>
+                    <label className="block text-sm font-bold text-sf-text-secondary mb-2">Occupation *</label>
                     <input
                       type="text"
                       value={formData.occupation}
@@ -369,7 +391,7 @@ const ApplyPage: React.FC = () => {
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Phone (WhatsApp) *</label>
+                    <label className="block text-sm font-bold text-sf-text-secondary mb-2">Phone (WhatsApp) *</label>
                     <input
                       type="tel"
                       value={formData.phone}
@@ -380,7 +402,7 @@ const ApplyPage: React.FC = () => {
                     {errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone}</p>}
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Email *</label>
+                    <label className="block text-sm font-bold text-sf-text-secondary mb-2">Email *</label>
                     <input
                       type="email"
                       value={formData.email}
@@ -392,90 +414,90 @@ const ApplyPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="border-t border-gray-800 pt-6">
-                  <h3 className="text-sm font-medium text-gray-300 mb-4">Social Media (Optional)</h3>
+                <div className="border-t-2 border-sf-glass-border pt-6">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-sf-text-secondary mb-4">Social Media (Optional)</h3>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm text-gray-500 mb-2">Instagram</label>
+                      <label className="block text-sm font-bold text-sf-text-muted mb-2">Instagram</label>
                       <div className="flex">
-                        <span className="bg-gray-800 border border-r-0 border-gray-700 rounded-l-xl px-3 py-3 text-gray-500">@</span>
+                        <span className="bg-sf-bg-tertiary border-2 border-r-0 border-sf-glass-border rounded-l-2xl px-3 py-3 text-sf-text-muted">@</span>
                         <input
                           type="text"
                           value={formData.instagram}
                           onChange={e => updateField('instagram', e.target.value)}
                           placeholder="username"
-                          className="flex-1 bg-gray-800/50 border border-gray-700 rounded-r-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
+                          className="flex-1 bg-sf-bg-tertiary border-2 border-sf-glass-border rounded-r-2xl px-4 py-3 text-white placeholder-sf-text-muted focus:outline-none focus:border-sf-accent-primary"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm text-gray-500 mb-2">TikTok</label>
+                      <label className="block text-sm font-bold text-sf-text-muted mb-2">TikTok</label>
                       <div className="flex">
-                        <span className="bg-gray-800 border border-r-0 border-gray-700 rounded-l-xl px-3 py-3 text-gray-500">@</span>
+                        <span className="bg-sf-bg-tertiary border-2 border-r-0 border-sf-glass-border rounded-l-2xl px-3 py-3 text-sf-text-muted">@</span>
                         <input
                           type="text"
                           value={formData.tiktok}
                           onChange={e => updateField('tiktok', e.target.value)}
                           placeholder="username"
-                          className="flex-1 bg-gray-800/50 border border-gray-700 rounded-r-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
+                          className="flex-1 bg-sf-bg-tertiary border-2 border-sf-glass-border rounded-r-2xl px-4 py-3 text-white placeholder-sf-text-muted focus:outline-none focus:border-sf-accent-primary"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm text-gray-500 mb-2">Twitter / X</label>
+                      <label className="block text-sm font-bold text-sf-text-muted mb-2">Twitter / X</label>
                       <div className="flex">
-                        <span className="bg-gray-800 border border-r-0 border-gray-700 rounded-l-xl px-3 py-3 text-gray-500">@</span>
+                        <span className="bg-sf-bg-tertiary border-2 border-r-0 border-sf-glass-border rounded-l-2xl px-3 py-3 text-sf-text-muted">@</span>
                         <input
                           type="text"
                           value={formData.twitter}
                           onChange={e => updateField('twitter', e.target.value)}
                           placeholder="username"
-                          className="flex-1 bg-gray-800/50 border border-gray-700 rounded-r-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
+                          className="flex-1 bg-sf-bg-tertiary border-2 border-sf-glass-border rounded-r-2xl px-4 py-3 text-white placeholder-sf-text-muted focus:outline-none focus:border-sf-accent-primary"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm text-gray-500 mb-2">YouTube</label>
+                      <label className="block text-sm font-bold text-sf-text-muted mb-2">YouTube</label>
                       <div className="flex">
-                        <span className="bg-gray-800 border border-r-0 border-gray-700 rounded-l-xl px-3 py-3 text-gray-500 text-xs">youtube.com/</span>
+                        <span className="bg-sf-bg-tertiary border-2 border-r-0 border-sf-glass-border rounded-l-2xl px-3 py-3 text-sf-text-muted text-xs">youtube.com/</span>
                         <input
                           type="text"
                           value={formData.youtube}
                           onChange={e => updateField('youtube', e.target.value)}
                           placeholder="channel"
-                          className="flex-1 bg-gray-800/50 border border-gray-700 rounded-r-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
+                          className="flex-1 bg-sf-bg-tertiary border-2 border-sf-glass-border rounded-r-2xl px-4 py-3 text-white placeholder-sf-text-muted focus:outline-none focus:border-sf-accent-primary"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm text-gray-500 mb-2">Facebook</label>
+                      <label className="block text-sm font-bold text-sf-text-muted mb-2">Facebook</label>
                       <div className="flex">
-                        <span className="bg-gray-800 border border-r-0 border-gray-700 rounded-l-xl px-3 py-3 text-gray-500 text-xs">facebook.com/</span>
+                        <span className="bg-sf-bg-tertiary border-2 border-r-0 border-sf-glass-border rounded-l-2xl px-3 py-3 text-sf-text-muted text-xs">facebook.com/</span>
                         <input
                           type="text"
                           value={formData.facebook}
                           onChange={e => updateField('facebook', e.target.value)}
                           placeholder="profile"
-                          className="flex-1 bg-gray-800/50 border border-gray-700 rounded-r-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
+                          className="flex-1 bg-sf-bg-tertiary border-2 border-sf-glass-border rounded-r-2xl px-4 py-3 text-white placeholder-sf-text-muted focus:outline-none focus:border-sf-accent-primary"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm text-gray-500 mb-2">Snapchat</label>
+                      <label className="block text-sm font-bold text-sf-text-muted mb-2">Snapchat</label>
                       <div className="flex">
-                        <span className="bg-gray-800 border border-r-0 border-gray-700 rounded-l-xl px-3 py-3 text-gray-500">@</span>
+                        <span className="bg-sf-bg-tertiary border-2 border-r-0 border-sf-glass-border rounded-l-2xl px-3 py-3 text-sf-text-muted">@</span>
                         <input
                           type="text"
                           value={formData.snapchat}
                           onChange={e => updateField('snapchat', e.target.value)}
                           placeholder="username"
-                          className="flex-1 bg-gray-800/50 border border-gray-700 rounded-r-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500"
+                          className="flex-1 bg-sf-bg-tertiary border-2 border-sf-glass-border rounded-r-2xl px-4 py-3 text-white placeholder-sf-text-muted focus:outline-none focus:border-sf-accent-primary"
                         />
                       </div>
                     </div>
                   </div>
                   <div className="mt-4">
-                    <label className="block text-sm text-gray-500 mb-2">Other Platforms (Threads, LinkedIn, website, podcast, etc.)</label>
+                    <label className="block text-sm font-bold text-sf-text-muted mb-2">Other Platforms (Threads, LinkedIn, website, podcast, etc.)</label>
                     <input
                       type="text"
                       value={formData.otherPlatforms}
@@ -491,10 +513,10 @@ const ApplyPage: React.FC = () => {
             {/* Step 2: Tell Us About Yourself */}
             {currentStep === 2 && (
               <div className="space-y-6">
-                <h2 className="text-xl font-bold text-orange-400 mb-4">2. Tell Us About Yourself</h2>
+                <h2 className="text-xl font-bold uppercase tracking-wider text-sf-accent-secondary mb-4">2. Tell Us About Yourself</h2>
 
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">In one sentence, who are you? *</label>
+                  <label className="block text-sm font-bold text-sf-text-secondary mb-2">In one sentence, who are you? *</label>
                   <textarea
                     value={formData.whoAreYou}
                     onChange={e => updateField('whoAreYou', e.target.value)}
@@ -504,12 +526,12 @@ const ApplyPage: React.FC = () => {
                   />
                   <div className="flex justify-between mt-1">
                     {errors.whoAreYou && <p className="text-red-400 text-xs">{errors.whoAreYou}</p>}
-                    <p className="text-xs text-gray-500 ml-auto">{formData.whoAreYou.length}/200</p>
+                    <p className="text-xs text-sf-text-muted ml-auto">{formData.whoAreYou.length}/200</p>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Why do you want to be on Star Factor? *</label>
+                  <label className="block text-sm font-bold text-sf-text-secondary mb-2">Why do you want to be on Star Factor? *</label>
                   <textarea
                     value={formData.whyFanFactor}
                     onChange={e => updateField('whyFanFactor', e.target.value)}
@@ -519,12 +541,12 @@ const ApplyPage: React.FC = () => {
                   />
                   <div className="flex justify-between mt-1">
                     {errors.whyFanFactor && <p className="text-red-400 text-xs">{errors.whyFanFactor}</p>}
-                    <p className="text-xs text-gray-500 ml-auto">{formData.whyFanFactor.length}/500</p>
+                    <p className="text-xs text-sf-text-muted ml-auto">{formData.whyFanFactor.length}/500</p>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">What makes you entertaining to watch? *</label>
+                  <label className="block text-sm font-bold text-sf-text-secondary mb-2">What makes you entertaining to watch? *</label>
                   <textarea
                     value={formData.whatMakesYouEntertaining}
                     onChange={e => updateField('whatMakesYouEntertaining', e.target.value)}
@@ -534,7 +556,7 @@ const ApplyPage: React.FC = () => {
                   />
                   <div className="flex justify-between mt-1">
                     {errors.whatMakesYouEntertaining && <p className="text-red-400 text-xs">{errors.whatMakesYouEntertaining}</p>}
-                    <p className="text-xs text-gray-500 ml-auto">{formData.whatMakesYouEntertaining.length}/500</p>
+                    <p className="text-xs text-sf-text-muted ml-auto">{formData.whatMakesYouEntertaining.length}/500</p>
                   </div>
                 </div>
               </div>
@@ -543,15 +565,15 @@ const ApplyPage: React.FC = () => {
             {/* Step 3: Quick Background */}
             {currentStep === 3 && (
               <div className="space-y-6">
-                <h2 className="text-xl font-bold text-orange-400 mb-4">3. Quick Background</h2>
+                <h2 className="text-xl font-bold uppercase tracking-wider text-sf-accent-secondary mb-4">3. Quick Background</h2>
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Relationship Status *</label>
+                    <label className="block text-sm font-bold text-sf-text-secondary mb-2">Relationship Status *</label>
                     <select
                       value={formData.relationshipStatus}
                       onChange={e => updateField('relationshipStatus', e.target.value)}
-                      className={inputClass('relationshipStatus')}
+                      className={selectClass('relationshipStatus')}
                     >
                       <option value="">Select status</option>
                       <option value="single">Single</option>
@@ -562,11 +584,11 @@ const ApplyPage: React.FC = () => {
                     {errors.relationshipStatus && <p className="text-red-400 text-xs mt-1">{errors.relationshipStatus}</p>}
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Highest Education *</label>
+                    <label className="block text-sm font-bold text-sf-text-secondary mb-2">Highest Education *</label>
                     <select
                       value={formData.education}
                       onChange={e => updateField('education', e.target.value)}
-                      className={inputClass('education')}
+                      className={selectClass('education')}
                     >
                       <option value="">Select education</option>
                       <option value="secondary">Secondary School</option>
@@ -581,17 +603,17 @@ const ApplyPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-400 mb-3">How would you describe yourself? (Check all that apply)</label>
+                  <label className="block text-sm font-bold text-sf-text-secondary mb-3">How would you describe yourself? (Check all that apply)</label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {personalityTraits.map(trait => (
                       <button
                         key={trait}
                         type="button"
                         onClick={() => togglePersonality(trait)}
-                        className={`p-3 rounded-xl border text-sm text-left transition-all ${
+                        className={`p-3 rounded-2xl border-2 text-sm text-left transition-all ${
                           formData.personality.includes(trait)
-                            ? 'bg-orange-500/20 border-orange-500 text-orange-400'
-                            : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600'
+                            ? 'bg-sf-accent-primary/20 border-sf-accent-primary text-sf-accent-secondary'
+                            : 'bg-sf-bg-tertiary border-sf-glass-border text-sf-text-muted hover:border-sf-accent-primary/50'
                         }`}
                       >
                         <span className="mr-2">{formData.personality.includes(trait) ? '✓' : '○'}</span>
@@ -602,17 +624,17 @@ const ApplyPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-400 mb-3">How do you typically handle conflict? *</label>
+                  <label className="block text-sm font-bold text-sf-text-secondary mb-3">How do you typically handle conflict? *</label>
                   <div className="grid md:grid-cols-2 gap-3">
                     {conflictOptions.map(option => (
                       <button
                         key={option}
                         type="button"
                         onClick={() => updateField('conflictHandling', option)}
-                        className={`p-4 rounded-xl border text-sm text-left transition-all ${
+                        className={`p-4 rounded-2xl border-2 text-sm text-left transition-all ${
                           formData.conflictHandling === option
-                            ? 'bg-orange-500/20 border-orange-500 text-orange-400'
-                            : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600'
+                            ? 'bg-sf-accent-primary/20 border-sf-accent-primary text-sf-accent-secondary'
+                            : 'bg-sf-bg-tertiary border-sf-glass-border text-sf-text-muted hover:border-sf-accent-primary/50'
                         }`}
                       >
                         <span className="mr-2">{formData.conflictHandling === option ? '●' : '○'}</span>
@@ -624,7 +646,7 @@ const ApplyPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">What&apos;s one thing that would definitely make you lose your temper?</label>
+                  <label className="block text-sm font-bold text-sf-text-secondary mb-2">What&apos;s one thing that would definitely make you lose your temper?</label>
                   <textarea
                     value={formData.temperTrigger}
                     onChange={e => updateField('temperTrigger', e.target.value)}
@@ -635,7 +657,7 @@ const ApplyPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Have you ever been on TV or applied to a reality show before? If yes, which one?</label>
+                  <label className="block text-sm font-bold text-sf-text-secondary mb-2">Have you ever been on TV or applied to a reality show before? If yes, which one?</label>
                   <textarea
                     value={formData.previousTvExperience}
                     onChange={e => updateField('previousTvExperience', e.target.value)}
@@ -650,18 +672,18 @@ const ApplyPage: React.FC = () => {
             {/* Step 4: Availability */}
             {currentStep === 4 && (
               <div className="space-y-6">
-                <h2 className="text-xl font-bold text-orange-400 mb-4">4. Availability</h2>
-                <p className="text-gray-400 mb-6">Please confirm you can commit to the following:</p>
+                <h2 className="text-xl font-bold uppercase tracking-wider text-sf-accent-secondary mb-4">4. Availability</h2>
+                <p className="text-sf-text-secondary mb-6">Please confirm you can commit to the following:</p>
 
                 <div className="space-y-4">
-                  <label className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
-                    formData.availableSixWeeks ? 'bg-green-500/10 border-green-500/50' : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'
+                  <label className={`flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                    formData.availableSixWeeks ? 'bg-sf-accent-primary/10 border-sf-accent-primary' : 'bg-sf-bg-tertiary border-sf-glass-border hover:border-sf-accent-primary/50'
                   }`}>
                     <input
                       type="checkbox"
                       checked={formData.availableSixWeeks}
                       onChange={e => updateField('availableSixWeeks', e.target.checked)}
-                      className="mt-1 w-5 h-5 rounded border-gray-600 bg-gray-700 text-orange-500 focus:ring-orange-500"
+                      className="mt-1 w-5 h-5 rounded border-sf-glass-border bg-sf-bg-tertiary text-sf-accent-primary focus:ring-sf-accent-primary"
                     />
                     <div>
                       <span className="text-white">I am available to live in the Star Factor house for 60 days</span>
@@ -669,14 +691,14 @@ const ApplyPage: React.FC = () => {
                     </div>
                   </label>
 
-                  <label className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
-                    formData.comfortableFilmed ? 'bg-green-500/10 border-green-500/50' : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'
+                  <label className={`flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                    formData.comfortableFilmed ? 'bg-sf-accent-primary/10 border-sf-accent-primary' : 'bg-sf-bg-tertiary border-sf-glass-border hover:border-sf-accent-primary/50'
                   }`}>
                     <input
                       type="checkbox"
                       checked={formData.comfortableFilmed}
                       onChange={e => updateField('comfortableFilmed', e.target.checked)}
-                      className="mt-1 w-5 h-5 rounded border-gray-600 bg-gray-700 text-orange-500 focus:ring-orange-500"
+                      className="mt-1 w-5 h-5 rounded border-sf-glass-border bg-sf-bg-tertiary text-sf-accent-primary focus:ring-sf-accent-primary"
                     />
                     <div>
                       <span className="text-white">I am comfortable being filmed and streamed 24/7</span>
@@ -684,14 +706,14 @@ const ApplyPage: React.FC = () => {
                     </div>
                   </label>
 
-                  <label className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
-                    formData.noHealthConditions ? 'bg-green-500/10 border-green-500/50' : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'
+                  <label className={`flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                    formData.noHealthConditions ? 'bg-sf-accent-primary/10 border-sf-accent-primary' : 'bg-sf-bg-tertiary border-sf-glass-border hover:border-sf-accent-primary/50'
                   }`}>
                     <input
                       type="checkbox"
                       checked={formData.noHealthConditions}
                       onChange={e => updateField('noHealthConditions', e.target.checked)}
-                      className="mt-1 w-5 h-5 rounded border-gray-600 bg-gray-700 text-orange-500 focus:ring-orange-500"
+                      className="mt-1 w-5 h-5 rounded border-sf-glass-border bg-sf-bg-tertiary text-sf-accent-primary focus:ring-sf-accent-primary"
                     />
                     <div>
                       <span className="text-white">I have no serious health conditions that would prevent participation</span>
@@ -699,14 +721,14 @@ const ApplyPage: React.FC = () => {
                     </div>
                   </label>
 
-                  <label className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
-                    formData.ageAndCitizenship ? 'bg-green-500/10 border-green-500/50' : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'
+                  <label className={`flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                    formData.ageAndCitizenship ? 'bg-sf-accent-primary/10 border-sf-accent-primary' : 'bg-sf-bg-tertiary border-sf-glass-border hover:border-sf-accent-primary/50'
                   }`}>
                     <input
                       type="checkbox"
                       checked={formData.ageAndCitizenship}
                       onChange={e => updateField('ageAndCitizenship', e.target.checked)}
-                      className="mt-1 w-5 h-5 rounded border-gray-600 bg-gray-700 text-orange-500 focus:ring-orange-500"
+                      className="mt-1 w-5 h-5 rounded border-sf-glass-border bg-sf-bg-tertiary text-sf-accent-primary focus:ring-sf-accent-primary"
                     />
                     <div>
                       <span className="text-white">I am at least 21 years old and a Nigerian citizen/resident</span>
@@ -720,33 +742,33 @@ const ApplyPage: React.FC = () => {
             {/* Step 5: Video Submission */}
             {currentStep === 5 && (
               <div className="space-y-6">
-                <h2 className="text-xl font-bold text-orange-400 mb-4">5. Video Submission</h2>
+                <h2 className="text-xl font-bold uppercase tracking-wider text-sf-accent-secondary mb-4">5. Video Submission</h2>
 
-                <div className="bg-gradient-to-r from-orange-500/20 to-pink-500/20 border border-orange-500/30 rounded-xl p-6">
-                  <h3 className="text-lg font-bold text-white mb-4">Submit a 1-2 Minute Video</h3>
-                  <p className="text-gray-300 mb-4">This is the most important part of your application! Show us your personality.</p>
-                  <ul className="space-y-2 text-gray-400">
+                <div className="border-2 border-sf-glass-border rounded-3xl p-6 bg-sf-accent-primary/10">
+                  <h3 className="text-lg font-black uppercase tracking-tight text-white mb-4">Submit a 1-2 Minute Video</h3>
+                  <p className="text-sf-text-secondary mb-4">This is the most important part of your application! Show us your personality.</p>
+                  <ul className="space-y-2 text-sf-text-muted">
                     <li className="flex items-start gap-2">
-                      <span className="text-orange-400">•</span>
+                      <span className="text-sf-cyan">•</span>
                       <span>Introduce yourself — name, age, what you do</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="text-orange-400">•</span>
+                      <span className="text-sf-cyan">•</span>
                       <span>Why should we pick YOU for Star Factor?</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="text-orange-400">•</span>
+                      <span className="text-sf-cyan">•</span>
                       <span>Show us something memorable — a talent, a story, your vibe</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="text-orange-400">•</span>
+                      <span className="text-sf-cyan">•</span>
                       <span><strong className="text-white">Be yourself. Be bold. Be unforgettable.</strong></span>
                     </li>
                   </ul>
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Video Link (Google Drive, YouTube unlisted, or Dropbox) *</label>
+                  <label className="block text-sm font-bold text-sf-text-secondary mb-2">Video Link (Google Drive, YouTube unlisted, or Dropbox) *</label>
                   <input
                     type="url"
                     value={formData.videoLink}
@@ -755,7 +777,7 @@ const ApplyPage: React.FC = () => {
                     className={inputClass('videoLink')}
                   />
                   {errors.videoLink && <p className="text-red-400 text-xs mt-1">{errors.videoLink}</p>}
-                  <p className="text-xs text-gray-500 mt-2">Make sure the link is publicly accessible or has sharing enabled.</p>
+                  <p className="text-xs text-sf-text-muted mt-2">Make sure the link is publicly accessible or has sharing enabled.</p>
                 </div>
               </div>
             )}
@@ -763,66 +785,66 @@ const ApplyPage: React.FC = () => {
             {/* Step 6: Agreement */}
             {currentStep === 6 && (
               <div className="space-y-6">
-                <h2 className="text-xl font-bold text-orange-400 mb-4">6. Agreement</h2>
-                <p className="text-gray-400 mb-6">By checking below, I confirm that:</p>
+                <h2 className="text-xl font-bold uppercase tracking-wider text-sf-accent-secondary mb-4">6. Agreement</h2>
+                <p className="text-sf-text-secondary mb-6">By checking below, I confirm that:</p>
 
                 <div className="space-y-4">
-                  <label className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
-                    formData.infoAccurate ? 'bg-green-500/10 border-green-500/50' : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'
+                  <label className={`flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                    formData.infoAccurate ? 'bg-sf-accent-primary/10 border-sf-accent-primary' : 'bg-sf-bg-tertiary border-sf-glass-border hover:border-sf-accent-primary/50'
                   }`}>
                     <input
                       type="checkbox"
                       checked={formData.infoAccurate}
                       onChange={e => updateField('infoAccurate', e.target.checked)}
-                      className="mt-1 w-5 h-5 rounded border-gray-600 bg-gray-700 text-orange-500 focus:ring-orange-500"
+                      className="mt-1 w-5 h-5 rounded border-sf-glass-border bg-sf-bg-tertiary text-sf-accent-primary focus:ring-sf-accent-primary"
                     />
                     <span className="text-white">All information provided is true and accurate</span>
                   </label>
 
-                  <label className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
-                    formData.consentFilming ? 'bg-green-500/10 border-green-500/50' : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'
+                  <label className={`flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                    formData.consentFilming ? 'bg-sf-accent-primary/10 border-sf-accent-primary' : 'bg-sf-bg-tertiary border-sf-glass-border hover:border-sf-accent-primary/50'
                   }`}>
                     <input
                       type="checkbox"
                       checked={formData.consentFilming}
                       onChange={e => updateField('consentFilming', e.target.checked)}
-                      className="mt-1 w-5 h-5 rounded border-gray-600 bg-gray-700 text-orange-500 focus:ring-orange-500"
+                      className="mt-1 w-5 h-5 rounded border-sf-glass-border bg-sf-bg-tertiary text-sf-accent-primary focus:ring-sf-accent-primary"
                     />
                     <span className="text-white">I consent to being filmed and broadcast 24/7 if selected</span>
                   </label>
 
-                  <label className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
-                    formData.understandPredictions ? 'bg-green-500/10 border-green-500/50' : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'
+                  <label className={`flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                    formData.understandPredictions ? 'bg-sf-accent-primary/10 border-sf-accent-primary' : 'bg-sf-bg-tertiary border-sf-glass-border hover:border-sf-accent-primary/50'
                   }`}>
                     <input
                       type="checkbox"
                       checked={formData.understandPredictions}
                       onChange={e => updateField('understandPredictions', e.target.checked)}
-                      className="mt-1 w-5 h-5 rounded border-gray-600 bg-gray-700 text-orange-500 focus:ring-orange-500"
+                      className="mt-1 w-5 h-5 rounded border-sf-glass-border bg-sf-bg-tertiary text-sf-accent-primary focus:ring-sf-accent-primary"
                     />
                     <span className="text-white">I understand viewers may interact with the show through predictions and voting</span>
                   </label>
 
-                  <label className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
-                    formData.noCriminalCharges ? 'bg-green-500/10 border-green-500/50' : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'
+                  <label className={`flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                    formData.noCriminalCharges ? 'bg-sf-accent-primary/10 border-sf-accent-primary' : 'bg-sf-bg-tertiary border-sf-glass-border hover:border-sf-accent-primary/50'
                   }`}>
                     <input
                       type="checkbox"
                       checked={formData.noCriminalCharges}
                       onChange={e => updateField('noCriminalCharges', e.target.checked)}
-                      className="mt-1 w-5 h-5 rounded border-gray-600 bg-gray-700 text-orange-500 focus:ring-orange-500"
+                      className="mt-1 w-5 h-5 rounded border-sf-glass-border bg-sf-bg-tertiary text-sf-accent-primary focus:ring-sf-accent-primary"
                     />
                     <span className="text-white">I have no pending criminal charges</span>
                   </label>
 
-                  <label className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
-                    formData.understandNoGuarantee ? 'bg-green-500/10 border-green-500/50' : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'
+                  <label className={`flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                    formData.understandNoGuarantee ? 'bg-sf-accent-primary/10 border-sf-accent-primary' : 'bg-sf-bg-tertiary border-sf-glass-border hover:border-sf-accent-primary/50'
                   }`}>
                     <input
                       type="checkbox"
                       checked={formData.understandNoGuarantee}
                       onChange={e => updateField('understandNoGuarantee', e.target.checked)}
-                      className="mt-1 w-5 h-5 rounded border-gray-600 bg-gray-700 text-orange-500 focus:ring-orange-500"
+                      className="mt-1 w-5 h-5 rounded border-sf-glass-border bg-sf-bg-tertiary text-sf-accent-primary focus:ring-sf-accent-primary"
                     />
                     <span className="text-white">I understand this application does not guarantee selection</span>
                   </label>
@@ -831,12 +853,12 @@ const ApplyPage: React.FC = () => {
             )}
 
             {/* Navigation Buttons */}
-            <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-800">
+            <div className="flex items-center justify-between mt-8 pt-6 border-t-2 border-sf-glass-border">
               <button
                 type="button"
                 onClick={handleBack}
                 disabled={currentStep === 1}
-                className="px-6 py-3 rounded-xl font-medium text-gray-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-secondary rounded-full px-6 py-3 font-bold uppercase tracking-wider text-sf-text-secondary hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Back
               </button>
@@ -845,7 +867,7 @@ const ApplyPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-400 hover:to-pink-400 px-8 py-3 rounded-xl font-semibold transition-all"
+                  className="btn-primary rounded-full px-8 py-3 font-bold uppercase tracking-wider transition-all"
                 >
                   Continue
                 </button>
@@ -854,7 +876,7 @@ const ApplyPage: React.FC = () => {
                   type="button"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
-                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 px-8 py-3 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="btn-primary rounded-full px-8 py-3 font-bold uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {isSubmitting ? (
                     <>
@@ -870,8 +892,8 @@ const ApplyPage: React.FC = () => {
           </div>
 
           {/* Contact Info */}
-          <div className="mt-8 text-center text-sm text-gray-500">
-            <p>Questions? DM us <a href="https://instagram.com/starfactorlive" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300">@starfactorlive</a> on Instagram or <a href="https://x.com/starfactortv" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300">@starfactortv</a> on Twitter</p>
+          <div className="mt-8 text-center text-sm text-sf-text-muted">
+            <p>Questions? DM us <a href="https://instagram.com/starfactorlive" target="_blank" rel="noopener noreferrer" className="text-sf-accent-secondary hover:text-sf-cyan transition-colors">@starfactorlive</a> on Instagram or <a href="https://x.com/starfactortv" target="_blank" rel="noopener noreferrer" className="text-sf-accent-secondary hover:text-sf-cyan transition-colors">@starfactortv</a> on Twitter</p>
           </div>
         </div>
       </main>

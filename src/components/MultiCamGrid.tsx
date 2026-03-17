@@ -23,10 +23,10 @@ const MultiCamGrid: React.FC<MultiCamGridProps> = ({
   selectedPlaybackId
 }) => {
   return (
-    <div className="h-full bg-gray-800 p-4 rounded">
+    <div className="h-full">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-gray-200 text-xl font-bold">Camera Feeds</h2>
-        <div className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
+        <h2 className="text-white text-xl font-black uppercase tracking-tight">Camera Feeds</h2>
+        <div className="text-xs font-bold uppercase tracking-[0.15em] text-sf-text-secondary bg-sf-bg-tertiary px-2 py-1 rounded-3xl">
           {cameras.filter(c => c.isActive).length} cameras ready
         </div>
       </div>
@@ -37,14 +37,14 @@ const MultiCamGrid: React.FC<MultiCamGridProps> = ({
             onClick={() => {
               onStreamClick(camera.playbackId, camera.name);
             }}
-            className={`border-2 rounded cursor-pointer hover:border-gray-400 transition-colors ${
-              selectedPlaybackId === camera.playbackId 
-                ? 'border-green-500' 
-                : 'border-gray-600'
+            className={`border-2 rounded-3xl cursor-pointer hover:border-sf-glass-border-hover transition-colors ${
+              selectedPlaybackId === camera.playbackId
+                ? 'border-sf-status-success'
+                : 'border-sf-glass-border'
             }`}
           >
             {/* Stream Thumbnail */}
-            <div className="relative h-48 md:h-64 w-full bg-black rounded-t overflow-hidden">
+            <div className="relative h-48 md:h-64 w-full bg-black rounded-t-3xl overflow-hidden">
               {/* Static Background - Always visible */}
               <div className="absolute inset-0 bg-black">
                 <div 
@@ -104,13 +104,13 @@ const MultiCamGrid: React.FC<MultiCamGridProps> = ({
               {/* Status Indicator */}
               <div className="absolute top-2 right-2">
                 <div className={`w-4 h-4 rounded-full border-2 border-white ${
-                  camera.isActive ? 'bg-green-500 animate-pulse' : 'bg-red-500'
+                  camera.isActive ? 'bg-sf-status-success animate-pulse' : 'bg-sf-status-error'
                 }`}></div>
               </div>
               
               {/* Play Overlay */}
-              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                <div className="w-16 h-16 bg-sf-accent-primary/20 rounded-full flex items-center justify-center">
                   <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z"/>
                   </svg>
@@ -119,8 +119,8 @@ const MultiCamGrid: React.FC<MultiCamGridProps> = ({
             </div>
             
             {/* Camera name displayed underneath */}
-            <div className="bg-gray-700 px-3 py-2 text-center">
-              <h3 className="text-gray-200 text-sm font-medium">{camera.name}</h3>
+            <div className="bg-sf-bg-tertiary px-3 py-2 text-center rounded-b-3xl">
+              <h3 className="text-white text-sm font-medium">{camera.name}</h3>
             </div>
             
           </div>
@@ -128,16 +128,16 @@ const MultiCamGrid: React.FC<MultiCamGridProps> = ({
       </div>
       
       {cameras.length === 0 && (
-        <div className="text-center text-gray-400 py-8">
+        <div className="text-center text-sf-text-secondary py-8">
           <p>No cameras available</p>
         </div>
       )}
-      
+
       {cameras.length > 0 && cameras.every(c => !c.isActive) && (
-        <div className="text-center text-gray-400 py-8">
-          <div className="bg-gray-700 p-4 rounded-lg">
+        <div className="text-center text-sf-text-secondary py-8">
+          <div className="bg-sf-bg-tertiary border-2 border-sf-glass-border p-4 rounded-3xl">
             <p className="text-sm mb-2">📹 All cameras are ready for streaming</p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-sf-text-muted">
               Start streaming to RTMP endpoints to see live feeds
             </p>
           </div>

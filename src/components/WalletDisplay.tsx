@@ -175,7 +175,7 @@ const WalletDisplay: React.FC<WalletDisplayProps> = ({ userId }) => {
       {/* Wallet Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 bg-sf-bg-tertiary hover:bg-sf-bg-hover px-4 py-2 rounded-xl transition-all border border-sf-glass-border hover:border-sf-glass-border-hover"
+        className="flex items-center gap-2 bg-sf-bg-tertiary hover:bg-sf-bg-hover px-4 py-2 rounded-full transition-all border-2 border-sf-glass-border hover:border-sf-glass-border-hover"
       >
         <div className="flex items-center gap-1.5">
           <div className="w-5 h-5 rounded-md bg-sf-accent-primary/20 flex items-center justify-center">
@@ -197,7 +197,7 @@ const WalletDisplay: React.FC<WalletDisplayProps> = ({ userId }) => {
 
       {/* Dropdown Panel */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 glass-card overflow-hidden z-50 animate-scale-in">
+        <div className="absolute right-0 mt-2 w-80 bg-sf-bg-secondary border-2 border-sf-glass-border rounded-3xl overflow-hidden z-50 animate-scale-in shadow-sf-xl">
           {/* Header Tabs */}
           <div className="flex bg-sf-bg-tertiary/50">
             {[
@@ -208,7 +208,7 @@ const WalletDisplay: React.FC<WalletDisplayProps> = ({ userId }) => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className={`flex-1 py-3 text-sm font-medium transition-all relative ${
+                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-all relative ${
                   activeTab === tab.id
                     ? 'text-white'
                     : 'text-sf-text-tertiary hover:text-white'
@@ -257,21 +257,21 @@ const WalletDisplay: React.FC<WalletDisplayProps> = ({ userId }) => {
                 <div className="space-y-4">
                   {/* Balance Display */}
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-sf-bg-tertiary rounded-xl p-3 border border-sf-accent-primary/20">
-                      <div className="text-sf-text-muted text-xs mb-1 flex items-center gap-1">
+                    <div className="bg-sf-bg-tertiary rounded-2xl p-3 border-2 border-sf-accent-primary/20">
+                      <div className="text-sf-text-muted text-[0.625rem] font-bold uppercase tracking-[0.15em] mb-1 flex items-center gap-1">
                         <div className="w-1.5 h-1.5 rounded-full bg-sf-accent-primary"></div>
                         Clout (Free)
                       </div>
-                      <div className="text-sf-accent-primary text-xl font-bold">
+                      <div className="text-sf-accent-primary text-xl font-black">
                         {walletData.balance.clout.toLocaleString()}
                       </div>
                     </div>
-                    <div className="bg-sf-bg-tertiary rounded-xl p-3 border border-sf-status-success/20">
-                      <div className="text-sf-text-muted text-xs mb-1 flex items-center gap-1">
+                    <div className="bg-sf-bg-tertiary rounded-2xl p-3 border-2 border-sf-status-success/20">
+                      <div className="text-sf-text-muted text-[0.625rem] font-bold uppercase tracking-[0.15em] mb-1 flex items-center gap-1">
                         <div className="w-1.5 h-1.5 rounded-full bg-sf-status-success"></div>
                         Stakes (Paid)
                       </div>
-                      <div className="text-sf-status-success text-xl font-bold">
+                      <div className="text-sf-status-success text-xl font-black">
                         {walletData.balance.stakes.toLocaleString()}
                       </div>
                     </div>
@@ -281,7 +281,7 @@ const WalletDisplay: React.FC<WalletDisplayProps> = ({ userId }) => {
                   {(() => {
                     const tierStyle = getTierStyle(walletData.tier);
                     return (
-                      <div className={`rounded-xl p-3 flex items-center justify-between border ${tierStyle.bg} ${tierStyle.border}`}>
+                      <div className={`rounded-2xl p-3 flex items-center justify-between border-2 ${tierStyle.bg} ${tierStyle.border}`}>
                         <div>
                           <div className="text-sf-text-muted text-xs">Your Tier</div>
                           <div className={`font-bold ${tierStyle.text}`}>
@@ -305,10 +305,10 @@ const WalletDisplay: React.FC<WalletDisplayProps> = ({ userId }) => {
                   <button
                     onClick={handleClaimDaily}
                     disabled={!walletData.canClaimDaily || isClaiming}
-                    className={`w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                    className={`w-full py-3 rounded-full font-bold uppercase tracking-wider text-sm transition-all flex items-center justify-center gap-2 ${
                       walletData.canClaimDaily
                         ? 'btn-primary'
-                        : 'bg-sf-bg-tertiary text-sf-text-muted cursor-not-allowed border border-sf-glass-border'
+                        : 'bg-sf-bg-tertiary text-sf-text-muted cursor-not-allowed border-2 border-sf-glass-border'
                     }`}
                   >
                     {isClaiming ? (
@@ -366,7 +366,7 @@ const WalletDisplay: React.FC<WalletDisplayProps> = ({ userId }) => {
                     <button
                       key={tier.amount}
                       onClick={() => handleDeposit(tier.amount)}
-                      className="w-full bg-sf-bg-tertiary hover:bg-sf-bg-hover rounded-xl p-4 flex items-center justify-between transition-all border border-sf-glass-border hover:border-sf-status-success/30 group"
+                      className="w-full bg-sf-bg-tertiary hover:bg-sf-bg-hover rounded-2xl p-4 flex items-center justify-between transition-all border-2 border-sf-glass-border hover:border-sf-status-success/30 group"
                     >
                       <div className="text-left">
                         <div className="text-white font-semibold group-hover:text-sf-status-success transition-colors">
