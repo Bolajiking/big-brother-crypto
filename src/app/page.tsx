@@ -1,1001 +1,1277 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 
-// FAQ Data
-const faqData = [
-  {
-    category: 'General',
-    questions: [
-      {
-        q: 'What is Star Factor?',
-        a: 'Star Factor is Africa\'s first live interactive reality game show. It\'s a 24/7 live-streamed competition where contestants live together in a house for 60 days, competing for a $30,000 grand prize. Your engagement directly shapes the outcome of the show through prediction markets and voting.'
-      },
-      {
-        q: 'When does Season 1 start?',
-        a: 'Season 1 is scheduled to launch in Q2 2026. Join our waitlist to be the first to know the exact premiere date and get early access to the platform.'
-      },
-      {
-        q: 'Is the platform easy to use?',
-        a: 'Absolutely. We\'ve designed Star Factor to feel as simple as any regular app. Watch, vote, and participate using your local currency. Instant payouts, transparent transactions, zero friction.'
-      },
-      {
-        q: 'Is this legal?',
-        a: 'Yes. Star Factor operates as an entertainment platform with skill-based prediction markets. We comply with local regulations in all territories we operate in and work with licensed payment providers for all transactions.'
-      },
-    ]
-  },
-  {
-    category: 'For Viewers',
-    questions: [
-      {
-        q: 'How do I watch the show?',
-        a: 'Create a free account and you\'ll get instant access to 8 live camera feeds streaming 24/7. Watch on any device — phone, tablet, laptop, or smart TV through our web app.'
-      },
-      {
-        q: 'What are Clout and Stakes?',
-        a: 'Clout is our free currency — earn it by watching, chatting, and logging in daily. Stakes is our premium currency — buy it with Naira to unlock bigger bets and premium features. Both currencies let you interact with the show.'
-      },
-      {
-        q: 'How do prediction markets work?',
-        a: 'Prediction markets let you bet on show outcomes — who wins challenges, who gets evicted, who starts drama. Create your own markets or bet on existing ones. Win Stakes when your predictions are correct.'
-      },
-      {
-        q: 'Can I really earn money?',
-        a: 'Yes. Win prediction markets, accumulate Stakes, and cash out to your bank account via Paystack. Top predictors on our leaderboard also earn weekly prizes.'
-      },
-    ]
-  },
-  {
-    category: 'For Contestants',
-    questions: [
-      {
-        q: 'How do I apply?',
-        a: 'Click "Apply Now" and complete our multi-step application. You\'ll need to provide personal details, answer personality questions, and submit a 1-2 minute video showing us why you\'d be an unforgettable housemate.'
-      },
-      {
-        q: 'What are the requirements?',
-        a: 'You must be at least 21 years old, a Nigerian citizen or resident, available for 60 days of filming, and comfortable being filmed 24/7. No serious health conditions that would prevent participation.'
-      },
-      {
-        q: 'What\'s the prize?',
-        a: 'The Season 1 grand prize is $30,000, plus brand partnership opportunities and the exposure of being on Africa\'s most-watched interactive show.'
-      },
-    ]
-  },
-  {
-    category: 'About Star Factor',
-    questions: [
-      {
-        q: 'Who built this?',
-        a: 'Star Factor is a Chainfren product. Chainfren unlocks digital wealth for creators and brands by equipping them with tools, strategy, and platforms to thrive in the global onchain economy.'
-      },
-      {
-        q: 'What makes Star Factor different from Big Brother?',
-        a: 'Star Factor puts real power in the viewers\' hands through prediction markets, skill-based betting, and transparent onchain voting. You don\'t just watch — you play, predict, and earn.'
-      },
-      {
-        q: 'Is my money safe?',
-        a: 'All payments are processed through Paystack, Nigeria\'s most trusted payment provider. Your funds are protected and withdrawals are instant to your bank account.'
-      },
-    ]
-  },
-];
+// ─────────────────────────────────────────────────────────────
+// PRIMITIVES — scoped to .sf-watch-root tokens (globals.css)
+// Same theme system as /watch for seamless cross-page UX.
+// ─────────────────────────────────────────────────────────────
+const SFWordmark: React.FC<{ size?: number; color?: string; dot?: string }> = ({
+  size = 22, color = '#fff', dot = '#FF4E2B',
+}) => (
+  <span className="sf-display" style={{
+    fontSize: size, fontWeight: 900, color,
+    letterSpacing: '-0.05em', lineHeight: 1,
+    display: 'inline-flex', alignItems: 'center', gap: 1,
+  }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+      <span style={{
+        width: size * 0.78, height: size * 0.78, borderRadius: 6,
+        background: 'var(--sf-stage)', border: '1.5px solid ' + color,
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <svg viewBox="0 0 24 24" width={size * 0.55} height={size * 0.55}>
+          <path d="M12 2l2.6 6.4L21 9l-5 4.7L17.5 21 12 17.6 6.5 21 8 13.7 3 9l6.4-.6L12 2z"
+            fill={dot} stroke={color} strokeWidth="0.8" strokeLinejoin="round" />
+        </svg>
+      </span>
+      <span style={{ fontStyle: 'italic' }}>starfactor</span>
+    </span>
+    <span style={{ color: dot, marginLeft: 1 }}>.</span>
+  </span>
+);
 
-// Scroll-triggered animation hook
-function useInView(options = {}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [isInView, setIsInView] = useState(false);
+const PALETTES: Record<string, { a: string; b: string; c: string }> = {
+  coral:  { a: '#FF4E2B', b: '#F2B544', c: '#0A0814' },
+  violet: { a: '#6B3FE5', b: '#8DAAFF', c: '#0A0814' },
+  mint:   { a: '#1FD17A', b: '#C8EB6D', c: '#0A0814' },
+  gold:   { a: '#F2B544', b: '#FF4E2B', c: '#0A0814' },
+  night:  { a: '#1A1247', b: '#6B3FE5', c: '#FF4E2B' },
+  sky:    { a: '#5ACDFF', b: '#8DAAFF', c: '#0A0814' },
+  rose:   { a: '#FF1F3D', b: '#FF4E2B', c: '#1A0410' },
+  ink:    { a: '#0E0A1F', b: '#1A1247', c: '#FF4E2B' },
+};
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsInView(true);
-          observer.unobserve(entry.target);
-        }
-      },
-      { threshold: 0.1, rootMargin: '-60px', ...options }
-    );
-
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
-
-  return { ref, isInView };
-}
-
-// FadeUp component for scroll animations
-const FadeUp: React.FC<{ children: React.ReactNode; delay?: number; className?: string }> = ({ children, delay = 0, className = '' }) => {
-  const { ref, isInView } = useInView();
+const Photo: React.FC<{ palette?: string; children?: React.ReactNode; style?: React.CSSProperties }> = ({
+  palette = 'coral', children, style,
+}) => {
+  const p = PALETTES[palette] || PALETTES.coral;
   return (
-    <div
-      ref={ref}
-      className={className}
-      style={{
-        opacity: isInView ? 1 : 0,
-        transform: isInView ? 'translateY(0)' : 'translateY(40px)',
-        transition: `all 0.7s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s`,
-      }}
-    >
+    <div className="sf-photo" style={{
+      width: '100%', height: '100%', position: 'relative', overflow: 'hidden',
+      background: `radial-gradient(120% 120% at 80% 20%, ${p.b} 0%, ${p.a} 50%, ${p.c} 120%)`,
+      ...style,
+    }}>
+      <div className="sf-photo-grain" />
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.45 }}>
+        <circle cx="78" cy="22" r="14" fill={p.b} fillOpacity="0.55" />
+        <circle cx="20" cy="78" r="26" fill={p.c} fillOpacity="0.30" />
+        <path d="M 0 60 Q 30 50 50 60 T 100 55" stroke={p.c} strokeWidth="0.5" fill="none" opacity="0.7" />
+        <path d="M 0 75 Q 30 65 55 70 T 100 68" stroke={p.b} strokeWidth="0.4" fill="none" opacity="0.5" />
+      </svg>
+      <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMax meet" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.32 }}>
+        <ellipse cx="50" cy="42" rx="11" ry="13" fill={p.c} />
+        <path d="M 22 105 Q 30 70 50 70 Q 70 70 78 105 Z" fill={p.c} />
+      </svg>
       {children}
     </div>
   );
 };
 
-// Token distribution data
-const tokenomics = [
-  { label: 'Community & Rewards', pct: 35, color: '#5ACDFF', bg: 'bg-[#5ACDFF]' },
-  { label: 'Ecosystem Growth', pct: 25, color: '#CBF0B8', bg: 'bg-[#CBF0B8]' },
-  { label: 'Team & Advisors', pct: 20, color: '#8DAAFF', bg: 'bg-[#8DAAFF]' },
-  { label: 'Investors', pct: 15, color: '#E6D9FF', bg: 'bg-[#E6D9FF]' },
-  { label: 'Reserve', pct: 5, color: '#A6D234', bg: 'bg-[#A6D234]' },
-];
-
-const LandingPage: React.FC = () => {
-  const [openFaq, setOpenFaq] = useState<string | null>(null);
-  const [activeCategory, setActiveCategory] = useState('General');
-  const [email, setEmail] = useState('');
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  const toggleFaq = (id: string) => {
-    setOpenFaq(openFaq === id ? null : id);
-  };
-
-  if (!isMounted) return null;
-
-  const currentFaq = faqData.find(c => c.category === activeCategory);
-
+type CamKind = 'wide' | 'corner' | 'tripod' | 'lens' | 'ptz';
+const CamGlyph: React.FC<{ kind?: CamKind; color?: string }> = ({ kind = 'wide', color = '#FF4E2B' }) => {
+  const stroke = '#0E0A1F';
+  if (kind === 'wide') return (
+    <svg viewBox="0 0 64 40" width="100%" height="100%" fill="none" preserveAspectRatio="xMidYMid meet">
+      <rect x="6" y="10" width="38" height="20" rx="3" fill="#fff" stroke={stroke} strokeWidth="1.6" />
+      <circle cx="44" cy="20" r="9" fill={color} stroke={stroke} strokeWidth="1.6" />
+      <circle cx="44" cy="20" r="4" fill="#0E0A1F" />
+      <circle cx="46" cy="18" r="1.4" fill="#fff" />
+      <path d="M22 10 L22 4 L26 4" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" fill="none" />
+      <circle cx="26" cy="4" r="1.6" fill={stroke} />
+      <circle cx="11" cy="15" r="1.6" fill="#FF1F3D" />
+    </svg>
+  );
+  if (kind === 'corner') return (
+    <svg viewBox="0 0 64 40" width="100%" height="100%" fill="none" preserveAspectRatio="xMidYMid meet">
+      <path d="M2 2 L18 2 L2 18 Z" fill={color} stroke={stroke} strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M14 14 L24 22" stroke={stroke} strokeWidth="2" strokeLinecap="round" />
+      <rect x="22" y="18" width="32" height="10" rx="5" fill="#fff" stroke={stroke} strokeWidth="1.6" />
+      <circle cx="50" cy="23" r="3.6" fill="#0E0A1F" />
+      <circle cx="51" cy="22" r="1.2" fill={color} />
+      <circle cx="26" cy="23" r="1.4" fill="#FF1F3D" />
+    </svg>
+  );
+  if (kind === 'tripod') return (
+    <svg viewBox="0 0 64 40" width="100%" height="100%" fill="none" preserveAspectRatio="xMidYMid meet">
+      <rect x="14" y="6" width="28" height="16" rx="2" fill="#fff" stroke={stroke} strokeWidth="1.6" />
+      <rect x="40" y="9" width="14" height="10" rx="1.5" fill={color} stroke={stroke} strokeWidth="1.6" />
+      <circle cx="49" cy="14" r="2.6" fill="#0E0A1F" />
+      <rect x="16" y="2" width="9" height="6" rx="1" fill={color} stroke={stroke} strokeWidth="1.4" />
+      <path d="M28 22 L18 38 M28 22 L28 38 M28 22 L38 38" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="20" cy="11" r="1.4" fill="#FF1F3D" />
+    </svg>
+  );
+  if (kind === 'lens') return (
+    <svg viewBox="0 0 64 40" width="100%" height="100%" fill="none" preserveAspectRatio="xMidYMid meet">
+      <circle cx="32" cy="20" r="16" fill="#fff" stroke={stroke} strokeWidth="1.6" />
+      <circle cx="32" cy="20" r="11" fill={color} stroke={stroke} strokeWidth="1.4" />
+      <circle cx="32" cy="20" r="6" fill="#0E0A1F" />
+      <circle cx="34" cy="18" r="1.8" fill="#fff" />
+      {[0, 60, 120, 180, 240, 300].map(a => (
+        <line key={a} x1="32" y1="20" x2={32 + Math.cos(a * Math.PI / 180) * 11} y2={20 + Math.sin(a * Math.PI / 180) * 11} stroke={stroke} strokeWidth="0.8" opacity="0.5" />
+      ))}
+      <rect x="48" y="6" width="8" height="4" rx="1" fill="#FF1F3D" stroke={stroke} strokeWidth="1.2" />
+    </svg>
+  );
   return (
-    <div className="min-h-screen bg-sf-bg-primary overflow-hidden">
-      {/* ============ NAVIGATION ============ */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-sf-bg-primary/90 backdrop-blur-xl border-b-2 border-sf-glass-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 transition-transform group-hover:scale-110">
-                <Image src="/starfff.png" alt="Star Factor" width={40} height={40} className="w-full h-full object-cover" />
-              </div>
-              <span className="text-lg font-black text-white uppercase tracking-tight">
-                Star Factor
-              </span>
-            </Link>
+    <svg viewBox="0 0 64 40" width="100%" height="100%" fill="none" preserveAspectRatio="xMidYMid meet">
+      <path d="M14 22 A18 18 0 0 1 50 22 Z" fill={color} stroke={stroke} strokeWidth="1.6" />
+      <circle cx="32" cy="22" r="6" fill="#0E0A1F" />
+      <circle cx="34" cy="20" r="1.6" fill="#fff" />
+      <rect x="10" y="22" width="44" height="6" rx="1" fill="#fff" stroke={stroke} strokeWidth="1.6" />
+      <path d="M6 32 Q 32 38 58 32" stroke={stroke} strokeWidth="1.4" strokeDasharray="2 2" fill="none" />
+      <path d="M6 32 l3 -2 M6 32 l3 2" stroke={stroke} strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M58 32 l-3 -2 M58 32 l-3 2" stroke={stroke} strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="22" cy="25" r="1.4" fill="#FF1F3D" />
+    </svg>
+  );
+};
 
-            {/* Desktop Nav Links */}
-            <div className="hidden md:flex items-center gap-1">
-              {[
-                { label: 'WATCH', href: '/watch' },
-                { label: 'PREDICT', href: '/watch' },
-                { label: 'APPLY', href: '/apply' },
-              ].map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="px-4 py-2 text-sm font-bold text-sf-text-tertiary hover:text-white uppercase tracking-wider transition-colors"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
+const Reticle: React.FC<{ color?: string }> = ({ color = '#fff' }) => (
+  <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+    <path d="M4 4 L4 14 M4 4 L14 4" stroke={color} strokeWidth="1.4" strokeLinecap="round" opacity="0.55" />
+    <path d="M96 4 L96 14 M96 4 L86 4" stroke={color} strokeWidth="1.4" strokeLinecap="round" opacity="0.55" />
+    <path d="M4 96 L4 86 M4 96 L14 96" stroke={color} strokeWidth="1.4" strokeLinecap="round" opacity="0.55" />
+    <path d="M96 96 L96 86 M96 96 L86 96" stroke={color} strokeWidth="1.4" strokeLinecap="round" opacity="0.55" />
+  </svg>
+);
 
-            {/* CTA Buttons */}
-            <div className="flex items-center gap-3">
-              <Link
-                href="/login"
-                className="hidden sm:inline-flex text-sm font-bold text-sf-text-secondary hover:text-white uppercase tracking-wider transition-colors px-4 py-2"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/watch"
-                className="btn-primary px-6 py-2.5 text-sm"
-              >
-                Watch Live
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* ============ HERO SECTION ============ */}
-      <section className="relative pt-32 pb-20 sm:pt-40 sm:pb-28 overflow-hidden">
-        {/* Background Effects — full spectrum orbs */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-10 left-1/4 w-[700px] h-[700px] bg-[#4357F6]/10 rounded-full blur-[160px]" />
-          <div className="absolute top-40 right-1/5 w-[400px] h-[400px] bg-[#5ACDFF]/8 rounded-full blur-[120px]" />
-          <div className="absolute bottom-0 left-1/3 w-[500px] h-[500px] bg-[#CBF0B8]/5 rounded-full blur-[140px]" />
-          <div className="absolute bottom-20 right-10 w-[300px] h-[300px] bg-[#E6D9FF]/6 rounded-full blur-[100px]" />
-          <div className="absolute inset-0 dot-grid" />
-        </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-4xl mx-auto">
-            {/* Badge */}
-            <FadeUp>
-              <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full border-2 border-[#5ACDFF]/30 bg-[#5ACDFF]/8 mb-8">
-                <span className="w-2 h-2 bg-[#5ACDFF] rounded-full animate-pulse" />
-                <span className="text-[#5ACDFF] text-xs font-bold uppercase tracking-[0.15em]">Season 1 Coming Q2 2026</span>
-              </div>
-            </FadeUp>
-
-            {/* Logo */}
-            <FadeUp delay={0.08}>
-              <div className="w-28 h-28 sm:w-36 sm:h-36 mx-auto mb-8 rounded-full overflow-hidden shadow-sf-glow-lg ring-2 ring-sf-accent-primary/30">
-                <Image src="/starfff.png" alt="Star Factor" width={144} height={144} className="w-full h-full object-cover" priority />
-              </div>
-            </FadeUp>
-
-            {/* Headline */}
-            <FadeUp delay={0.16}>
-              <h1 className="text-hero text-white mb-6 leading-[1.05]">
-                WATCH. PREDICT.{' '}
-                <span className="gradient-text-cyan">EARN.</span>
-              </h1>
-            </FadeUp>
-
-            {/* Subheadline */}
-            <FadeUp delay={0.24}>
-              <p className="text-lg sm:text-xl text-sf-text-secondary max-w-2xl mx-auto mb-10 leading-relaxed">
-                Africa&apos;s first interactive reality TV platform. Cameras streaming 24/7.
-                Prediction markets where your knowledge pays. Real money. Real drama. Real rewards.
-              </p>
-            </FadeUp>
-
-            {/* CTA Buttons */}
-            <FadeUp delay={0.32}>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link
-                  href="/watch"
-                  className="btn-primary px-10 py-4 text-base shadow-sf-glow-button hover:shadow-sf-glow-button-hover"
-                >
-                  Start Watching
-                </Link>
-                <Link
-                  href="/apply"
-                  className="btn-secondary px-10 py-4 text-base"
-                >
-                  Apply as Contestant
-                </Link>
-              </div>
-            </FadeUp>
-          </div>
-        </div>
-      </section>
-
-      {/* ============ STATS BAR ============ */}
-      <section className="relative py-2 px-4 sm:px-6 lg:px-8">
-        <FadeUp>
-          <div className="max-w-5xl mx-auto rounded-3xl border-2 p-8 sm:p-12 relative overflow-hidden"
-            style={{ background: 'linear-gradient(135deg, #0C1D4D 0%, #112758 100%)', borderColor: 'rgba(141,170,255,0.15)' }}
-          >
-            {/* colorful corner accents */}
-            <div className="absolute top-0 left-0 w-32 h-32 bg-[#5ACDFF]/10 rounded-full blur-[60px]" />
-            <div className="absolute bottom-0 right-0 w-32 h-32 bg-[#CBF0B8]/10 rounded-full blur-[60px]" />
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 relative">
-              {[
-                { value: '8', label: 'Live Cameras', color: 'text-[#5ACDFF]', border: 'border-[#5ACDFF]/20', bg: 'bg-[#5ACDFF]/8' },
-                { value: '$30K', label: 'Grand Prize', color: 'text-[#CBF0B8]', border: 'border-[#CBF0B8]/20', bg: 'bg-[#CBF0B8]/8' },
-                { value: '60', label: 'Days Live', color: 'text-[#E6D9FF]', border: 'border-[#E6D9FF]/20', bg: 'bg-[#E6D9FF]/8' },
-                { value: '24/7', label: 'Non-Stop', color: 'text-[#8DAAFF]', border: 'border-[#8DAAFF]/20', bg: 'bg-[#8DAAFF]/8' },
-              ].map((stat, i) => (
-                <div key={i} className={`text-center rounded-2xl border-2 ${stat.border} ${stat.bg} py-5 px-4`}>
-                  <div className={`text-3xl sm:text-4xl font-black ${stat.color}`}>{stat.value}</div>
-                  <div className="text-xs font-bold uppercase tracking-[0.15em] text-sf-text-tertiary mt-2">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </FadeUp>
-      </section>
-
-      {/* ============ HOW IT WORKS ============ */}
-      <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <FadeUp>
-            <div className="text-center mb-16">
-              <span className="overline mb-4 block">How It Works</span>
-              <h2 className="text-display text-white">
-                YOUR SHOW.{' '}
-                <span className="gradient-text">YOUR RULES.</span>
-              </h2>
-            </div>
-          </FadeUp>
-
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                step: '01',
-                title: 'WATCH LIVE',
-                desc: 'Tune into 8 camera feeds streaming 24/7. Follow your favorite contestants from the kitchen to the garden, the lounge to the bedroom.',
-                accentText: 'text-[#5ACDFF]',
-                accentBg: 'bg-[#5ACDFF]/12',
-                accentBorder: 'border-[#5ACDFF]/25',
-                stepBg: 'bg-[#5ACDFF]',
-                icon: (
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                ),
-              },
-              {
-                step: '02',
-                title: 'PREDICT & BET',
-                desc: 'Create prediction markets or bet on existing ones. Who wins the next challenge? Who gets evicted? Put your knowledge to work.',
-                accentText: 'text-[#8DAAFF]',
-                accentBg: 'bg-[#8DAAFF]/12',
-                accentBorder: 'border-[#8DAAFF]/25',
-                stepBg: 'bg-[#8DAAFF]',
-                icon: (
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                ),
-              },
-              {
-                step: '03',
-                title: 'EARN REWARDS',
-                desc: 'Win prediction markets and cash out to your bank account. Top predictors earn weekly prizes. Your engagement pays — literally.',
-                accentText: 'text-[#CBF0B8]',
-                accentBg: 'bg-[#CBF0B8]/12',
-                accentBorder: 'border-[#CBF0B8]/25',
-                stepBg: 'bg-[#CBF0B8]',
-                icon: (
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                ),
-              },
-            ].map((item, i) => (
-              <FadeUp key={i} delay={i * 0.08}>
-                <div className={`rounded-3xl border-2 ${item.accentBorder} ${item.accentBg} p-7 sm:p-8 h-full group hover:scale-[1.02] transition-all duration-300`}>
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className={`w-12 h-12 rounded-2xl bg-sf-bg-primary/50 border-2 ${item.accentBorder} flex items-center justify-center flex-shrink-0 group-hover:rotate-6 transition-transform`}>
-                      <span className={item.accentText}>{item.icon}</span>
-                    </div>
-                    <div className={`w-9 h-9 rounded-full ${item.stepBg} flex items-center justify-center flex-shrink-0`}>
-                      <span className="text-xs font-black text-sf-bg-primary">{item.step}</span>
-                    </div>
-                  </div>
-                  <h3 className={`text-lg font-black uppercase tracking-tight mb-3 ${item.accentText}`}>{item.title}</h3>
-                  <p className="text-sf-text-tertiary text-sm leading-relaxed">{item.desc}</p>
-                </div>
-              </FadeUp>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ============ FEATURES GRID ============ */}
-      <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <FadeUp>
-            <div className="text-center mb-16">
-              <span className="overline mb-4 block">Platform Features</span>
-              <h2 className="text-display text-white">
-                BUILT FOR{' '}
-                <span className="gradient-text-cyan">THE CULTURE.</span>
-              </h2>
-            </div>
-          </FadeUp>
-
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                title: '8 Live Cameras',
-                desc: 'Full coverage of the house. Kitchen, garden, lounge, pool, garage, bedroom, office, and entrance. Never miss a moment.',
-                bg: 'bg-[#5ACDFF]/12',
-                borderColor: 'border-[#5ACDFF]/25',
-                iconColor: 'text-[#5ACDFF]',
-                icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />,
-              },
-              {
-                title: 'Prediction Markets',
-                desc: 'Create and bet on markets for any show event. Odds update in real-time. Win big with the right calls.',
-                bg: 'bg-[#4357F6]/12',
-                borderColor: 'border-[#4357F6]/25',
-                iconColor: 'text-[#8DAAFF]',
-                icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />,
-              },
-              {
-                title: 'Live Chat',
-                desc: 'Talk with other viewers in real-time. React with emoji, trigger sound effects, and create prediction markets from chat.',
-                bg: 'bg-[#E6D9FF]/10',
-                borderColor: 'border-[#E6D9FF]/25',
-                iconColor: 'text-[#E6D9FF]',
-                icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />,
-              },
-              {
-                title: 'Instant Payouts',
-                desc: 'Cash out winnings directly to your bank account via Paystack. No delays, no hidden fees, no middlemen.',
-                bg: 'bg-[#CBF0B8]/10',
-                borderColor: 'border-[#CBF0B8]/25',
-                iconColor: 'text-[#CBF0B8]',
-                icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />,
-              },
-              {
-                title: 'Voting Power',
-                desc: 'Vote to save your favorite contestants from eviction. Tier up for multiplied vote power — from 1x to 3x.',
-                bg: 'bg-[#8DAAFF]/12',
-                borderColor: 'border-[#8DAAFF]/25',
-                iconColor: 'text-[#8DAAFF]',
-                icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,
-              },
-              {
-                title: 'Dual Currency',
-                desc: 'Earn free Clout by watching and chatting. Buy Stakes with Naira for premium bets. Both currencies unlock the full experience.',
-                bg: 'bg-[#A6D234]/10',
-                borderColor: 'border-[#A6D234]/25',
-                iconColor: 'text-[#A6D234]',
-                icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
-              },
-            ].map((feature, i) => (
-              <FadeUp key={i} delay={i * 0.06}>
-                <div className={`rounded-3xl border-2 ${feature.borderColor} ${feature.bg} p-7 h-full group hover:scale-[1.02] transition-all duration-300`}>
-                  <div className="w-12 h-12 rounded-2xl bg-sf-bg-primary/60 border-2 border-sf-glass-border flex items-center justify-center mb-5 group-hover:rotate-6 transition-transform">
-                    <svg className={`w-6 h-6 ${feature.iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      {feature.icon}
-                    </svg>
-                  </div>
-                  <h3 className={`text-base font-black uppercase tracking-tight mb-2 ${feature.iconColor}`}>{feature.title}</h3>
-                  <p className="text-sf-text-tertiary text-sm leading-relaxed">{feature.desc}</p>
-                </div>
-              </FadeUp>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ============ MARKET OPPORTUNITY ============ */}
-      <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        {/* Background */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[500px] h-[500px] bg-[#5ACDFF]/6 rounded-full blur-[150px]" />
-          <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[400px] h-[400px] bg-[#CBF0B8]/6 rounded-full blur-[120px]" />
-        </div>
-
-        <div className="max-w-7xl mx-auto relative">
-          <FadeUp>
-            <div className="text-center mb-16">
-              <span className="text-[0.625rem] font-bold uppercase tracking-[0.15em] text-[#5ACDFF] block mb-4">Market Opportunity</span>
-              <h2 className="text-display text-white">
-                THE NUMBERS{' '}
-                <span style={{ background: 'linear-gradient(to right, #5ACDFF, #CBF0B8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                  DON&apos;T LIE.
-                </span>
-              </h2>
-              <p className="text-sf-text-secondary mt-4 max-w-2xl mx-auto">
-                Africa&apos;s entertainment economy is exploding. Star Factor sits at the intersection of three massive, untapped markets.
-              </p>
-            </div>
-          </FadeUp>
-
-          {/* Big market stat cards */}
-          <div className="grid gap-2 sm:grid-cols-3 mb-8">
-            {[
-              {
-                value: '$17B',
-                label: 'African Streaming Market by 2027',
-                sub: 'Growing at 18% CAGR',
-                color: '#5ACDFF',
-                bg: 'bg-[#5ACDFF]/10',
-                border: 'border-[#5ACDFF]/25',
-              },
-              {
-                value: '600M+',
-                label: 'African Mobile Users',
-                sub: 'World\'s fastest-growing internet population',
-                color: '#CBF0B8',
-                bg: 'bg-[#CBF0B8]/10',
-                border: 'border-[#CBF0B8]/25',
-              },
-              {
-                value: '$3B+',
-                label: 'Africa Prediction Market TAM',
-                sub: 'Largely unaddressed by existing platforms',
-                color: '#E6D9FF',
-                bg: 'bg-[#E6D9FF]/10',
-                border: 'border-[#E6D9FF]/25',
-              },
-            ].map((m, i) => (
-              <FadeUp key={i} delay={i * 0.1}>
-                <div className={`rounded-3xl border-2 ${m.border} ${m.bg} p-8 text-center group hover:scale-[1.02] transition-all`}>
-                  <div className="text-4xl sm:text-5xl font-black mb-3" style={{ color: m.color }}>{m.value}</div>
-                  <div className="text-sm font-bold text-white uppercase tracking-wide mb-2">{m.label}</div>
-                  <div className="text-xs text-sf-text-muted">{m.sub}</div>
-                </div>
-              </FadeUp>
-            ))}
-          </div>
-
-          {/* Why now section */}
-          <FadeUp delay={0.2}>
-            <div className="rounded-3xl border-2 border-[#8DAAFF]/20 bg-[#8DAAFF]/6 p-8 sm:p-10">
-              <div className="grid sm:grid-cols-2 gap-8 items-center">
-                <div>
-                  <span className="text-[0.625rem] font-bold uppercase tracking-[0.15em] text-[#8DAAFF] block mb-3">Why Now</span>
-                  <h3 className="text-2xl font-black uppercase text-white mb-4 leading-tight">
-                    THE PERFECT STORM
-                  </h3>
-                  <p className="text-sf-text-secondary text-sm leading-relaxed mb-6">
-                    Reality TV is Africa&apos;s most-watched content format. Mobile penetration is at an all-time high. Crypto rails make instant micropayments possible. Star Factor is the first product built to capture all three tailwinds simultaneously.
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {['Nigeria 🇳🇬', 'Ghana 🇬🇭', 'Kenya 🇰🇪', 'South Africa 🇿🇦'].map(c => (
-                      <span key={c} className="px-3 py-1.5 rounded-full border-2 border-[#8DAAFF]/25 bg-[#8DAAFF]/10 text-[#8DAAFF] text-xs font-bold">{c}</span>
-                    ))}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { label: 'Season 1 Contestants', value: '20', color: '#5ACDFF' },
-                    { label: 'Launch Markets', value: '4', color: '#CBF0B8' },
-                    { label: 'Prize Pool S1', value: '$30K', color: '#E6D9FF' },
-                    { label: 'Camera Feeds', value: '8 HD', color: '#8DAAFF' },
-                  ].map((item, i) => (
-                    <div key={i} className="bg-sf-bg-tertiary/60 border-2 border-sf-glass-border rounded-2xl p-4 text-center">
-                      <div className="text-2xl font-black mb-1" style={{ color: item.color }}>{item.value}</div>
-                      <div className="text-[0.625rem] font-bold uppercase tracking-[0.12em] text-sf-text-muted">{item.label}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </FadeUp>
-        </div>
-      </section>
-
-      {/* ============ TOKENOMICS ============ */}
-      <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <FadeUp>
-            <div className="text-center mb-16">
-              <span className="text-[0.625rem] font-bold uppercase tracking-[0.15em] text-[#CBF0B8] block mb-4">Token Economics</span>
-              <h2 className="text-display text-white">
-                CLOUT &amp;{' '}
-                <span style={{ background: 'linear-gradient(to right, #CBF0B8, #5ACDFF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                  STAKES.
-                </span>
-              </h2>
-              <p className="text-sf-text-secondary mt-4 max-w-2xl mx-auto">
-                Two currencies power the Star Factor economy. Clout fuels free participation. Stakes powers real-money prediction markets.
-              </p>
-            </div>
-          </FadeUp>
-
-          <div className="grid lg:grid-cols-2 gap-4 mb-4">
-            {/* Clout Card */}
-            <FadeUp>
-              <div className="rounded-3xl border-2 border-[#8DAAFF]/25 bg-[#8DAAFF]/8 p-8 h-full">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-12 h-12 rounded-2xl bg-[#8DAAFF]/20 border-2 border-[#8DAAFF]/30 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-[#8DAAFF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-lg font-black uppercase text-[#8DAAFF]">CLOUT</div>
-                    <div className="text-xs text-sf-text-muted font-bold uppercase tracking-wider">Free Currency</div>
-                  </div>
-                </div>
-                <div className="space-y-3 mb-6">
-                  {[
-                    { action: 'Daily Login', reward: '+50 Clout' },
-                    { action: 'Watch 1 hour', reward: '+25 Clout' },
-                    { action: 'Send a chat message', reward: '+2 Clout' },
-                    { action: 'Prediction market win', reward: '+100–500 Clout' },
-                  ].map((row, i) => (
-                    <div key={i} className="flex items-center justify-between py-2.5 border-b border-[#8DAAFF]/10 last:border-0">
-                      <span className="text-sm text-sf-text-secondary">{row.action}</span>
-                      <span className="text-sm font-bold text-[#8DAAFF]">{row.reward}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="bg-sf-bg-primary/40 rounded-2xl border border-[#8DAAFF]/15 p-4">
-                  <p className="text-xs text-sf-text-muted leading-relaxed">Clout is earned, never bought. Use it to vote, tip contestants, react in chat, and unlock platform features.</p>
-                </div>
-              </div>
-            </FadeUp>
-
-            {/* Stakes Card */}
-            <FadeUp delay={0.1}>
-              <div className="rounded-3xl border-2 border-[#CBF0B8]/25 bg-[#CBF0B8]/8 p-8 h-full">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-12 h-12 rounded-2xl bg-[#CBF0B8]/20 border-2 border-[#CBF0B8]/30 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-[#CBF0B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-lg font-black uppercase text-[#CBF0B8]">STAKES</div>
-                    <div className="text-xs text-sf-text-muted font-bold uppercase tracking-wider">Premium Currency</div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  {[
-                    { label: '100 Stakes', price: '₦500', badge: 'Starter' },
-                    { label: '500 Stakes', price: '₦2,000', badge: 'Popular' },
-                    { label: '1,500 Stakes', price: '₦5,000', badge: 'Value' },
-                    { label: '5,000 Stakes', price: '₦15,000', badge: 'Pro' },
-                  ].map((tier, i) => (
-                    <div key={i} className={`rounded-2xl border-2 p-3 text-center ${i === 1 ? 'border-[#CBF0B8]/50 bg-[#CBF0B8]/15' : 'border-[#CBF0B8]/15 bg-sf-bg-tertiary/40'}`}>
-                      <div className={`text-[0.625rem] font-bold uppercase tracking-wider mb-1.5 ${i === 1 ? 'text-[#CBF0B8]' : 'text-sf-text-muted'}`}>{tier.badge}</div>
-                      <div className="text-sm font-black text-white">{tier.label}</div>
-                      <div className={`text-xs font-bold mt-1 ${i === 1 ? 'text-[#CBF0B8]' : 'text-sf-text-tertiary'}`}>{tier.price}</div>
-                    </div>
-                  ))}
-                </div>
-                <div className="bg-sf-bg-primary/40 rounded-2xl border border-[#CBF0B8]/15 p-4">
-                  <p className="text-xs text-sf-text-muted leading-relaxed">Stakes = real money. Buy with Naira via Paystack. Win prediction markets and cash out instantly to your bank.</p>
-                </div>
-              </div>
-            </FadeUp>
-          </div>
-
-          {/* Distribution Bar */}
-          <FadeUp delay={0.2}>
-            <div className="rounded-3xl border-2 border-[#5ACDFF]/20 bg-[#5ACDFF]/6 p-8">
-              <div className="mb-6">
-                <span className="text-[0.625rem] font-bold uppercase tracking-[0.15em] text-[#5ACDFF]">Stakes Allocation</span>
-                <h3 className="text-xl font-black text-white uppercase mt-1">TOKEN DISTRIBUTION</h3>
-              </div>
-              {/* Stacked bar */}
-              <div className="flex rounded-full overflow-hidden h-5 mb-6 gap-0.5">
-                {tokenomics.map((t, i) => (
-                  <div
-                    key={i}
-                    className="h-full transition-all"
-                    style={{ width: `${t.pct}%`, backgroundColor: t.color, opacity: 0.85 }}
-                    title={`${t.label}: ${t.pct}%`}
-                  />
-                ))}
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                {tokenomics.map((t, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: t.color }} />
-                    <div>
-                      <div className="text-[0.625rem] font-bold uppercase tracking-wider text-sf-text-muted">{t.pct}%</div>
-                      <div className="text-xs text-sf-text-secondary leading-tight">{t.label}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </FadeUp>
-        </div>
-      </section>
-
-      {/* ============ INVESTOR SECTION ============ */}
-      <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-[#E6D9FF]/6 rounded-full blur-[160px]" />
-          <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-[#5ACDFF]/6 rounded-full blur-[120px]" />
-        </div>
-
-        <div className="max-w-7xl mx-auto relative">
-          <FadeUp>
-            <div className="text-center mb-16">
-              <span className="text-[0.625rem] font-bold uppercase tracking-[0.15em] text-[#E6D9FF] block mb-4">For Investors</span>
-              <h2 className="text-display text-white">
-                BACK THE{' '}
-                <span style={{ background: 'linear-gradient(to right, #E6D9FF, #8DAAFF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                  FUTURE.
-                </span>
-              </h2>
-              <p className="text-sf-text-secondary mt-4 max-w-2xl mx-auto">
-                Star Factor is raising its seed round to fund Season 1 production, platform development, and market expansion across West Africa.
-              </p>
-            </div>
-          </FadeUp>
-
-          {/* Investment highlights */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
-            {[
-              { label: 'Revenue Model', value: '3x', sub: 'Revenue streams', color: '#E6D9FF', border: 'border-[#E6D9FF]/25', bg: 'bg-[#E6D9FF]/8' },
-              { label: 'Launch Markets', value: '4', sub: 'African countries', color: '#5ACDFF', border: 'border-[#5ACDFF]/25', bg: 'bg-[#5ACDFF]/8' },
-              { label: 'Prize Pool S1', value: '$30K', sub: 'Grand prize', color: '#CBF0B8', border: 'border-[#CBF0B8]/25', bg: 'bg-[#CBF0B8]/8' },
-              { label: 'Break-even', value: 'S2', sub: 'Season 2 target', color: '#8DAAFF', border: 'border-[#8DAAFF]/25', bg: 'bg-[#8DAAFF]/8' },
-            ].map((item, i) => (
-              <FadeUp key={i} delay={i * 0.08}>
-                <div className={`rounded-3xl border-2 ${item.border} ${item.bg} p-7 text-center group hover:scale-[1.02] transition-all`}>
-                  <div className="text-xs font-bold uppercase tracking-[0.12em] text-sf-text-muted mb-2">{item.label}</div>
-                  <div className="text-3xl font-black mb-2" style={{ color: item.color }}>{item.value}</div>
-                  <div className="text-xs text-sf-text-secondary font-medium">{item.sub}</div>
-                </div>
-              </FadeUp>
-            ))}
-          </div>
-
-          {/* Revenue + Use of Funds */}
-          <div className="grid lg:grid-cols-2 gap-4">
-            {/* Revenue Streams */}
-            <FadeUp>
-              <div className="rounded-3xl border-2 border-[#E6D9FF]/20 bg-[#E6D9FF]/6 p-8 h-full">
-                <span className="text-[0.625rem] font-bold uppercase tracking-[0.15em] text-[#E6D9FF] block mb-3">Revenue Streams</span>
-                <h3 className="text-xl font-black uppercase text-white mb-6">HOW WE EARN</h3>
-                <div className="space-y-4">
-                  {[
-                    {
-                      source: 'Stakes Sales',
-                      desc: 'Platform takes 10% of all Stakes purchases. Primary revenue driver.',
-                      share: '60%',
-                      color: '#E6D9FF',
-                    },
-                    {
-                      source: 'Prediction Market Fees',
-                      desc: '5% rake on all resolved prediction market pools.',
-                      share: '25%',
-                      color: '#8DAAFF',
-                    },
-                    {
-                      source: 'Brand Sponsorships',
-                      desc: 'In-show product placements and branded challenges.',
-                      share: '15%',
-                      color: '#5ACDFF',
-                    },
-                  ].map((rev, i) => (
-                    <div key={i} className="flex items-start gap-4 pb-4 border-b border-[#E6D9FF]/10 last:border-0 last:pb-0">
-                      <div className="w-12 h-12 rounded-2xl bg-sf-bg-primary/50 border-2 border-sf-glass-border flex items-center justify-center flex-shrink-0">
-                        <span className="text-sm font-black" style={{ color: rev.color }}>{rev.share}</span>
-                      </div>
-                      <div>
-                        <div className="text-sm font-bold text-white mb-1">{rev.source}</div>
-                        <div className="text-xs text-sf-text-muted leading-relaxed">{rev.desc}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </FadeUp>
-
-            {/* Use of Funds */}
-            <FadeUp delay={0.1}>
-              <div className="rounded-3xl border-2 border-[#5ACDFF]/20 bg-[#5ACDFF]/6 p-8 h-full">
-                <span className="text-[0.625rem] font-bold uppercase tracking-[0.15em] text-[#5ACDFF] block mb-3">Use of Funds</span>
-                <h3 className="text-xl font-black uppercase text-white mb-6">WHERE IT GOES</h3>
-                <div className="space-y-3">
-                  {[
-                    { label: 'Production & House Setup', pct: 45, color: '#5ACDFF' },
-                    { label: 'Platform & Tech', pct: 25, color: '#8DAAFF' },
-                    { label: 'Marketing & Growth', pct: 20, color: '#CBF0B8' },
-                    { label: 'Operations & Legal', pct: 10, color: '#E6D9FF' },
-                  ].map((item, i) => (
-                    <div key={i}>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs font-bold text-sf-text-secondary">{item.label}</span>
-                        <span className="text-xs font-black" style={{ color: item.color }}>{item.pct}%</span>
-                      </div>
-                      <div className="h-2 bg-sf-bg-tertiary rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full"
-                          style={{ width: `${item.pct}%`, backgroundColor: item.color, opacity: 0.8 }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-6 pt-6 border-t border-[#5ACDFF]/15">
-                  <p className="text-xs text-sf-text-muted leading-relaxed mb-4">
-                    Interested in backing Africa&apos;s most ambitious entertainment platform? We&apos;re building for the long term.
-                  </p>
-                  <a
-                    href="mailto:invest@chainfren.com"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-full border-2 border-[#5ACDFF]/40 bg-[#5ACDFF]/10 text-[#5ACDFF] text-xs font-bold uppercase tracking-wider hover:bg-[#5ACDFF]/20 transition-all"
-                  >
-                    Contact Investor Relations
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </a>
-                </div>
-              </div>
-            </FadeUp>
-          </div>
-        </div>
-      </section>
-
-      {/* ============ FAQ SECTION ============ */}
-      <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto">
-          <FadeUp>
-            <div className="text-center mb-12">
-              <span className="overline mb-4 block">Got Questions?</span>
-              <h2 className="text-display text-white">
-                EVERYTHING YOU{' '}
-                <span className="gradient-text">NEED TO KNOW.</span>
-              </h2>
-            </div>
-          </FadeUp>
-
-          {/* Category Tabs */}
-          <FadeUp delay={0.08}>
-            <div className="flex flex-wrap justify-center gap-2 mb-8">
-              {faqData.map((cat, i) => {
-                const tabColors = ['border-[#4357F6]', 'border-[#5ACDFF]', 'border-[#CBF0B8]', 'border-[#E6D9FF]'];
-                const tabActiveBgs = ['bg-[#4357F6]', 'bg-[#5ACDFF]', 'bg-[#CBF0B8]', 'bg-[#E6D9FF]'];
-                const tabActiveTexts = ['text-white', 'text-sf-bg-primary', 'text-sf-bg-primary', 'text-sf-bg-primary'];
-                return (
-                  <button
-                    key={cat.category}
-                    onClick={() => {
-                      setActiveCategory(cat.category);
-                      setOpenFaq(null);
-                    }}
-                    className={`px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-[0.1em] transition-all border-2 ${
-                      activeCategory === cat.category
-                        ? `${tabActiveBgs[i]} ${tabActiveTexts[i]} ${tabColors[i]}`
-                        : 'bg-transparent text-sf-text-tertiary border-sf-glass-border hover:border-sf-glass-border-hover hover:text-white'
-                    }`}
-                  >
-                    {cat.category}
-                  </button>
-                );
-              })}
-            </div>
-          </FadeUp>
-
-          {/* FAQ Accordion */}
-          <div className="space-y-2">
-            {currentFaq?.questions.map((faq, index) => {
-              const faqId = `${activeCategory}-${index}`;
-              const isOpen = openFaq === faqId;
-
-              return (
-                <FadeUp key={faqId} delay={index * 0.06}>
-                  <div
-                    className={`rounded-3xl border-2 transition-all duration-300 overflow-hidden ${
-                      isOpen
-                        ? 'bg-[#8DAAFF]/10 border-[#8DAAFF]/35'
-                        : 'bg-sf-bg-secondary border-sf-glass-border hover:border-sf-glass-border-hover'
-                    }`}
-                  >
-                    <button
-                      onClick={() => toggleFaq(faqId)}
-                      className="w-full px-6 py-5 flex items-center justify-between text-left"
-                    >
-                      <span className={`text-sm font-bold pr-4 ${isOpen ? 'text-white' : 'text-sf-text-secondary'}`}>
-                        {faq.q}
-                      </span>
-                      <div
-                        className={`w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
-                          isOpen
-                            ? 'bg-[#8DAAFF] border-[#8DAAFF] rotate-180'
-                            : 'bg-[#8DAAFF]/15 border-[#8DAAFF]/25'
-                        }`}
-                      >
-                        <svg
-                          className={`w-4 h-4 ${isOpen ? 'text-sf-bg-primary' : 'text-[#8DAAFF]'}`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
-                    </button>
-                    <div
-                      className="overflow-hidden transition-all duration-300"
-                      style={{
-                        maxHeight: isOpen ? '200px' : '0',
-                        opacity: isOpen ? 1 : 0,
-                      }}
-                    >
-                      <p className="px-6 pb-5 text-sm text-sf-text-tertiary leading-relaxed">
-                        {faq.a}
-                      </p>
-                    </div>
-                  </div>
-                </FadeUp>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ============ CTA SECTION ============ */}
-      <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8">
-        <FadeUp>
-          <div className="max-w-4xl mx-auto rounded-3xl border-2 border-[#5ACDFF]/25 p-8 sm:p-14 text-center relative overflow-hidden"
-            style={{ background: 'linear-gradient(135deg, rgba(90,205,255,0.06) 0%, rgba(203,240,184,0.04) 50%, rgba(230,217,255,0.06) 100%)' }}
-          >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#5ACDFF]/10 rounded-full blur-[100px]" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#CBF0B8]/10 rounded-full blur-[100px]" />
-
-            <div className="relative z-10">
-              <span className="text-[0.625rem] font-bold uppercase tracking-[0.15em] text-[#5ACDFF] block mb-4">Join the Waitlist</span>
-              <h2 className="text-display text-white mb-4">
-                DON&apos;T MISS SEASON 1.
-              </h2>
-              <p className="text-sf-text-secondary text-base mb-8 max-w-lg mx-auto">
-                Be the first to know when Star Factor goes live. Early access members get <span className="text-[#CBF0B8] font-bold">500 bonus Clout</span>.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  className="input-primary flex-1 py-3.5 px-5 rounded-full text-sm"
-                />
-                <button className="btn-primary px-8 py-3.5 text-sm whitespace-nowrap">
-                  Join Waitlist
-                </button>
-              </div>
-            </div>
-          </div>
-        </FadeUp>
-      </section>
-
-      {/* ============ FOOTER ============ */}
-      <footer className="border-t-2 border-sf-glass-border py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="flex flex-col items-center md:items-start gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full overflow-hidden">
-                  <Image src="/starfff.png" alt="Star Factor" width={32} height={32} className="w-full h-full object-cover" />
-                </div>
-                <span className="text-sm font-black text-white uppercase tracking-tight">Star Factor</span>
-              </div>
-              <span className="text-xs text-sf-text-muted font-medium">
-                Built by <span className="text-[#8DAAFF] font-bold">Chainfren</span>
-              </span>
-            </div>
-
-            <div className="flex items-center gap-6">
-              {[
-                { label: 'Watch', href: '/watch' },
-                { label: 'Apply', href: '/apply' },
-                { label: 'Invest', href: 'mailto:invest@chainfren.com' },
-                { label: 'FAQ', href: '#faq' },
-              ].map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className="text-xs font-bold text-sf-text-tertiary hover:text-white uppercase tracking-wider transition-colors"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-3">
-              {[
-                { label: 'X', href: 'https://x.com/starfactortv', color: 'hover:text-[#5ACDFF] hover:border-[#5ACDFF]/40' },
-                { label: 'IG', href: 'https://instagram.com/starfactorlive', color: 'hover:text-[#E6D9FF] hover:border-[#E6D9FF]/40' },
-                { label: 'YT', href: 'https://youtube.com', color: 'hover:text-[#FF6B6B] hover:border-[#FF6B6B]/40' },
-              ].map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`w-10 h-10 rounded-full border-2 border-sf-glass-border flex items-center justify-center text-sf-text-muted text-xs font-bold transition-all ${social.color}`}
-                >
-                  {social.label}
-                </a>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-8 pt-8 border-t border-sf-glass-border text-center">
-            <p className="text-xs text-sf-text-muted">
-              &copy; {new Date().getFullYear()} Star Factor. A Chainfren Product. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
+const Reveal: React.FC<{ children: React.ReactNode; delay?: number; y?: number }> = ({ children, delay = 0, y = 24 }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setShown(true); obs.disconnect(); }
+    }, { threshold: 0.12, rootMargin: '-40px' });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  return (
+    <div ref={ref} style={{
+      opacity: shown ? 1 : 0,
+      transform: shown ? 'translateY(0)' : `translateY(${y}px)`,
+      transition: `opacity 700ms cubic-bezier(.22,1,.36,1) ${delay}ms, transform 700ms cubic-bezier(.22,1,.36,1) ${delay}ms`,
+    }}>
+      {children}
     </div>
   );
 };
 
-export default LandingPage;
+// ─────────────────────────────────────────────────────────────
+// SECTIONS  (copy follows the homepage design spec verbatim
+//  where it landed; tightened only for product accuracy.)
+// ─────────────────────────────────────────────────────────────
+const Nav: React.FC = () => {
+  const links = [
+    { label: 'CAMERAS',      href: '#cameras' },
+    { label: 'CASTING',      href: '#casting' },
+    { label: 'HOW IT WORKS', href: '#how' },
+    { label: 'TIMELINE',     href: '#timeline' },
+  ];
+  return (
+    <header style={{
+      position: 'sticky', top: 0, zIndex: 50,
+      background: 'rgba(10,8,20,0.75)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      borderBottom: '1px solid var(--sf-line)',
+    }}>
+      <div className="sf-nav-pad" style={{
+        maxWidth: 1280, margin: '0 auto',
+        display: 'flex', alignItems: 'center', gap: 16,
+      }}>
+        <Link href="/" style={{ display: 'inline-flex' }}><SFWordmark size={22} /></Link>
+        <nav className="sf-hide-mobile" style={{ display: 'flex', gap: 4, marginLeft: 24 }}>
+          {links.map(l => (
+            <a key={l.label} href={l.href} className="sf-eyebrow" style={{
+              padding: '10px 16px', borderRadius: 999,
+              color: 'var(--sf-fg-2)', fontSize: 11, cursor: 'pointer',
+              transition: 'color 200ms, background 200ms',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'var(--sf-fg-2)'; e.currentTarget.style.background = 'transparent'; }}
+            >{l.label}</a>
+          ))}
+        </nav>
+        <div style={{ flex: 1 }} />
+        <span className="sf-hide-xs" style={{
+          display: 'inline-flex', alignItems: 'center', gap: 7,
+          padding: '5px 12px', borderRadius: 999,
+          background: 'rgba(255,78,43,0.12)', border: '1px solid rgba(255,78,43,0.4)',
+          fontSize: 10, fontWeight: 900, letterSpacing: '0.14em', color: '#fff',
+        }}>
+          <span className="sf-pulse"></span>
+          CASTING SOON
+        </span>
+        <Link href="/watch" className="sf-btn sf-btn-ghost sf-hide-mobile" style={{ height: 38, padding: '0 18px' }}>SEE PREVIEW</Link>
+        <a href="#cta" className="sf-btn sf-btn-coral" style={{ height: 38, padding: '0 14px', fontSize: 11 }}>JOIN WAITLIST</a>
+      </div>
+    </header>
+  );
+};
+
+const Hero: React.FC = () => {
+  const SilhouetteTile: React.FC<{ palette: string; label: string; sublabel: string; rotate?: number; top?: number; right?: number; width: number; zIndex?: number; opacity?: number }> = ({
+    palette, label, sublabel, rotate = 0, top, right, width, zIndex = 1, opacity = 1,
+  }) => (
+    <div style={{ position: 'absolute', top, right, width, zIndex, opacity, transform: `rotate(${rotate}deg)`, transition: 'transform 600ms cubic-bezier(.22,1,.36,1)' }}>
+      <div className="sf-tile" style={{ aspectRatio: '9/13', borderRadius: 16, borderColor: 'var(--sf-line-strong)' }}>
+        <Photo palette={palette}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(10,8,20,0.4)' }} />
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="sf-display" style={{
+              fontSize: width > 300 ? 200 : 140, color: 'rgba(255,255,255,0.18)',
+              fontStyle: 'italic', letterSpacing: '-0.06em',
+            }}>?</div>
+          </div>
+          <div style={{ position: 'absolute', top: 12, left: 12 }}>
+            <span style={{
+              background: 'rgba(10,8,20,0.7)', backdropFilter: 'blur(8px)',
+              color: '#fff', fontSize: 9, fontWeight: 900,
+              letterSpacing: '0.16em', padding: '4px 9px',
+              borderRadius: 999, border: '1px solid rgba(255,255,255,0.15)',
+            }}>● CASTING</span>
+          </div>
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            padding: '40px 16px 16px',
+            background: 'linear-gradient(to top, rgba(0,0,0,0.92), transparent)',
+          }}>
+            <div className="sf-eyebrow" style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)' }}>{sublabel}</div>
+            <div className="sf-display" style={{ fontSize: width > 300 ? 22 : 14, color: '#fff', marginTop: 6, lineHeight: 1.05, fontStyle: 'italic' }}>{label}</div>
+          </div>
+        </Photo>
+      </div>
+    </div>
+  );
+
+  const STATS = [
+    { v: '8',    l: 'Cameras at launch' },
+    { v: '24/7', l: 'Always streaming', accent: 'var(--sf-amber)' },
+    { v: '0%',   l: 'Platform cut on payouts', accent: 'var(--sf-mint)' },
+    { v: 'Q4',   l: 'Season 01 launch window' },
+  ];
+
+  return (
+    <section style={{
+      position: 'relative', minHeight: 820,
+      background: 'var(--sf-stage)', overflow: 'hidden',
+      borderBottom: '1px solid var(--sf-line)',
+    }}>
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        <div className="sf-ring sf-ring-decor" style={{ width: 1100, height: 1100, top: -380, right: -260, borderColor: 'rgba(255,78,43,0.10)' }} />
+        <div className="sf-ring sf-ring-decor" style={{ width: 800, height: 800, top: -200, right: -100, borderColor: 'rgba(255,78,43,0.18)' }} />
+        <div className="sf-ring sf-ring-decor" style={{ width: 540, height: 540, top: -50, right: 60, borderColor: 'rgba(242,181,68,0.20)' }} />
+        <div style={{ position: 'absolute', top: 200, right: 220, width: 1, height: 1, boxShadow: '0 0 200px 120px rgba(107,63,229,0.35)' }} />
+        <div style={{ position: 'absolute', top: 500, left: 200, width: 1, height: 1, boxShadow: '0 0 220px 140px rgba(255,78,43,0.18)' }} />
+      </div>
+
+      <div className="sf-hero-silhouettes">
+        <SilhouetteTile palette="coral"  rotate={3}  top={140} right={64}  width={380} zIndex={2} label="Could be you." sublabel="MAIN HOUSE · OPEN CASTING" />
+        <SilhouetteTile palette="mint"   rotate={-5} top={320} right={460} width={220} zIndex={1} label="Apply now." sublabel="POOL DECK" />
+        <SilhouetteTile palette="gold"   rotate={8}  top={80}  right={380} width={160} zIndex={0} opacity={0.7} label="The Garden" sublabel="" />
+      </div>
+
+      <div className="sf-hero-pad" style={{ position: 'relative', zIndex: 5, maxWidth: 1280, margin: '0 auto' }}>
+        <Reveal>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '6px 14px',
+              background: 'rgba(255,78,43,0.10)',
+              border: '1px solid rgba(255,78,43,0.4)',
+              borderRadius: 999,
+            }}>
+              <span className="sf-pulse"></span>
+              <span className="sf-eyebrow" style={{ color: 'var(--sf-coral)', fontSize: 11 }}>SEASON 01 · ONE HOUSE · 8 CAMERAS · CASTING SOON</span>
+            </span>
+          </div>
+        </Reveal>
+
+        <Reveal delay={80}>
+          <h1 className="sf-display" style={{
+            fontSize: 'clamp(56px, 9vw, 124px)', color: '#fff',
+            maxWidth: 920, letterSpacing: '-0.05em',
+            lineHeight: 0.86, marginBottom: 28,
+          }}>
+            One house. Eight rooms.<br />
+            <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>Eight cameras.</span><br />
+            Twenty-four seven.
+          </h1>
+        </Reveal>
+
+        <Reveal delay={160}>
+          <p style={{
+            maxWidth: 560, fontSize: 18, lineHeight: 1.55,
+            color: 'var(--sf-fg-2)', marginBottom: 40,
+          }}>
+            One house. Eight cameras. Twenty-four hours a day. When we go live, you&apos;ll watch every angle, predict
+            every moment, and earn every win — directly to your wallet. Season 01 starts at eight cameras, and we&apos;ll keep adding.
+          </p>
+        </Reveal>
+
+        <Reveal delay={220}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 56, flexWrap: 'wrap' }}>
+            <a href="#cta" className="sf-btn sf-btn-coral" style={{ height: 56, padding: '0 28px', fontSize: 13 }}>
+              JOIN THE WAITLIST
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
+            </a>
+            <Link href="/apply" className="sf-btn sf-btn-paper" style={{ height: 56, padding: '0 28px', fontSize: 13 }}>
+              APPLY TO BE CAST
+            </Link>
+            <Link href="/watch" className="sf-btn sf-btn-ghost" style={{ height: 56, padding: '0 24px', fontSize: 12 }}>
+              SEE THE PREVIEW →
+            </Link>
+          </div>
+        </Reveal>
+
+        <Reveal delay={300}>
+          <div style={{
+            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 1,
+            background: 'var(--sf-line)',
+            border: '1px solid var(--sf-line)',
+            borderRadius: 18, overflow: 'hidden',
+            maxWidth: 760,
+          }}>
+            {STATS.map((s, i) => (
+              <div key={i} style={{ padding: '22px 20px', background: 'var(--sf-stage-2)' }}>
+                <div className="sf-display" style={{ fontSize: 32, color: s.accent || '#fff', letterSpacing: '-0.04em' }}>{s.v}</div>
+                <div style={{ fontSize: 10, color: 'var(--sf-fg-3)', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 4 }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+};
+
+const Ticker: React.FC = () => {
+  const items = [
+    '★ Season 01 waitlist now open',
+    '🎬 Casting applications open in 3 weeks',
+    '💰 First 10,000 signups get a ₦500 starter pot at launch',
+    '📺 Watch the platform preview — see how the markets work',
+    '🏠 Eight cameras confirmed for Season 01 — more every season',
+    '⚡ Zero platform cut on payouts — wallet to wallet',
+  ];
+  return (
+    <div style={{
+      background: 'var(--sf-stage-2)',
+      borderTop: '1px solid var(--sf-line)',
+      borderBottom: '1px solid var(--sf-line)',
+      height: 56, display: 'flex', alignItems: 'center',
+      overflow: 'hidden', position: 'relative',
+    }}>
+      <div style={{
+        flexShrink: 0, height: '100%', display: 'flex', alignItems: 'center',
+        gap: 10, padding: '0 22px',
+        background: 'var(--sf-stage)', borderRight: '1px solid var(--sf-line)',
+      }}>
+        <span className="sf-pulse"></span>
+        <span style={{ fontSize: 11, fontWeight: 900, color: '#fff', letterSpacing: '0.16em' }}>ANNOUNCEMENTS</span>
+      </div>
+      <div className="sf-marquee" style={{ paddingLeft: 32 }}>
+        {[...items, ...items].map((t, i) => (
+          <span key={i} style={{ fontSize: 13, color: 'var(--sf-fg-2)', fontWeight: 600 }}>{t}</span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const Channels: React.FC = () => {
+  const cams = [
+    { name: 'Living Room', code: 'LR-01', short: 'CAM 01', color: '#FF4E2B', palette: 'coral',  desc: 'Wide shot. Where alliances form.',          icon: 'wide'   as CamKind },
+    { name: 'Kitchen',     code: 'KT-02', short: 'CAM 02', color: '#F2B544', palette: 'gold',   desc: 'Counter cam. Where things slip out.',       icon: 'corner' as CamKind },
+    { name: 'Bedroom 1',   code: 'BD-03', short: 'CAM 03', color: '#6B3FE5', palette: 'violet', desc: 'Wall-mount. Where strategy is whispered.',  icon: 'corner' as CamKind },
+    { name: 'Bedroom 2',   code: 'BD-04', short: 'CAM 04', color: '#5ACDFF', palette: 'sky',    desc: 'Pillow talk. Late-night plotting.',         icon: 'corner' as CamKind },
+    { name: 'Pool Deck',   code: 'PL-05', short: 'CAM 05', color: '#1FD17A', palette: 'mint',   desc: 'Outdoor. Tasks settle here.',               icon: 'tripod' as CamKind },
+    { name: 'Diary Room',  code: 'DR-06', short: 'CAM 06', color: '#4D7AFF', palette: 'night',  desc: 'Confessional. One-shot, locked-off.',       icon: 'lens'   as CamKind },
+    { name: 'Garden',      code: 'GD-07', short: 'CAM 07', color: '#FF1F3D', palette: 'rose',   desc: 'Rooftop PTZ. Sweeps the whole grounds.',    icon: 'ptz'    as CamKind },
+    { name: 'Front Door',  code: 'FD-08', short: 'CAM 08', color: '#FFB020', palette: 'gold',   desc: 'Entry cam. Arrivals & exits.',              icon: 'corner' as CamKind },
+  ];
+  const [hovered, setHovered] = useState(0);
+
+  return (
+    <section id="cameras" style={{
+      padding: 'clamp(56px, 8vw, 110px) clamp(14px, 4vw, 64px)',
+      background: 'var(--sf-stage)',
+      borderBottom: '1px solid var(--sf-line)',
+      position: 'relative',
+    }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+        <Reveal>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 48, gap: 32, flexWrap: 'wrap' }}>
+            <div>
+              <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 12, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ width: 24, height: 16 }}><CamGlyph kind="wide" color="var(--sf-coral)" /></span>
+                ONE HOUSE · 8 CAMERAS AT LAUNCH · SCALING UP
+              </div>
+              <h2 className="sf-display" style={{
+                fontSize: 'clamp(40px, 6vw, 76px)', color: '#fff',
+                letterSpacing: '-0.045em', lineHeight: 0.92, maxWidth: 760,
+              }}>
+                Pick your<br />
+                <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>angle.</span> Switch anytime.
+              </h2>
+            </div>
+            <div style={{ maxWidth: 360, paddingBottom: 12 }}>
+              <p style={{ fontSize: 15, lineHeight: 1.55, color: 'var(--sf-fg-2)' }}>
+                One house. Eight cameras running in parallel at launch — and we&apos;ll keep adding angles every season. Hop between them like changing seats in the room.
+              </p>
+              <Link href="/watch" className="sf-eyebrow" style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                color: '#fff', marginTop: 16,
+              }}>
+                SEE THE WATCH PREVIEW
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
+              </Link>
+            </div>
+          </div>
+        </Reveal>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
+          {cams.map((h, i) => (
+            <Reveal key={h.code} delay={i * 40}>
+              <div
+                className={`sf-tile ${hovered === i ? 'active' : ''}`}
+                onMouseEnter={() => setHovered(i)}
+                style={{
+                  aspectRatio: '4/3', borderRadius: 18,
+                  borderColor: hovered === i ? h.color : 'var(--sf-line)',
+                  boxShadow: hovered === i ? `0 0 0 1px ${h.color}, 0 24px 60px -16px ${h.color}55` : 'none',
+                  position: 'relative', overflow: 'hidden',
+                }}
+              >
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, right: 0, zIndex: 3,
+                  height: 56, padding: '0 14px',
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  background: 'linear-gradient(to bottom, rgba(0,0,0,0.55), transparent)',
+                }}>
+                  <div style={{
+                    width: 44, height: 28,
+                    background: 'rgba(10,8,20,0.78)',
+                    border: '1px solid rgba(255,255,255,0.18)',
+                    borderRadius: 6, padding: 3,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    <CamGlyph kind={h.icon} color={h.color} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <span className="sf-mono" style={{ fontSize: 9, fontWeight: 900, color: '#fff', letterSpacing: '0.16em' }}>{h.code}</span>
+                    <span className="sf-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.55)', fontWeight: 700, letterSpacing: '0.1em' }}>REC ●</span>
+                  </div>
+                  <span style={{
+                    marginLeft: 'auto',
+                    fontSize: 9, fontWeight: 900, letterSpacing: '0.14em',
+                    padding: '4px 8px', borderRadius: 4,
+                    background: h.color, color: '#0A0814',
+                  }}>SOON</span>
+                </div>
+
+                <Photo palette={h.palette} style={{ height: '100%' }}>
+                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(10,8,20,0.34)' }} />
+                  <Reticle color="#fff" />
+
+                  <div className="sf-mono" style={{
+                    position: 'absolute', bottom: 70, right: 12, zIndex: 3,
+                    padding: '3px 7px',
+                    background: 'rgba(10,8,20,0.7)',
+                    border: '1px solid rgba(255,255,255,0.14)',
+                    borderRadius: 3,
+                    fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.85)',
+                    letterSpacing: '0.08em',
+                  }}>--:--:--</div>
+
+                  <div style={{
+                    position: 'absolute', bottom: 0, left: 0, right: 0,
+                    padding: '60px 20px 18px',
+                    background: 'linear-gradient(to top, rgba(0,0,0,0.92) 30%, transparent)',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                      <span className="sf-house-dot" style={{ background: h.color }}></span>
+                      <span className="sf-eyebrow" style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)' }}>{h.short}</span>
+                    </div>
+                    <div className="sf-display" style={{ fontSize: 26, color: '#fff', lineHeight: 1.05, letterSpacing: '-0.03em' }}>
+                      {h.name}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 4, fontWeight: 500 }}>{h.desc}</div>
+                  </div>
+                </Photo>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        {/* Director's booth callout */}
+        <Reveal delay={120}>
+          <div style={{
+            marginTop: 14,
+            padding: 28,
+            borderRadius: 20,
+            background: 'linear-gradient(120deg, rgba(107,63,229,0.18) 0%, rgba(255,78,43,0.10) 100%)',
+            border: '1px solid var(--sf-violet)',
+            display: 'flex', alignItems: 'center', gap: 28,
+            position: 'relative', overflow: 'hidden', flexWrap: 'wrap',
+          }}>
+            <div style={{
+              position: 'absolute', right: -50, top: -50, width: 240, height: 240,
+              borderRadius: 999,
+              background: 'radial-gradient(circle, rgba(107,63,229,0.4) 0%, transparent 70%)',
+            }} />
+            <div style={{
+              display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4,
+              width: 200, height: 96, flexShrink: 0,
+              border: '1.5px solid var(--sf-violet)', padding: 4, borderRadius: 8,
+              background: 'rgba(10,8,20,0.5)',
+            }}>
+              {cams.map((c, i) => (
+                <div key={i} style={{
+                  background: i === 0 ? c.color : `${c.color}33`,
+                  border: i === 0 ? '1px solid #fff' : '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 3, position: 'relative', overflow: 'hidden',
+                  aspectRatio: '4/3',
+                }}>
+                  <div className="sf-mono" style={{ position: 'absolute', top: 1, left: 2, fontSize: 6, color: '#fff', fontWeight: 900, letterSpacing: '0.05em' }}>{i + 1}</div>
+                  {i === 0 && <div style={{ position: 'absolute', top: 2, right: 2, width: 4, height: 4, borderRadius: 999, background: '#fff' }} />}
+                </div>
+              ))}
+            </div>
+            <div style={{ flex: 1, position: 'relative', minWidth: 280 }}>
+              <div className="sf-eyebrow" style={{ color: 'var(--sf-violet)' }}>★ DIRECTOR&apos;S BOOTH</div>
+              <div className="sf-display" style={{ fontSize: 32, color: '#fff', marginTop: 6, marginBottom: 6, letterSpacing: '-0.03em' }}>
+                Every camera, <span style={{ fontStyle: 'italic' }}>one screen.</span>
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--sf-fg-2)', maxWidth: 520 }}>
+                Run multicam with picture-in-picture, follow a cast member across rooms, see the whole house at once. Pro tier — preview at launch.
+              </div>
+            </div>
+            <Link href="/watch" className="sf-btn sf-btn-paper" style={{ height: 44, padding: '0 22px', fontSize: 12 }}>LEARN MORE →</Link>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+};
+
+const HowItWorks: React.FC = () => {
+  const steps = [
+    { n: '01', eyebrow: 'WATCH',   palette: 'coral', color: '#FF4E2B',
+      title: 'Pick a room. Pick your angle.',
+      body: 'Eight cameras stream 24/7 from one house. Hop from the Living Room to the Pool Deck to the Diary Room — anywhere the cast goes, a camera is already there.' },
+    { n: '02', eyebrow: 'PREDICT', palette: 'gold',  color: '#F2B544',
+      title: 'Markets open every minute.',
+      body: 'Will a kiss happen tonight? Who wins the task? Who gets evicted? Stake from ₦100. Markets settle the moment it happens.' },
+    { n: '03', eyebrow: 'EARN',    palette: 'mint',  color: '#1FD17A',
+      title: 'Cash out, wallet to wallet.',
+      body: 'Win, hold, withdraw. No platform cut on payouts. Your prediction history, your wallet, your money — yours.' },
+  ];
+
+  return (
+    <section id="how" style={{
+      padding: 'clamp(56px, 8vw, 120px) clamp(14px, 4vw, 64px)',
+      background: 'var(--sf-paper)',
+      color: 'var(--sf-stage)',
+      borderBottom: '1px solid var(--sf-line)',
+      position: 'relative',
+    }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+        <Reveal>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 64, gap: 40, flexWrap: 'wrap' }}>
+            <div>
+              <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 12 }}>● HOW IT WORKS</div>
+              <h2 className="sf-display" style={{ fontSize: 'clamp(48px, 7vw, 84px)', color: 'var(--sf-stage)', letterSpacing: '-0.05em', lineHeight: 0.9, maxWidth: 800 }}>
+                Watch. <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>Predict.</span> Earn.
+              </h2>
+            </div>
+            <p style={{ fontSize: 16, lineHeight: 1.55, color: 'rgba(10,8,20,0.7)', maxWidth: 380, paddingBottom: 20 }}>
+              We took reality TV, opened every camera, opened every market, and gave the audience the remote. And the wallet.
+            </p>
+          </div>
+        </Reveal>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
+          {steps.map((s, i) => (
+            <Reveal key={s.n} delay={i * 100}>
+              <div style={{
+                padding: 32, background: '#fff',
+                border: '2px solid var(--sf-stage)',
+                borderRadius: 28,
+                position: 'relative', overflow: 'hidden',
+                minHeight: 480,
+                display: 'flex', flexDirection: 'column',
+              }}>
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, right: 0, height: 200,
+                  background: s.color, borderBottom: '2px solid var(--sf-stage)',
+                }}>
+                  <Photo palette={s.palette}>
+                    <div style={{
+                      position: 'absolute', top: 18, left: 22,
+                      fontSize: 64, fontWeight: 900, color: '#fff',
+                      letterSpacing: '-0.05em', lineHeight: 1,
+                      textShadow: '0 4px 20px rgba(0,0,0,0.4)',
+                    }}>{s.n}</div>
+                    <div style={{
+                      position: 'absolute', top: 22, right: 22,
+                      padding: '5px 12px', borderRadius: 999,
+                      background: 'rgba(10,8,20,0.85)', backdropFilter: 'blur(6px)',
+                      fontSize: 10, fontWeight: 900, color: '#fff', letterSpacing: '0.16em',
+                    }}>{s.eyebrow}</div>
+                  </Photo>
+                </div>
+
+                <div style={{ marginTop: 220, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <h3 className="sf-display" style={{
+                    fontSize: 28, color: 'var(--sf-stage)', lineHeight: 1.05, marginBottom: 12,
+                    letterSpacing: '-0.03em',
+                  }}>{s.title}</h3>
+                  <p style={{ fontSize: 14, lineHeight: 1.55, color: 'rgba(10,8,20,0.7)', flex: 1 }}>{s.body}</p>
+                  <div style={{
+                    marginTop: 20, paddingTop: 16,
+                    borderTop: '1px dashed rgba(10,8,20,0.18)',
+                    display: 'flex', alignItems: 'center', gap: 8,
+                  }}>
+                    <span className="sf-eyebrow" style={{ color: s.color }}>{s.eyebrow}</span>
+                    <span style={{ marginLeft: 'auto', color: 'rgba(10,8,20,0.4)', fontSize: 12, fontWeight: 700 }}>STEP {s.n}</span>
+                  </div>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const MarketsPreview: React.FC = () => {
+  const samples = [
+    {
+      title: 'Will a kiss happen today?',
+      sub: 'Daily binary market · any camera, any room',
+      type: 'BINARY',
+      options: [
+        { label: 'Yes', odds: '1.8x', pct: 64, color: 'var(--sf-mint)' },
+        { label: 'No',  odds: '2.4x', pct: 36, color: '#aaa' },
+      ],
+    },
+    {
+      title: 'Who gets evicted Sunday?',
+      sub: 'Weekly official market · 4 nominees',
+      type: 'OFFICIAL',
+      options: [
+        { label: 'Nominee A', odds: '2.3x', pct: 42, color: '#F2B544' },
+        { label: 'Nominee B', odds: '3.1x', pct: 28, color: '#FF1F3D' },
+        { label: 'Nominee C', odds: '4.4x', pct: 18, color: '#1FD17A' },
+        { label: 'Nominee D', odds: '5.6x', pct: 12, color: '#5ACDFF' },
+      ],
+    },
+    {
+      title: "Who wins tonight's task?",
+      sub: 'Live during challenges · two teams',
+      type: 'TASK',
+      options: [
+        { label: 'Team Sun',  odds: '1.9x', pct: 56, color: '#FFB020' },
+        { label: 'Team Moon', odds: '2.0x', pct: 44, color: '#6B3FE5' },
+      ],
+    },
+  ];
+
+  return (
+    <section style={{
+      padding: 'clamp(56px, 8vw, 120px) clamp(14px, 4vw, 64px)',
+      background: 'var(--sf-stage)',
+      borderBottom: '1px solid var(--sf-line)',
+      position: 'relative', overflow: 'hidden',
+    }}>
+      <div style={{
+        position: 'absolute', top: 80, right: -120,
+        width: 420, height: 420, borderRadius: 999,
+        background: 'radial-gradient(circle at 30% 30%, #FFE68A 0%, #FFB020 50%, #C97A00 100%)',
+        opacity: 0.06, filter: 'blur(2px)',
+      }} />
+
+      <div style={{ maxWidth: 1280, margin: '0 auto', position: 'relative' }}>
+        <Reveal>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 56, gap: 40, flexWrap: 'wrap' }}>
+            <div>
+              <div className="sf-eyebrow" style={{ color: 'var(--sf-amber)', marginBottom: 12 }}>● MARKET PREVIEW · SAMPLES</div>
+              <h2 className="sf-display" style={{
+                fontSize: 'clamp(48px, 7vw, 84px)', color: '#fff',
+                letterSpacing: '-0.05em', lineHeight: 0.9, maxWidth: 920,
+              }}>
+                Every moment is<br />
+                <span style={{ fontStyle: 'italic', color: 'var(--sf-amber)' }}>a market.</span>
+              </h2>
+            </div>
+            <p style={{ fontSize: 14, color: 'var(--sf-fg-3)', lineHeight: 1.55, maxWidth: 360, paddingBottom: 18 }}>
+              These are sample markets to show the format. Real pools, real odds, real settlements go live on launch day.
+            </p>
+          </div>
+        </Reveal>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginBottom: 24 }}>
+          {samples.map((p, idx) => (
+            <Reveal key={p.title} delay={idx * 80}>
+              <div style={{
+                padding: 24,
+                background: idx === 1 ? 'linear-gradient(180deg, rgba(255,176,32,0.10), var(--sf-stage-2))' : 'var(--sf-stage-2)',
+                border: `1px solid ${idx === 1 ? 'var(--sf-amber)' : 'var(--sf-line)'}`,
+                borderRadius: 18,
+                position: 'relative',
+                minHeight: 320,
+                display: 'flex', flexDirection: 'column',
+              }}>
+                <div style={{
+                  position: 'absolute', top: -10, left: 16,
+                  background: idx === 1 ? 'var(--sf-amber)' : idx === 0 ? 'var(--sf-coral)' : 'var(--sf-mint)',
+                  color: idx === 1 || idx === 2 ? '#1A0F00' : '#fff',
+                  fontSize: 9, fontWeight: 900, letterSpacing: '0.16em',
+                  padding: '4px 10px', borderRadius: 4,
+                }}>{p.type}</div>
+
+                <div style={{ marginBottom: 14 }}>
+                  <h3 className="sf-display" style={{ fontSize: 24, color: '#fff', lineHeight: 1.1, letterSpacing: '-0.025em', marginBottom: 6 }}>
+                    {p.title}
+                  </h3>
+                  <div style={{ fontSize: 12, color: 'var(--sf-fg-3)' }}>{p.sub}</div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+                  {p.options.map((o) => (
+                    <div key={o.label} className="sf-pred-row" style={{ borderColor: 'var(--sf-line)', cursor: 'default' }}>
+                      <div className="sf-pred-fill" style={{ width: `${o.pct}%`, background: `${o.color}24` }} />
+                      <div style={{ position: 'relative', padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span className="sf-house-dot" style={{ background: o.color, width: 8, height: 8 }}></span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', flex: 1 }}>{o.label}</span>
+                        <span style={{ fontSize: 11, color: 'var(--sf-fg-2)', fontWeight: 700 }}>{o.pct}%</span>
+                        <span style={{ fontSize: 13, fontWeight: 900, color: o.color, minWidth: 42, textAlign: 'right' }}>{o.odds}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{
+                  marginTop: 16, padding: '8px 12px', borderRadius: 999,
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px dashed var(--sf-line-strong)',
+                  fontSize: 10, color: 'var(--sf-fg-3)', fontWeight: 700,
+                  letterSpacing: '0.1em', textAlign: 'center',
+                }}>
+                  SAMPLE · PREDICTIONS LOCK ON LAUNCH
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal>
+          <div style={{
+            padding: '20px 28px',
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px dashed var(--sf-line-strong)',
+            borderRadius: 14,
+            display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+          }}>
+            <span style={{ fontSize: 22, color: 'var(--sf-violet)' }}>＋</span>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>User-created markets are coming.</div>
+              <div style={{ fontSize: 12, color: 'var(--sf-fg-3)', marginTop: 2 }}>Set the question, set the odds, settle on chain. Available from launch.</div>
+            </div>
+            <button className="sf-btn sf-btn-ghost" style={{ height: 38, padding: '0 18px' }}>READ THE WHITEPAPER</button>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+};
+
+const Casting: React.FC = () => {
+  const slots = [
+    { palette: 'coral',  tag: 'CHARM',    line: 'The flirt who reads the room.' },
+    { palette: 'violet', tag: 'STRATEGY', line: 'Plays the long game from day one.' },
+    { palette: 'gold',   tag: 'DRAMA',    line: 'Magnet. Always near the chaos.' },
+    { palette: 'mint',   tag: 'TASK',     line: 'Wins the challenges. Quiet wins.' },
+    { palette: 'sky',    tag: 'COMIC',    line: 'Keeps the house from turning sour.' },
+    { palette: 'rose',   tag: 'WILDCARD', line: 'Nobody knows what they’ll do next.' },
+    { palette: 'night',  tag: 'HEART',    line: 'The one the audience falls for.' },
+    { palette: 'ink',    tag: 'CHAOS',    line: 'Burns it down on day forty.' },
+  ];
+
+  return (
+    <section id="casting" style={{
+      padding: 'clamp(56px, 8vw, 120px) clamp(14px, 4vw, 64px)',
+      background: 'var(--sf-stage)',
+      borderBottom: '1px solid var(--sf-line)',
+    }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+        <Reveal>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 56, gap: 32, flexWrap: 'wrap' }}>
+            <div>
+              <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 12 }}>● CASTING SOON · 8 SLOTS</div>
+              <h2 className="sf-display" style={{ fontSize: 'clamp(48px, 7vw, 84px)', color: '#fff', letterSpacing: '-0.05em', lineHeight: 0.9, maxWidth: 880 }}>
+                Eight slots. <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>One winner.</span>
+              </h2>
+            </div>
+            <p style={{ fontSize: 16, lineHeight: 1.55, color: 'var(--sf-fg-2)', maxWidth: 380, paddingBottom: 18 }}>
+              Casting opens soon for Season 01. We&apos;re assembling a cast of eight from across the continent — every archetype, every region — to live in one house under eight cameras for forty-eight straight days. Apply, or nominate someone you&apos;d watch.
+            </p>
+          </div>
+        </Reveal>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 24 }}>
+          {slots.map((s, i) => (
+            <Reveal key={s.tag} delay={i * 40}>
+              <div className="sf-tile" style={{ aspectRatio: '3/4', borderRadius: 18 }}>
+                <Photo palette={s.palette}>
+                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(10,8,20,0.45)' }} />
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="sf-display" style={{
+                      fontSize: 'clamp(80px, 18vw, 140px)', color: 'rgba(255,255,255,0.15)',
+                      fontStyle: 'italic', letterSpacing: '-0.05em',
+                    }}>0{i + 1}</div>
+                  </div>
+                  <div style={{ position: 'absolute', top: 12, left: 12 }}>
+                    <span style={{
+                      background: 'rgba(10,8,20,0.7)', backdropFilter: 'blur(8px)',
+                      color: '#fff', fontSize: 9, fontWeight: 900,
+                      letterSpacing: '0.16em', padding: '4px 9px',
+                      borderRadius: 4, border: '1px solid rgba(255,255,255,0.15)',
+                    }}>SLOT 0{i + 1}</span>
+                  </div>
+                  <div style={{ position: 'absolute', top: 12, right: 12 }}>
+                    <span style={{
+                      fontSize: 9, fontWeight: 900, letterSpacing: '0.14em',
+                      padding: '4px 8px', borderRadius: 4,
+                      background: 'rgba(255,255,255,0.92)', color: '#0A0814',
+                    }}>{s.tag}</span>
+                  </div>
+                  <div style={{
+                    position: 'absolute', bottom: 0, left: 0, right: 0,
+                    padding: '40px 16px 16px',
+                    background: 'linear-gradient(to top, rgba(0,0,0,0.94) 30%, transparent)',
+                  }}>
+                    <div style={{ fontSize: 14, color: '#fff', fontWeight: 700, lineHeight: 1.3, marginBottom: 10 }}>{s.line}</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 700 }}>OPEN APPLICATION</div>
+                  </div>
+                </Photo>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal>
+          <div style={{
+            padding: 28,
+            background: 'linear-gradient(120deg, rgba(255,78,43,0.12), rgba(107,63,229,0.10))',
+            border: '1px solid rgba(255,78,43,0.35)',
+            borderRadius: 22,
+            display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap',
+          }}>
+            <div style={{ flex: 1, minWidth: 280 }}>
+              <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)' }}>★ APPLICATIONS OPEN SOON</div>
+              <div className="sf-display" style={{ fontSize: 32, color: '#fff', marginTop: 8, marginBottom: 6, letterSpacing: '-0.03em' }}>
+                Think you&apos;ve got it? <span style={{ fontStyle: 'italic' }}>Get on the list.</span>
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--sf-fg-2)' }}>
+                18+, residents of any African country. Drop your handle and we&apos;ll send the application the day it opens.
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <Link href="/apply" className="sf-btn sf-btn-coral" style={{ height: 48, padding: '0 22px', fontSize: 12 }}>APPLY TO BE CAST</Link>
+              <button className="sf-btn sf-btn-ghost" style={{ height: 48, padding: '0 22px', fontSize: 12 }}>NOMINATE A FRIEND</button>
+            </div>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+};
+
+const Mechanics: React.FC = () => {
+  const ms = [
+    { tag: 'OFFICIAL', icon: '★',  color: 'var(--sf-amber)',  q: 'Who gets evicted Sunday?',     body: 'Big-pool markets every Sunday. House nominees. Open all week.' },
+    { tag: 'LIVE',     icon: '🔥', color: '#FF4E2B',           q: 'Will a kiss happen tonight?',  body: 'Daily binary markets. Settle as soon as it happens.' },
+    { tag: 'TASK',     icon: '⚡', color: 'var(--sf-mint)',    q: "Who wins tonight's task?",     body: 'Open during challenges. Closes when the buzzer goes.' },
+    { tag: 'USER',     icon: '👤', color: 'var(--sf-violet)',  q: 'Argument before dinner?',      body: 'You set the question. You set the odds. We settle it.' },
+  ];
+
+  return (
+    <section style={{
+      padding: 'clamp(56px, 8vw, 120px) clamp(14px, 4vw, 64px)',
+      background: 'var(--sf-stage-2)',
+      borderTop: '1px solid var(--sf-line)',
+      borderBottom: '1px solid var(--sf-line)',
+    }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 64, alignItems: 'flex-start' }}>
+        <Reveal>
+          <div>
+            <div className="sf-eyebrow" style={{ color: 'var(--sf-amber)', marginBottom: 12 }}>● WHAT&apos;S ON THE LINE</div>
+            <h2 className="sf-display" style={{ fontSize: 'clamp(44px, 6vw, 76px)', color: '#fff', letterSpacing: '-0.05em', lineHeight: 0.9, marginBottom: 24 }}>
+              Real money,<br />
+              <span style={{ fontStyle: 'italic', color: 'var(--sf-amber)' }}>real stakes.</span>
+            </h2>
+            <p style={{ fontSize: 15, color: 'var(--sf-fg-2)', lineHeight: 1.6, marginBottom: 28, maxWidth: 460 }}>
+              Cash payouts to viewers. Wallet to wallet. Zero platform cut. We don&apos;t take a cent of your winnings — the markets fund themselves from the pool.
+            </p>
+
+            <div style={{
+              padding: 28,
+              background: 'linear-gradient(120deg, rgba(255,176,32,0.14), rgba(255,78,43,0.10))',
+              border: '1px solid rgba(255,176,32,0.4)',
+              borderRadius: 18,
+              display: 'flex', alignItems: 'center', gap: 24,
+            }}>
+              <div className="sf-spin-slow" style={{
+                width: 64, height: 64, borderRadius: 999,
+                background: 'radial-gradient(circle at 30% 30%, #FFE68A 0%, #FFB020 60%, #C97A00 100%)',
+                boxShadow: 'inset 0 -3px 4px rgba(0,0,0,0.25), 0 8px 24px rgba(255,176,32,0.4)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#1A0F00', fontWeight: 900, fontSize: 28, flexShrink: 0,
+              }}>★</div>
+              <div>
+                <div className="sf-display" style={{ fontSize: 44, color: '#fff', letterSpacing: '-0.04em' }}>0%</div>
+                <div className="sf-eyebrow" style={{ color: 'var(--sf-fg-3)', marginTop: 4 }}>PLATFORM CUT ON PAYOUTS · EVER</div>
+              </div>
+            </div>
+          </div>
+        </Reveal>
+
+        <Reveal delay={120}>
+          <div style={{
+            background: 'var(--sf-stage)',
+            border: '1px solid var(--sf-line)',
+            borderRadius: 22, padding: 8,
+          }}>
+            <div style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid var(--sf-line)' }}>
+              <span className="sf-pulse"></span>
+              <span className="sf-eyebrow" style={{ color: '#fff' }}>WHAT YOU CAN PREDICT</span>
+              <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--sf-fg-3)', fontWeight: 700 }}>SAMPLE MARKETS</span>
+            </div>
+            {ms.map((m, i, arr) => (
+              <div key={m.tag} style={{
+                display: 'flex', alignItems: 'flex-start', gap: 14,
+                padding: 18,
+                borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+              }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 999,
+                  background: m.color + '22', border: `1px solid ${m.color}66`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 16, flexShrink: 0,
+                }}>{m.icon}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <span style={{
+                      fontSize: 9, fontWeight: 900, letterSpacing: '0.14em',
+                      padding: '2px 7px', borderRadius: 4,
+                      background: m.color, color: '#0A0814',
+                    }}>{m.tag}</span>
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 4, letterSpacing: '-0.01em' }}>{m.q}</div>
+                  <div style={{ fontSize: 12, color: 'var(--sf-fg-2)', lineHeight: 1.5 }}>{m.body}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+};
+
+const Timeline: React.FC = () => {
+  const steps = [
+    { phase: 'NOW',         title: 'Waitlist open',                body: 'Get on the list — first 10,000 signups get a starter pot when we go live.', color: '#FF4E2B', live: true },
+    { phase: 'NEXT',        title: 'Casting opens',                body: 'Open applications for 8 cast slots. Rolling shortlist published weekly.', color: '#F2B544' },
+    { phase: 'PRE-LAUNCH',  title: 'Cast reveal & house build',    body: 'Final 8 announced. Cameras installed. Markets primed. Director’s booth opens to early backers.', color: '#6B3FE5' },
+    { phase: 'LAUNCH',      title: 'Season 01 goes live',          body: '48 days. 8 cameras. 24/7 streaming. Eviction every Sunday at 19:00 WAT.', color: '#1FD17A', big: true },
+  ];
+
+  return (
+    <section id="timeline" style={{
+      padding: 'clamp(56px, 8vw, 120px) clamp(14px, 4vw, 64px)',
+      background: 'var(--sf-stage)',
+      borderBottom: '1px solid var(--sf-line)',
+    }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+        <Reveal>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 56, flexWrap: 'wrap' }}>
+            <div>
+              <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 12 }}>● THE ROAD TO SEASON 01</div>
+              <h2 className="sf-display" style={{
+                fontSize: 'clamp(44px, 6vw, 76px)', color: '#fff',
+                letterSpacing: '-0.05em', lineHeight: 0.9, maxWidth: 800,
+              }}>
+                Four phases.<br />
+                <span style={{ fontStyle: 'italic' }}>One season.</span>
+              </h2>
+            </div>
+          </div>
+        </Reveal>
+
+        <div style={{ position: 'relative' }}>
+          <div className="sf-hide-mobile" style={{
+            position: 'absolute', top: 28, left: '6%', right: '6%', height: 2,
+            background: 'linear-gradient(to right, #FF4E2B 0%, #F2B544 33%, #6B3FE5 66%, #1FD17A 100%)',
+            opacity: 0.4,
+          }} />
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+            {steps.map((s, i) => (
+              <Reveal key={s.phase} delay={i * 100}>
+                <div style={{ position: 'relative' }}>
+                  <div style={{
+                    width: 56, height: 56, borderRadius: 999,
+                    background: 'var(--sf-stage)',
+                    border: `2px solid ${s.color}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    marginBottom: 22, position: 'relative', zIndex: 2,
+                    boxShadow: s.live ? `0 0 0 6px ${s.color}22, 0 0 24px ${s.color}55` : 'none',
+                  }}>
+                    {s.live
+                      ? <span className="sf-pulse" style={{ background: s.color, boxShadow: `0 0 0 4px ${s.color}33`, width: 12, height: 12 }} />
+                      : <span style={{ width: 12, height: 12, borderRadius: 999, background: s.color, opacity: 0.5 }} />}
+                  </div>
+                  <div style={{
+                    padding: 22,
+                    background: s.big ? `linear-gradient(160deg, ${s.color}26, var(--sf-stage-2))` : 'var(--sf-stage-2)',
+                    border: `1px solid ${s.big || s.live ? s.color : 'var(--sf-line)'}`,
+                    borderRadius: 18,
+                    minHeight: 200,
+                    display: 'flex', flexDirection: 'column',
+                    position: 'relative', overflow: 'hidden',
+                  }}>
+                    {s.big && (
+                      <div style={{
+                        position: 'absolute', right: -40, top: -40, width: 160, height: 160,
+                        borderRadius: 999,
+                        background: `radial-gradient(circle, ${s.color}50 0%, transparent 70%)`,
+                      }} />
+                    )}
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                      <span style={{
+                        fontSize: 9, fontWeight: 900, letterSpacing: '0.14em',
+                        padding: '4px 9px', borderRadius: 4,
+                        background: s.color, color: '#0A0814',
+                      }}>{s.phase}</span>
+                      {s.live && (
+                        <>
+                          <span className="sf-pulse"></span>
+                          <span style={{ fontSize: 10, color: s.color, fontWeight: 800, letterSpacing: '0.1em' }}>NOW</span>
+                        </>
+                      )}
+                    </div>
+                    <div className="sf-display" style={{ fontSize: 22, color: '#fff', lineHeight: 1.05, letterSpacing: '-0.02em', marginBottom: 8 }}>{s.title}</div>
+                    <div style={{ fontSize: 13, color: 'var(--sf-fg-2)', lineHeight: 1.5, flex: 1 }}>{s.body}</div>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const FinalCTA: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !/.+@.+\..+/.test(email)) return;
+    setSubmitted(true);
+  };
+  return (
+    <section id="cta" style={{
+      padding: 'clamp(64px, 9vw, 140px) clamp(14px, 4vw, 64px)',
+      background: 'var(--sf-stage)',
+      borderBottom: '1px solid var(--sf-line)',
+      position: 'relative', overflow: 'hidden',
+    }}>
+      <div className="sf-ring sf-ring-decor" style={{ width: 1400, height: 1400, top: '50%', left: '50%', transform: 'translate(-50%,-50%)', borderColor: 'rgba(255,78,43,0.10)' }} />
+      <div className="sf-ring sf-ring-decor" style={{ width: 1000, height: 1000, top: '50%', left: '50%', transform: 'translate(-50%,-50%)', borderColor: 'rgba(255,78,43,0.18)' }} />
+      <div className="sf-ring sf-ring-decor" style={{ width: 640, height: 640, top: '50%', left: '50%', transform: 'translate(-50%,-50%)', borderColor: 'rgba(242,181,68,0.22)' }} />
+      <div style={{
+        position: 'absolute', top: '50%', left: '50%', width: 1, height: 1,
+        boxShadow: '0 0 220px 160px rgba(255,78,43,0.14), 0 0 400px 280px rgba(107,63,229,0.12)',
+      }} />
+
+      <div style={{ maxWidth: 1280, margin: '0 auto', position: 'relative', textAlign: 'center' }}>
+        <Reveal>
+          <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 24 }}>● SEASON 01 · WAITLIST OPEN</div>
+        </Reveal>
+        <Reveal delay={80}>
+          <h2 className="sf-display" style={{
+            fontSize: 'clamp(72px, 14vw, 168px)', color: '#fff',
+            letterSpacing: '-0.06em', lineHeight: 0.85,
+            marginBottom: 40,
+          }}>
+            Don&apos;t watch.<br />
+            <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>Play.</span>
+          </h2>
+        </Reveal>
+        <Reveal delay={160}>
+          <p style={{
+            fontSize: 19, lineHeight: 1.5, color: 'var(--sf-fg-2)',
+            maxWidth: 600, margin: '0 auto 48px',
+          }}>
+            Cast can hear the chat. Markets settle in real time. Evictions are decided by you. Get on the list — we&apos;ll send a starter pot when we go live.
+          </p>
+        </Reveal>
+
+        <Reveal delay={220}>
+          {submitted ? (
+            <div style={{
+              maxWidth: 540, margin: '0 auto',
+              padding: '20px 28px',
+              background: 'rgba(31,209,122,0.08)',
+              border: '1px solid var(--sf-mint)',
+              borderRadius: 999,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
+            }}>
+              <span style={{ width: 24, height: 24, borderRadius: 999, background: 'var(--sf-mint)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#0A0814', fontWeight: 900 }}>✓</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>You&apos;re on the list. We&apos;ll be in touch the moment Season 01 lights up.</span>
+            </div>
+          ) : (
+            <form onSubmit={submit} style={{
+              maxWidth: 540, margin: '0 auto',
+              display: 'flex', gap: 8,
+              padding: 8,
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid var(--sf-line-strong)',
+              borderRadius: 999,
+              backdropFilter: 'blur(8px)',
+            }}>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                style={{
+                  flex: 1, height: 52, padding: '0 22px',
+                  background: 'transparent', border: 'none', outline: 'none',
+                  color: '#fff', fontSize: 15,
+                  letterSpacing: '-0.01em',
+                  fontFamily: 'inherit',
+                }}
+              />
+              <button type="submit" className="sf-btn sf-btn-coral" style={{ height: 52, padding: '0 28px', fontSize: 13 }}>
+                JOIN WAITLIST
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
+              </button>
+            </form>
+          )}
+        </Reveal>
+
+        <Reveal delay={280}>
+          <div style={{ marginTop: 24, fontSize: 12, color: 'var(--sf-fg-3)', fontWeight: 600 }}>
+            First 10,000 get a ₦500 starter pot · No platform fees on payouts · 18+
+          </div>
+        </Reveal>
+
+        <Reveal delay={340}>
+          <div style={{ marginTop: 36, display: 'flex', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
+            <Link href="/apply" className="sf-btn sf-btn-paper" style={{ height: 44, padding: '0 22px', fontSize: 12 }}>APPLY TO BE CAST</Link>
+            <Link href="/watch" className="sf-btn sf-btn-ghost" style={{ height: 44, padding: '0 22px', fontSize: 12 }}>
+              SEE THE WATCH PREVIEW →
+            </Link>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+};
+
+const Footer: React.FC = () => {
+  const cols = [
+    { title: 'PRODUCT', items: ['Cameras', 'How it works', 'Markets preview', 'Watch the demo'] },
+    { title: 'JOIN',    items: ['Waitlist', 'Apply to be cast', 'Nominate someone', 'Partner with us'] },
+    { title: 'LEARN',   items: ['FAQ', 'Whitepaper', 'How payouts work', 'Responsible play'] },
+    { title: 'COMPANY', items: ['About', 'Press kit', 'Careers', 'Contact'] },
+  ];
+  return (
+    <footer style={{
+      background: 'var(--sf-stage-2)',
+      padding: 'clamp(40px, 5vw, 80px) clamp(14px, 4vw, 64px) clamp(24px, 3vw, 40px)',
+      borderTop: '1px solid var(--sf-line)',
+    }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+          gap: 48,
+          marginBottom: 64,
+        }}>
+          <div style={{ minWidth: 240 }}>
+            <SFWordmark size={28} />
+            <p style={{ fontSize: 14, color: 'var(--sf-fg-2)', lineHeight: 1.55, marginTop: 18, maxWidth: 320 }}>
+              Africa&apos;s first interactive reality TV platform. Launching Season 01 with one house, eight live cameras, real-money markets,
+              and zero platform cut on payouts.
+            </p>
+            <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
+              {['X', 'IG', 'TT', 'YT'].map(s => (
+                <button key={s} className="sf-btn-icon" style={{ width: 40, height: 40, fontSize: 11, fontWeight: 900 }}>{s}</button>
+              ))}
+            </div>
+          </div>
+          {cols.map(c => (
+            <div key={c.title}>
+              <div className="sf-eyebrow" style={{ color: '#fff', marginBottom: 18 }}>{c.title}</div>
+              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 12, padding: 0, margin: 0 }}>
+                {c.items.map(it => (
+                  <li key={it} style={{ fontSize: 13, color: 'var(--sf-fg-2)', cursor: 'pointer' }}>{it}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div style={{
+          paddingTop: 28,
+          borderTop: '1px solid var(--sf-line)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: 24, flexWrap: 'wrap',
+        }}>
+          <div style={{ fontSize: 12, color: 'var(--sf-fg-3)' }}>
+            © {new Date().getFullYear()} Starfactor TV · Lagos, Nigeria · A Chainfren product · All rights reserved.
+          </div>
+          <div style={{ display: 'flex', gap: 24 }}>
+            {['Privacy', 'Terms', 'Responsible play', 'Cookies'].map(s => (
+              <span key={s} style={{ fontSize: 12, color: 'var(--sf-fg-3)', cursor: 'pointer' }}>{s}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────
+// PAGE
+// ─────────────────────────────────────────────────────────────
+const HomePage: React.FC = () => {
+  return (
+    <div className="sf-watch-root" style={{ minHeight: '100vh', background: 'var(--sf-stage)' }}>
+      <Nav />
+      <Hero />
+      <Ticker />
+      <Channels />
+      <HowItWorks />
+      <MarketsPreview />
+      <Casting />
+      <Mechanics />
+      <Timeline />
+      <FinalCTA />
+      <Footer />
+    </div>
+  );
+};
+
+export default HomePage;

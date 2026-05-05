@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import Image from 'next/image';
-import MultiCamGrid from './MultiCamGrid';
-import Chat from './Chat';
-import InteractiveWidgets from './InteractiveWidgets';
+import Link from 'next/link';
 import LivepeerPlayer from './LivepeerPlayer';
-import { MarketCreationData } from '@/types/prediction';
+import ClientOnly from './ClientOnly';
+import { usePredictionStore } from '@/stores/predictionStore';
+import { useUserStore } from '@/stores/userStore';
+import { MarketCreationData, PredictionMarket } from '@/types/prediction';
 
 interface Camera {
   id: string;
@@ -27,92 +27,139 @@ interface MobileLayoutProps {
   onCreateMarket?: (data: MarketCreationData) => void;
 }
 
-type OverlayHeight = 'collapsed' | 'half' | 'full';
+type SheetState = 'closed' | 'half' | 'full';
+type SheetTab = 'predict' | 'chat';
+type MobileViewMode = 'single' | 'director';
+
+const PALETTES = ['coral', 'violet', 'gold', 'mint', 'sky', 'rose'];
+
+const PaletteFill: React.FC<{ palette: string; children?: React.ReactNode }> = ({ palette, children }) => {
+  const map: Record<string, { a: string; b: string; c: string }> = {
+    coral:  { a: '#FF4E2B', b: '#F2B544', c: '#0A0814' },
+    violet: { a: '#6B3FE5', b: '#8DAAFF', c: '#0A0814' },
+    mint:   { a: '#1FD17A', b: '#C8EB6D', c: '#0A0814' },
+    gold:   { a: '#F2B544', b: '#FF4E2B', c: '#0A0814' },
+    sky:    { a: '#5ACDFF', b: '#8DAAFF', c: '#0A0814' },
+    rose:   { a: '#FF1F3D', b: '#FF4E2B', c: '#1A0410' },
+  };
+  const p = map[palette] || map.coral;
+  return (
+    <div className="sf-photo" style={{
+      width: '100%', height: '100%', position: 'relative', overflow: 'hidden',
+      background: `radial-gradient(120% 120% at 80% 20%, ${p.b} 0%, ${p.a} 50%, ${p.c} 120%)`,
+    }}>
+      <div className="sf-photo-grain" />
+      {children}
+    </div>
+  );
+};
+
+const fmt = (n: number) => {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1) + 'M';
+  if (n >= 1_000) return (n / 1_000).toFixed(n >= 10_000 ? 0 : 1) + 'K';
+  return n.toString();
+};
+const ngn = (n: number) => '₦' + fmt(n);
+const optionDot = (idx: number) => ['var(--sf-mint)', 'var(--sf-coral)', 'var(--sf-violet)', 'var(--sf-cyan-warm)'][idx % 4];
+const optionFill = (idx: number, picked = false) => {
+  if (picked) return 'rgba(255,78,43,0.18)';
+  return ['rgba(31,209,122,0.12)', 'rgba(255,78,43,0.12)', 'rgba(107,63,229,0.12)', 'rgba(90,205,255,0.12)'][idx % 4];
+};
+
+const SEED_CHAT = [
+  { id: 'm1', name: 'Tola_LG',    color: '#6B3FE5', msg: 'WAHALA Kemi about to flip the table 🔥', time: 'now' },
+  { id: 'm2', name: '9JaKid',     color: '#1FD17A', msg: 'Bayo dey scheme for diary again',         time: 'now' },
+  { id: 'm3', name: 'Ife_M',      color: '#FF4E2B', msg: 'My ₦5K on Femi for eviction.',            time: '10s' },
+  { id: 'm4', name: 'AbujaQueen', color: '#5ACDFF', msg: 'Tunde acting fake for camera',            time: '22s' },
+  { id: 'm5', name: 'Sage',       color: '#1FD17A', msg: 'Watch Ngozi, she playing 4D chess',       time: '1m' },
+];
 
 const MobileLayout: React.FC<MobileLayoutProps> = ({
   cameras,
   selectedPlaybackId,
+  onStreamClick,
   onRequireLogin,
   isAuthenticated = false,
   userEmail,
-  onCreateMarket
+  onCreateMarket,
 }) => {
-  const [activeOverlay, setActiveOverlay] = useState<'none' | 'chat' | 'interact'>('none');
-  const [overlayHeight, setOverlayHeight] = useState<OverlayHeight>('half');
-  const [fullScreenStream, setFullScreenStream] = useState<{playbackId: string, cameraName: string} | null>(null);
+  const [activeChannel, setActiveChannel] = useState(0);
+  const [sheetTab, setSheetTab] = useState<SheetTab>('predict');
+  const [sheetState, setSheetState] = useState<SheetState>('half');
+  const [viewMode, setViewMode] = useState<MobileViewMode>('single');
+  const [showMobileWidgets, setShowMobileWidgets] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
-  const [isSideNavOpen, setIsSideNavOpen] = useState(false);
+  const [showChannelDrawer, setShowChannelDrawer] = useState(false);
+
+  // Drag handle
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartY, setDragStartY] = useState(0);
-  const [currentTranslateY, setCurrentTranslateY] = useState(0);
+  const [dragDelta, setDragDelta] = useState(0);
 
-  const overlayRef = useRef<HTMLDivElement>(null);
+  // Predict + chat state
+  const { markets, userBets, addMarket, placeBet, initializeDemoData } = usePredictionStore();
+  const { balance, deductStakes } = useUserStore();
+  const [pickedBet, setPickedBet] = useState<{ marketId: string; optionId: string } | null>(null);
+  const [stake, setStake] = useState(500);
+
+  const [chatMessages, setChatMessages] = useState(SEED_CHAT);
+  const [chatInput, setChatInput] = useState('');
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const [showMarketComposer, setShowMarketComposer] = useState(false);
+  const [predictQuestion, setPredictQuestion] = useState('');
+  const [predictOptions, setPredictOptions] = useState(['', '']);
+  const [predictCategory, setPredictCategory] = useState<MarketCreationData['category']>('event');
+  const [predictDuration, setPredictDuration] = useState(24);
+
+  const [winH, setWinH] = useState(800);
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    initializeDemoData();
+    const update = () => setWinH(window.innerHeight);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [initializeDemoData]);
 
-  // Get overlay height in pixels based on state
-  const getOverlayHeightClass = useCallback(() => {
-    switch (overlayHeight) {
-      case 'collapsed':
-        return 'h-[120px]';
-      case 'half':
-        return 'h-[55vh]';
-      case 'full':
-        return 'h-[85vh]';
-      default:
-        return 'h-[55vh]';
-    }
-  }, [overlayHeight]);
+  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages]);
 
-  // Handle drag start
+  useEffect(() => {
+    if (!selectedPlaybackId || cameras.length === 0) return;
+    const idx = cameras.findIndex(c => c.playbackId === selectedPlaybackId);
+    if (idx >= 0 && idx !== activeChannel) setActiveChannel(idx);
+  }, [activeChannel, cameras, selectedPlaybackId]);
+
+  useEffect(() => {
+    if (cameras.length > 0 && activeChannel >= cameras.length) setActiveChannel(0);
+  }, [activeChannel, cameras.length]);
+
+  const sheetHeight = sheetState === 'closed' ? 80 : sheetState === 'half' ? Math.round(winH * 0.55) : Math.round(winH * 0.88);
+
   const handleDragStart = (e: React.TouchEvent | React.MouseEvent) => {
     setIsDragging(true);
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    setDragStartY(clientY);
-    setCurrentTranslateY(0);
+    const y = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    setDragStartY(y);
+    setDragDelta(0);
   };
-
-  // Handle drag move
   const handleDragMove = useCallback((e: TouchEvent | MouseEvent) => {
     if (!isDragging) return;
-
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    const deltaY = clientY - dragStartY;
-    setCurrentTranslateY(deltaY);
+    const y = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    setDragDelta(y - dragStartY);
   }, [isDragging, dragStartY]);
-
-  // Handle drag end
   const handleDragEnd = useCallback(() => {
     if (!isDragging) return;
     setIsDragging(false);
-
-    // Determine new height based on drag distance
-    const threshold = 50;
-
-    if (currentTranslateY > threshold) {
-      // Dragged down - collapse or close
-      if (overlayHeight === 'full') {
-        setOverlayHeight('half');
-      } else if (overlayHeight === 'half') {
-        setOverlayHeight('collapsed');
-      } else {
-        setActiveOverlay('none');
-      }
-    } else if (currentTranslateY < -threshold) {
-      // Dragged up - expand
-      if (overlayHeight === 'collapsed') {
-        setOverlayHeight('half');
-      } else if (overlayHeight === 'half') {
-        setOverlayHeight('full');
-      }
+    const t = 60;
+    if (dragDelta > t) {
+      setSheetState(s => (s === 'full' ? 'half' : s === 'half' ? 'closed' : 'closed'));
+    } else if (dragDelta < -t) {
+      setSheetState(s => (s === 'closed' ? 'half' : s === 'half' ? 'full' : 'full'));
     }
+    setDragDelta(0);
+  }, [isDragging, dragDelta]);
 
-    setCurrentTranslateY(0);
-  }, [isDragging, currentTranslateY, overlayHeight]);
-
-  // Add/remove global event listeners for dragging
   useEffect(() => {
     if (isDragging) {
       window.addEventListener('mousemove', handleDragMove);
@@ -120,7 +167,6 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
       window.addEventListener('touchmove', handleDragMove);
       window.addEventListener('touchend', handleDragEnd);
     }
-
     return () => {
       window.removeEventListener('mousemove', handleDragMove);
       window.removeEventListener('mouseup', handleDragEnd);
@@ -129,451 +175,771 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
     };
   }, [isDragging, handleDragMove, handleDragEnd]);
 
-  const handleStreamClick = (playbackId: string, cameraName: string) => {
-    setFullScreenStream({ playbackId, cameraName });
-  };
+  const activeCam = cameras[activeChannel];
+  const activeMarket = markets.find(m => m.status === 'active');
+  const otherCameras = cameras.map((cam, idx) => ({ cam, idx })).filter(({ idx }) => idx !== activeChannel);
 
-  const handleCloseFullScreen = () => {
-    setFullScreenStream(null);
+  const handlePickOption = (marketId: string, optionId: string) => {
+    if (!isAuthenticated) { onRequireLogin?.(); return; }
+    setPickedBet({ marketId, optionId });
+    setSheetState('full');
   };
-
-  const toggleOverlay = (overlay: 'chat' | 'interact') => {
-    if (activeOverlay === overlay) {
-      // Toggle through states: half -> full -> collapsed -> close
-      if (overlayHeight === 'half') {
-        setOverlayHeight('full');
-      } else if (overlayHeight === 'full') {
-        setOverlayHeight('collapsed');
-      } else {
-        setActiveOverlay('none');
-        setOverlayHeight('half');
-      }
-    } else {
-      setActiveOverlay(overlay);
-      setOverlayHeight('half');
+  const handlePlaceBet = () => {
+    if (!pickedBet) return;
+    if (deductStakes(stake)) {
+      placeBet(pickedBet.marketId, pickedBet.optionId, stake, userEmail?.split('@')[0] || 'You');
+      setPickedBet(null);
     }
   };
 
-  const closeOverlay = () => {
-    setActiveOverlay('none');
-    setOverlayHeight('half');
+  const handleSendChat = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+    if (!isAuthenticated) { onRequireLogin?.(); return; }
+    const text = chatInput.trim();
+    if (text.toLowerCase().startsWith('/predict')) {
+      setShowMarketComposer(true);
+      setSheetTab('predict');
+      setSheetState('full');
+      setChatInput('');
+      return;
+    }
+    setChatMessages(prev => [...prev, {
+      id: `m_${Date.now()}`,
+      name: userEmail?.split('@')[0] || 'You',
+      color: '#FF4E2B',
+      msg: text,
+      time: 'now',
+    }]);
+    setChatInput('');
+  };
+
+  const handleCreateMarket = () => {
+    const opts = predictOptions.filter(o => o.trim());
+    if (!predictQuestion.trim() || opts.length < 2) return;
+    const data: MarketCreationData = {
+      question: predictQuestion.trim(),
+      options: opts,
+      duration: predictDuration,
+      category: predictCategory,
+    };
+    if (onCreateMarket) {
+      onCreateMarket(data);
+    } else {
+      addMarket(data, userEmail?.split('@')[0] || 'Anonymous');
+    }
+    setChatMessages(prev => [...prev, {
+      id: `m_${Date.now()}`,
+      name: userEmail?.split('@')[0] || 'You',
+      color: '#1FD17A',
+      msg: `Created prediction: "${data.question}"`,
+      time: 'now',
+    }]);
+    setShowMarketComposer(false);
+    setPredictQuestion('');
+    setPredictOptions(['', '']);
+    setPredictCategory('event');
+    setPredictDuration(24);
+    setSheetTab('predict');
+    setSheetState('half');
   };
 
   if (!isMounted) {
     return (
-      <div className="h-screen bg-sf-bg-primary flex items-center justify-center" suppressHydrationWarning>
-        <div className="text-center text-sf-text-secondary">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sf-accent-primary mx-auto mb-2"></div>
-          <p className="text-sm">Loading...</p>
-        </div>
+      <div className="sf-watch-root" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: '#F8F4EC', fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Loading…</div>
       </div>
     );
   }
 
-  // Overlay Content Component
-  const OverlayContent = ({ type }: { type: 'chat' | 'interact' }) => (
-    <div
-      ref={overlayRef}
-      className={`fixed bottom-0 left-0 right-0 z-40 transition-all duration-300 ease-out ${getOverlayHeightClass()}`}
-      style={{
-        transform: isDragging ? `translateY(${currentTranslateY}px)` : 'translateY(0)',
-      }}
-    >
-      {/* Glass morphism backdrop */}
-      <div className="absolute inset-0 bg-sf-bg-secondary/95 backdrop-blur-xl border-t-2 border-sf-glass-border rounded-t-3xl shadow-2xl" />
-
-      {/* Content container */}
-      <div className="relative h-full flex flex-col">
-        {/* Drag Handle Bar */}
-        <div
-          className="flex-shrink-0 pt-3 pb-2 cursor-grab active:cursor-grabbing touch-none"
-          onMouseDown={handleDragStart}
-          onTouchStart={handleDragStart}
-        >
-          <div className="w-10 h-1 bg-sf-text-muted/50 rounded-full mx-auto" />
-        </div>
-
-        {/* Header with title and controls */}
-        <div className="flex-shrink-0 px-4 pb-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-              type === 'chat'
-                ? 'bg-sf-accent-primary/20'
-                : 'bg-sf-accent-secondary/20'
-            }`}>
-              {type === 'chat' ? (
-                <svg className="w-4 h-4 text-sf-accent-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4 text-sf-accent-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              )}
-            </div>
-            <div>
-              <h3 className="text-white font-bold uppercase tracking-wider text-sm">
-                {type === 'chat' ? 'Live Chat' : 'Interact'}
-              </h3>
-              <p className="text-sf-text-muted text-xs">
-                {overlayHeight === 'collapsed' ? 'Tap to expand' :
-                 overlayHeight === 'half' ? 'Swipe up to expand' :
-                 'Full screen'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Height toggle buttons */}
-            <div className="flex items-center gap-1 bg-sf-bg-tertiary rounded-full p-1">
-              <button
-                onClick={() => setOverlayHeight('collapsed')}
-                className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
-                  overlayHeight === 'collapsed'
-                    ? 'bg-sf-accent-primary text-white'
-                    : 'text-sf-text-muted hover:text-white'
-                }`}
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              <button
-                onClick={() => setOverlayHeight('half')}
-                className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
-                  overlayHeight === 'half'
-                    ? 'bg-sf-accent-primary text-white'
-                    : 'text-sf-text-muted hover:text-white'
-                }`}
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-                </svg>
-              </button>
-              <button
-                onClick={() => setOverlayHeight('full')}
-                className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
-                  overlayHeight === 'full'
-                    ? 'bg-sf-accent-primary text-white'
-                    : 'text-sf-text-muted hover:text-white'
-                }`}
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Close button */}
-            <button
-              onClick={closeOverlay}
-              className="w-8 h-8 rounded-full bg-sf-bg-tertiary flex items-center justify-center text-sf-text-muted hover:text-white hover:bg-sf-status-error/20 transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Scrollable content area */}
-        <div className={`flex-1 overflow-hidden ${overlayHeight === 'collapsed' ? 'opacity-0 pointer-events-none' : 'opacity-100'} transition-opacity duration-200`}>
-          {type === 'chat' ? (
-            <Chat
-              onRequireLogin={() => onRequireLogin?.()}
-              isAuthenticated={isAuthenticated}
-              onCreateMarket={onCreateMarket}
-            />
-          ) : (
-            <InteractiveWidgets onRequireLogin={onRequireLogin} />
-          )}
-        </div>
-      </div>
-    </div>
-  );
-
-  // Full screen video view
-  if (fullScreenStream) {
-    return (
-      <div className="h-screen bg-black flex flex-col" suppressHydrationWarning>
-        {/* Header */}
-        <div className="flex-shrink-0 bg-sf-bg-secondary/90 backdrop-blur-sm border-2 border-sf-glass-border p-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={handleCloseFullScreen}
-              className="flex items-center gap-2 text-sf-text-secondary hover:text-white px-3 py-2 rounded-full border-2 border-sf-glass-border bg-sf-bg-tertiary hover:bg-sf-bg-hover transition-colors"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              <span className="text-sm font-medium">Back</span>
-            </button>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-sf-status-live rounded-full animate-pulse" />
-              <h2 className="text-white text-sm font-semibold">{fullScreenStream.cameraName}</h2>
-            </div>
-            <div className="w-16" />
-          </div>
-        </div>
-
-        {/* Video Area */}
-        <div className="flex-1 relative">
-          <LivepeerPlayer playbackId={fullScreenStream.playbackId} />
-        </div>
-
-        {/* Bottom Sheet Overlay */}
-        {activeOverlay !== 'none' && (
-          <OverlayContent type={activeOverlay} />
-        )}
-
-        {/* Footer Navigation */}
-        <footer className="flex-shrink-0 bg-sf-bg-secondary/95 backdrop-blur-xl border-2 border-sf-glass-border safe-area-bottom">
-          <div className="flex justify-around py-3 px-4">
-            <button
-              onClick={() => toggleOverlay('chat')}
-              className={`flex flex-col items-center gap-1 px-6 py-2 rounded-2xl transition-all ${
-                activeOverlay === 'chat'
-                  ? 'bg-sf-accent-primary/20 text-sf-accent-primary scale-105'
-                  : 'text-sf-text-tertiary hover:text-white'
-              }`}
-            >
-              <div className="relative">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-                {activeOverlay === 'chat' && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-sf-status-live rounded-full animate-pulse" />
-                )}
-              </div>
-              <span className="font-bold uppercase tracking-wider text-[0.625rem]">Chat</span>
-            </button>
-
-            <button
-              onClick={handleCloseFullScreen}
-              className="flex flex-col items-center gap-1 px-6 py-2 rounded-2xl text-sf-text-tertiary hover:text-white transition-all"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-              </svg>
-              <span className="font-bold uppercase tracking-wider text-[0.625rem]">Grid</span>
-            </button>
-
-            <button
-              onClick={() => toggleOverlay('interact')}
-              className={`flex flex-col items-center gap-1 px-6 py-2 rounded-2xl transition-all ${
-                activeOverlay === 'interact'
-                  ? 'bg-sf-accent-secondary/20 text-sf-accent-secondary scale-105'
-                  : 'text-sf-text-tertiary hover:text-white'
-              }`}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              <span className="font-bold uppercase tracking-wider text-[0.625rem]">Interact</span>
-            </button>
-          </div>
-        </footer>
-      </div>
-    );
-  }
-
-  // Main grid view
   return (
-    <div className="h-screen bg-sf-bg-primary flex flex-col" suppressHydrationWarning>
-      {/* Header */}
-      <header className="flex-shrink-0 bg-sf-bg-secondary/95 backdrop-blur-xl border-2 border-sf-glass-border px-4 py-3">
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => setIsSideNavOpen(true)}
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-sf-text-secondary hover:text-white hover:bg-sf-bg-tertiary transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-
-          <div className="flex items-center">
-            <Image src="/starfff.png" alt="Star Factor" width={32} height={32} className="w-8 h-8 rounded-full" />
+    <div className="sf-watch-root" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+      {/* HEADER — paper */}
+      <header style={{
+        position: 'sticky', top: 0, zIndex: 40,
+        height: 56, padding: '0 14px',
+        display: 'flex', alignItems: 'center', gap: 10,
+        background: 'var(--sf-paper)',
+        color: 'var(--sf-stage)',
+        borderBottom: '2px solid var(--sf-stage)',
+      }}>
+        <button onClick={() => setShowChannelDrawer(true)} style={{
+          width: 38, height: 38, borderRadius: 999,
+          background: 'var(--sf-stage)', color: '#fff',
+          border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }} aria-label="Cameras">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span className="sf-display" style={{ fontSize: 18, fontWeight: 900, color: 'var(--sf-stage)', fontStyle: 'italic', letterSpacing: '-0.04em' }}>
+            starfactor<span style={{ color: 'var(--sf-coral)' }}>.</span>
+          </span>
+        </Link>
+        <span className="sf-display-italic" style={{ fontSize: 18, marginLeft: 8 }}>
+          DAY <span style={{ color: 'var(--sf-coral)' }}>47</span>
+        </span>
+        <div style={{ flex: 1 }} />
+        <ClientOnly>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '5px 10px 5px 5px',
+            background: 'var(--sf-stage)', color: '#fff', borderRadius: 999,
+          }}>
+            <span style={{
+              width: 22, height: 22, borderRadius: 999,
+              background: 'linear-gradient(135deg,#FFB020,#FF4E2B)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#1A0F00', fontWeight: 900, fontSize: 11,
+            }}>★</span>
+            <span style={{ fontSize: 11, fontWeight: 800 }}>{balance.stakes.toLocaleString()}</span>
           </div>
-
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-sf-status-live rounded-full animate-pulse" />
-            <span className="text-sf-status-live text-xs font-medium">LIVE</span>
-          </div>
-        </div>
+        </ClientOnly>
       </header>
 
-      {/* Main Content - Camera Grid */}
-      <div className="flex-1 overflow-hidden p-3">
-        <MultiCamGrid
-          cameras={cameras}
-          onStreamClick={handleStreamClick}
-          selectedPlaybackId={selectedPlaybackId || undefined}
-        />
+      {/* PLAYER */}
+      <div style={{ position: 'relative', aspectRatio: '16/9', background: '#000' }}>
+        {activeCam ? (
+          <LivepeerPlayer playbackId={activeCam.playbackId} isMainPlayer={true} showStatus={false} className="w-full h-full" />
+        ) : (
+          <PaletteFill palette="coral" />
+        )}
+        <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 6 }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            padding: '3px 9px', borderRadius: 999,
+            background: 'var(--sf-live)', color: '#fff',
+            fontSize: 9, fontWeight: 900, letterSpacing: '0.16em',
+          }}>
+            <span className="sf-pulse" style={{ background: '#fff', boxShadow: '0 0 0 3px rgba(255,255,255,0.3)' }}></span>
+            LIVE
+          </span>
+          {showMobileWidgets && (
+            <span style={{
+              background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)',
+              padding: '4px 9px', borderRadius: 999,
+              fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', color: '#fff',
+            }}>👁 {(38400 + activeChannel * 1200).toLocaleString()}</span>
+          )}
+        </div>
+        <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 6, zIndex: 30 }}>
+          <button
+            onClick={() => {
+              setViewMode(v => v === 'director' ? 'single' : 'director');
+              setSheetState('closed');
+            }}
+            style={{
+              padding: '5px 9px',
+              borderRadius: 999,
+              background: viewMode === 'director' ? 'var(--sf-coral)' : 'rgba(0,0,0,0.62)',
+              color: '#fff',
+              border: '1px solid rgba(255,255,255,0.14)',
+              fontSize: 9,
+              fontWeight: 900,
+              letterSpacing: '0.12em',
+            }}
+          >{viewMode === 'director' ? 'SINGLE' : 'GRID'}</button>
+          <button
+            onClick={() => {
+              setShowMobileWidgets(v => !v);
+              setSheetState('closed');
+            }}
+            style={{
+              padding: '5px 9px',
+              borderRadius: 999,
+              background: !showMobileWidgets ? 'var(--sf-paper)' : 'rgba(0,0,0,0.62)',
+              color: !showMobileWidgets ? 'var(--sf-stage)' : '#fff',
+              border: '1px solid rgba(255,255,255,0.14)',
+              fontSize: 9,
+              fontWeight: 900,
+              letterSpacing: '0.12em',
+            }}
+          >FOCUS</button>
+        </div>
+        {showMobileWidgets && activeMarket && (
+          <div style={{
+            position: 'absolute', bottom: 12, left: 8, right: 8,
+            background: 'linear-gradient(90deg, rgba(255,78,43,0.92), rgba(255,176,32,0.92))',
+            borderRadius: 10, padding: '8px 10px',
+            display: 'flex', alignItems: 'center', gap: 8,
+            boxShadow: '0 12px 40px -10px rgba(255,78,43,0.5)',
+          }}>
+            <span style={{
+              padding: '2px 6px', borderRadius: 4,
+              background: 'rgba(0,0,0,0.85)', color: '#fff',
+              fontSize: 8, fontWeight: 900, letterSpacing: '0.14em', flexShrink: 0,
+            }}>🔥 LIVE</span>
+            <span style={{ fontSize: 11, fontWeight: 800, color: '#fff', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {activeMarket.question}
+            </span>
+            <button
+              onClick={() => { setSheetTab('predict'); setSheetState('half'); }}
+              style={{
+                padding: '4px 10px', borderRadius: 999,
+                background: '#0A0814', color: '#fff', border: 'none',
+                fontSize: 10, fontWeight: 800,
+                cursor: 'pointer', flexShrink: 0,
+              }}
+            >BET</button>
+          </div>
+        )}
       </div>
 
-      {/* Bottom Sheet Overlay */}
-      {activeOverlay !== 'none' && (
-        <OverlayContent type={activeOverlay} />
+      {viewMode === 'director' && (
+        <div className="sf-fade-in" style={{ padding: '12px 14px 14px', background: 'var(--sf-stage)' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 10,
+          }}>
+            <div>
+              <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', fontSize: 9 }}>DIRECTOR VIEW</div>
+              <div style={{ color: '#fff', fontSize: 13, fontWeight: 900, marginTop: 2 }}>{cameras.length} rooms open</div>
+            </div>
+            <button
+              onClick={() => setSheetState(s => s === 'closed' ? 'half' : 'closed')}
+              className="sf-btn sf-btn-ghost"
+              style={{ height: 30, fontSize: 10, padding: '0 12px' }}
+            >
+              {sheetState === 'closed' ? 'OPEN PANEL' : 'HIDE PANEL'}
+            </button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
+            {otherCameras.map(({ cam, idx }) => (
+              <button
+                key={cam.id}
+                onClick={() => {
+                  setActiveChannel(idx);
+                  onStreamClick(cam.playbackId, cam.name);
+                }}
+                className="sf-tile"
+                style={{
+                  aspectRatio: '4/3',
+                  padding: 0,
+                  background: 'transparent',
+                  borderColor: 'var(--sf-line-strong)',
+                }}
+              >
+                <PaletteFill palette={PALETTES[idx % PALETTES.length]}>
+                  <div style={{ position: 'absolute', top: 6, left: 6, display: 'flex', gap: 4 }}>
+                    <span style={{
+                      background: cam.isActive ? 'var(--sf-live)' : 'rgba(0,0,0,0.65)',
+                      color: '#fff',
+                      fontSize: 8,
+                      fontWeight: 900,
+                      padding: '2px 5px',
+                      borderRadius: 4,
+                      letterSpacing: '0.1em',
+                    }}>{cam.isActive ? 'LIVE' : 'IDLE'}</span>
+                  </div>
+                  <div style={{
+                    position: 'absolute',
+                    left: 7,
+                    right: 7,
+                    bottom: 7,
+                    textAlign: 'left',
+                  }}>
+                    <div style={{ color: '#fff', fontSize: 12, fontWeight: 900, textShadow: '0 1px 4px rgba(0,0,0,0.75)' }}>{cam.name}</div>
+                    <div className="sf-mono" style={{ color: 'rgba(255,255,255,0.82)', fontSize: 9, marginTop: 2 }}>
+                      CAM {String(idx + 1).padStart(2, '0')}
+                    </div>
+                  </div>
+                </PaletteFill>
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
-      {/* Side Navigation Overlay */}
-      {isSideNavOpen && (
-        <div className="fixed inset-0 z-50">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setIsSideNavOpen(false)}
-          />
+      {/* SHOW META + CAST PILLS */}
+      <div style={{ padding: '14px 14px 10px' }}>
+        <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 6, fontSize: 10 }}>
+          STARFACTOR · S01 · DAY 47 · {(activeCam?.name || 'MAIN').toUpperCase()}
+        </div>
+        <h1 className="sf-display" style={{ fontSize: 18, color: '#fff', marginBottom: 10, lineHeight: 1.1 }}>
+          {activeCam?.description || 'Live from the house. Tap any camera to switch.'}
+        </h1>
+      </div>
 
-          {/* Side Navigation Panel */}
-          <div className="absolute left-0 top-0 h-full w-72 bg-sf-bg-secondary rounded-r-3xl border-r-2 border-sf-glass-border shadow-2xl animate-slide-in-left">
-            <div className="p-5 h-full flex flex-col">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center">
-                  <Image src="/starfff.png" alt="Star Factor" width={40} height={40} className="w-10 h-10 rounded-full" />
+      {/* HORIZONTAL CHANNEL RAIL */}
+      {viewMode === 'single' && (
+        <div style={{
+          padding: '0 14px 16px',
+          display: 'flex', gap: 8, overflowX: 'auto',
+        }} className="sf-no-scrollbar">
+          {cameras.map((cam, i) => (
+            <button
+              key={cam.id}
+              onClick={() => {
+                setActiveChannel(i);
+                onStreamClick(cam.playbackId, cam.name);
+              }}
+              className={`sf-tile ${i === activeChannel ? 'active' : ''}`}
+              style={{ flex: '0 0 140px', aspectRatio: '16/9', padding: 0, background: 'transparent' }}
+            >
+              <PaletteFill palette={PALETTES[i % PALETTES.length]}>
+                <div style={{ position: 'absolute', top: 4, left: 4 }}>
+                  <span style={{
+                    background: 'rgba(0,0,0,0.7)', color: '#fff',
+                    fontSize: 8, fontWeight: 900, padding: '2px 5px',
+                    borderRadius: 3, letterSpacing: '0.12em',
+                  }}>{cam.isActive ? '● LIVE' : '○ IDLE'}</span>
                 </div>
-                <button
-                  onClick={() => setIsSideNavOpen(false)}
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-sf-text-muted hover:text-white hover:bg-sf-bg-tertiary transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
+                <div style={{
+                  position: 'absolute', bottom: 4, left: 4, right: 4,
+                  fontSize: 10, fontWeight: 900, color: '#fff',
+                  textShadow: '0 1px 4px rgba(0,0,0,0.8)',
+                }}>{cam.name}</div>
+              </PaletteFill>
+            </button>
+          ))}
+        </div>
+      )}
 
-              {/* Navigation Links */}
-              <nav className="flex-1 space-y-2">
-                {[
-                  { icon: 'home', label: 'Home', color: 'sf-accent-primary' },
-                  { icon: 'video', label: 'Watch', color: 'sf-status-success' },
-                  { icon: 'chart', label: 'Predictions', color: 'sf-accent-secondary' },
-                  { icon: 'trophy', label: 'Leaderboard', color: 'yellow-400' },
-                  { icon: 'user', label: 'Profile', color: 'pink-400' },
-                ].map((item) => (
-                  <button
-                    key={item.label}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sf-text-secondary hover:text-white hover:bg-sf-bg-tertiary transition-colors text-left"
-                  >
-                    <div className={`w-9 h-9 rounded-xl bg-${item.color}/10 flex items-center justify-center`}>
-                      {item.icon === 'home' && (
-                        <svg className={`w-5 h-5 text-${item.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                        </svg>
-                      )}
-                      {item.icon === 'video' && (
-                        <svg className={`w-5 h-5 text-${item.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                      )}
-                      {item.icon === 'chart' && (
-                        <svg className={`w-5 h-5 text-${item.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                      )}
-                      {item.icon === 'trophy' && (
-                        <svg className={`w-5 h-5 text-${item.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                        </svg>
-                      )}
-                      {item.icon === 'user' && (
-                        <svg className={`w-5 h-5 text-${item.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      )}
+      {/* BOTTOM SHEET */}
+      <div style={{
+        position: 'fixed',
+        left: 0, right: 0, bottom: 0,
+        height: sheetHeight,
+        background: 'var(--sf-stage)',
+        borderTop: '1.5px solid var(--sf-line-strong)',
+        borderTopLeftRadius: 22, borderTopRightRadius: 22,
+        boxShadow: '0 -20px 50px rgba(0,0,0,0.5)',
+        zIndex: 50,
+        transition: isDragging ? 'none' : 'height 280ms cubic-bezier(.22,1,.36,1), transform 280ms cubic-bezier(.22,1,.36,1)',
+        transform: isDragging ? `translateY(${Math.max(0, dragDelta)}px)` : 'translateY(0)',
+        display: 'flex', flexDirection: 'column',
+      }}>
+        {/* Drag handle */}
+        <div
+          onMouseDown={handleDragStart}
+          onTouchStart={handleDragStart}
+          style={{ padding: '8px 0 4px', cursor: 'grab', touchAction: 'none' }}
+        >
+          <div style={{ width: 40, height: 4, background: 'rgba(255,255,255,0.25)', borderRadius: 999, margin: '0 auto' }} />
+        </div>
+
+        {/* Tab bar */}
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--sf-line)', padding: '0 14px' }}>
+          {([
+            { id: 'predict', label: 'Predict', count: markets.filter(m => m.status === 'active').length },
+            { id: 'chat',    label: 'Chat',    count: chatMessages.length },
+          ] as { id: SheetTab; label: string; count: number }[]).map(t => (
+            <button key={t.id} onClick={() => { setSheetTab(t.id); if (sheetState === 'closed') setSheetState('half'); }} className={`sf-tab ${sheetTab === t.id ? 'on' : ''}`}>
+              {t.label}
+              <span style={{
+                fontSize: 9, fontWeight: 800,
+                padding: '2px 6px', borderRadius: 999,
+                background: sheetTab === t.id ? 'var(--sf-coral)' : 'rgba(255,255,255,0.08)',
+                color: sheetTab === t.id ? '#fff' : 'var(--sf-fg-3)',
+              }}>{t.count}</span>
+            </button>
+          ))}
+          <div style={{ flex: 1 }} />
+          <button onClick={() => setSheetState('closed')} style={{
+            background: 'transparent', border: 'none', color: 'var(--sf-fg-3)',
+            padding: '0 8px', cursor: 'pointer', fontSize: 16,
+            display: sheetState === 'closed' ? 'none' : 'block',
+          }} aria-label="Minimize panel">−</button>
+          <button onClick={() => setSheetState(s => s === 'full' ? 'half' : 'full')} style={{
+            background: 'transparent', border: 'none', color: 'var(--sf-fg-3)',
+            padding: '0 10px', cursor: 'pointer', fontSize: 18,
+          }} aria-label="Toggle size">{sheetState === 'full' ? '⌄' : '⌃'}</button>
+        </div>
+
+        {/* Sheet content */}
+        <div style={{ flex: 1, overflow: 'auto', padding: 14, display: sheetState === 'closed' ? 'none' : 'flex', flexDirection: 'column', gap: 10 }} className="sf-no-scrollbar">
+          {sheetTab === 'predict' && (
+            <div className="sf-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <ClientOnly>
+                <div style={{
+                  padding: 12, borderRadius: 14,
+                  background: 'linear-gradient(135deg, rgba(255,176,32,0.10) 0%, rgba(255,78,43,0.10) 100%)',
+                  border: '1px solid rgba(255,176,32,0.25)',
+                  display: 'flex', alignItems: 'center', gap: 10,
+                }}>
+                  <div className="sf-spin-slow" style={{
+                    width: 32, height: 32, borderRadius: 999,
+                    background: 'radial-gradient(circle at 30% 30%, #FFE68A 0%, #FFB020 60%, #C97A00 100%)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#1A0F00', fontWeight: 900, fontSize: 13,
+                  }}>★</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 9, color: 'var(--sf-fg-3)', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Stake balance</div>
+                    <div style={{ fontSize: 16, color: '#fff', fontWeight: 900 }}>{balance.stakes.toLocaleString()} <span style={{ color: 'var(--sf-amber)', fontSize: 10 }}>{ngn(Math.floor(balance.stakes / 10))}</span></div>
+                  </div>
+                  {!isAuthenticated && <button onClick={() => onRequireLogin?.()} className="sf-btn sf-btn-coral" style={{ height: 28, fontSize: 10 }}>SIGN IN</button>}
+                </div>
+              </ClientOnly>
+
+              <button
+                onClick={() => {
+                  if (!isAuthenticated) { onRequireLogin?.(); return; }
+                  setShowMarketComposer(true);
+                  setSheetState('full');
+                }}
+                style={{
+                  padding: 12,
+                  background: 'var(--sf-paper)',
+                  color: 'var(--sf-stage)',
+                  border: '2px solid var(--sf-stage)',
+                  borderRadius: 12,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{ textAlign: 'left' }}>
+                  <span className="sf-eyebrow" style={{ color: 'var(--sf-coral)', display: 'block', marginBottom: 4 }}>MAKE A MARKET</span>
+                  <span style={{ fontSize: 13, fontWeight: 900 }}>Turn a hot take into odds</span>
+                </span>
+                <span style={{
+                  width: 30, height: 30, borderRadius: 999,
+                  background: 'var(--sf-coral)', color: '#fff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 18, fontWeight: 900,
+                }}>+</span>
+              </button>
+
+              <ClientOnly>
+                {markets.filter(m => m.status === 'active').length === 0 ? (
+                  <div style={{ padding: 18, textAlign: 'center', borderRadius: 14, border: '1px dashed var(--sf-line-strong)', color: 'var(--sf-fg-3)' }}>
+                    <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>No active markets</p>
+                  </div>
+                ) : (
+                  markets.filter(m => m.status === 'active').map(m => (
+                    <MarketCard key={m.id} market={m} onPick={(opt) => handlePickOption(m.id, opt)}
+                      pickedOptionId={pickedBet?.marketId === m.id ? pickedBet.optionId : null}
+                      userBetOptionId={userBets.find(b => b.marketId === m.id)?.optionId} />
+                  ))
+                )}
+              </ClientOnly>
+            </div>
+          )}
+
+          {sheetTab === 'chat' && (
+            <div className="sf-fade-in" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }} className="sf-no-scrollbar">
+                {chatMessages.map(m => (
+                  <div key={m.id} style={{
+                    padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.04)',
+                    display: 'flex', gap: 8, alignItems: 'flex-start',
+                  }}>
+                    <div style={{
+                      width: 22, height: 22, borderRadius: 999, background: m.color,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#fff', fontSize: 9, fontWeight: 900, flexShrink: 0,
+                    }}>{m.name.charAt(0).toUpperCase()}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'baseline' }}>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: m.color }}>{m.name}</span>
+                        <span style={{ fontSize: 9, color: 'var(--sf-fg-4)' }}>{m.time}</span>
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--sf-fg-2)', lineHeight: 1.35, marginTop: 1, wordBreak: 'break-word' }}>{m.msg}</div>
                     </div>
-                    <span className="font-medium">{item.label}</span>
-                  </button>
+                  </div>
                 ))}
-              </nav>
+                <div ref={chatEndRef} />
+              </div>
+              <form onSubmit={handleSendChat} style={{ paddingTop: 8, borderTop: '1px solid var(--sf-line)', display: 'flex', gap: 6 }}>
+                <input
+                  value={chatInput}
+                  onChange={e => setChatInput(e.target.value)}
+                  onFocus={() => !isAuthenticated && onRequireLogin?.()}
+                  placeholder={isAuthenticated ? 'Talk to the house… try /predict' : 'Sign in to chat'}
+                  readOnly={!isAuthenticated}
+                  style={{
+                    flex: 1, padding: '9px 12px',
+                    background: 'rgba(255,255,255,0.04)', border: '1px solid var(--sf-line)',
+                    borderRadius: 999, color: '#fff', fontSize: 12, outline: 'none',
+                  }}
+                />
+                <button type="submit" className="sf-btn-icon" style={{ background: 'var(--sf-coral)', borderColor: 'var(--sf-coral)', color: '#fff' }} aria-label="Send">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
 
-              {/* User Profile Section */}
-              <div className="pt-4 border-t-2 border-sf-glass-border">
-                <div className="flex items-center gap-3 p-3 rounded-2xl border-2 border-sf-glass-border bg-sf-bg-tertiary">
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-sf-bg-hover">
-                    <Image
-                      src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff&size=100&bold=true"
-                      alt="User Profile"
-                      width={40}
-                      height={40}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zy9cIj4KPHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiM2MzY2ZjEiLz4KPC9zdmc+";
-                      }}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white font-medium text-sm truncate">
-                      {userEmail || 'Guest User'}
-                    </p>
-                    <div className="flex items-center gap-1">
-                      <span className="w-2 h-2 bg-sf-status-success rounded-full" />
-                      <span className="text-sf-text-muted text-xs">Online</span>
-                    </div>
-                  </div>
+        {/* Sticky bet bar (predict tab only) */}
+        {sheetTab === 'predict' && pickedBet && sheetState !== 'closed' && (() => {
+          const m = markets.find(x => x.id === pickedBet.marketId);
+          const opt = m?.options.find(o => o.id === pickedBet.optionId);
+          if (!m || !opt) return null;
+          const potential = Math.floor(stake * opt.odds);
+          const insufficient = stake > balance.stakes;
+          return (
+            <div className="sf-slide-up" style={{
+              padding: 12, borderTop: '1px solid var(--sf-line-strong)',
+              background: 'var(--sf-stage-2)',
+              display: 'flex', flexDirection: 'column', gap: 8,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', fontSize: 11 }}>
+                <span style={{ color: 'var(--sf-fg-2)', fontWeight: 700 }}>
+                  Backing <span style={{ color: '#fff', fontWeight: 900 }}>{opt.label}</span>
+                </span>
+                <span style={{ color: 'var(--sf-fg-3)' }}>To win: <span style={{ color: 'var(--sf-mint)', fontWeight: 800 }}>{potential.toLocaleString()}</span></span>
+              </div>
+              <div style={{ display: 'flex', gap: 4 }}>
+                {[100, 500, 1000, 5000].map(v => (
+                  <button key={v} onClick={() => setStake(v)} style={{
+                    flex: 1, height: 30,
+                    background: stake === v ? 'var(--sf-coral)' : 'transparent',
+                    color: stake === v ? '#fff' : 'var(--sf-fg-2)',
+                    border: stake === v ? 'none' : '1px solid var(--sf-line)',
+                    borderRadius: 8, fontSize: 11, fontWeight: 800, cursor: 'pointer',
+                  }}>{v >= 1000 ? `${v / 1000}K` : v}</button>
+                ))}
+              </div>
+              <button
+                onClick={handlePlaceBet}
+                disabled={insufficient}
+                className={`sf-btn ${insufficient ? 'sf-btn-ghost' : 'sf-btn-coral'}`}
+                style={{ height: 40, fontSize: 12, opacity: insufficient ? 0.5 : 1 }}
+              >
+                {insufficient ? 'INSUFFICIENT' : `PLACE BET · ${stake.toLocaleString()}`}
+              </button>
+            </div>
+          );
+        })()}
+      </div>
+
+      {/* Create market composer */}
+      {showMarketComposer && (
+        <div className="fixed inset-0 z-[70] sf-fade-in">
+          <div onClick={() => setShowMarketComposer(false)} style={{
+            position: 'absolute', inset: 0,
+            background: 'rgba(10,8,20,0.78)', backdropFilter: 'blur(8px)',
+          }} />
+          <div className="sf-slide-up" style={{
+            position: 'absolute', left: 10, right: 10, bottom: 10,
+            maxHeight: 'calc(100vh - 28px)',
+            overflow: 'auto',
+            background: 'var(--sf-stage-2)',
+            color: '#fff',
+            border: '1.5px solid var(--sf-line-strong)',
+            borderRadius: 18,
+            padding: 16,
+            boxShadow: '0 24px 70px rgba(0,0,0,0.55)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <div style={{
+                width: 38, height: 38, borderRadius: 12,
+                background: 'var(--sf-grad-coral)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 900, fontSize: 18,
+              }}>+</div>
+              <div style={{ flex: 1 }}>
+                <div className="sf-display" style={{ fontSize: 20 }}>CREATE MARKET</div>
+                <div style={{ fontSize: 10, color: 'var(--sf-fg-3)', marginTop: 2 }}>Let chat bet on the next beat</div>
+              </div>
+              <button onClick={() => setShowMarketComposer(false)} aria-label="Close" style={{
+                width: 32, height: 32, borderRadius: 999,
+                border: '1px solid var(--sf-line)', background: 'rgba(255,255,255,0.04)',
+                color: '#fff', fontSize: 18,
+              }}>×</button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--sf-fg-3)', display: 'block', marginBottom: 6 }}>Question</label>
+                <input
+                  value={predictQuestion}
+                  onChange={e => setPredictQuestion(e.target.value)}
+                  placeholder="Will Ada win the pool task?"
+                  style={{
+                    width: '100%', padding: '11px 12px',
+                    borderRadius: 10, border: '1px solid var(--sf-line)',
+                    background: 'rgba(255,255,255,0.04)', color: '#fff',
+                    outline: 'none', fontSize: 13,
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--sf-fg-3)', display: 'block', marginBottom: 6 }}>Category</label>
+                <div style={{ display: 'flex', gap: 6, overflowX: 'auto' }} className="sf-no-scrollbar">
+                  {(['contestant', 'event', 'challenge', 'drama', 'other'] as const).map(cat => (
+                    <button key={cat} onClick={() => setPredictCategory(cat)} style={{
+                      flex: '0 0 auto',
+                      padding: '7px 11px', borderRadius: 999,
+                      background: predictCategory === cat ? 'var(--sf-coral)' : 'transparent',
+                      color: predictCategory === cat ? '#fff' : 'var(--sf-fg-2)',
+                      border: '1px solid var(--sf-line)',
+                      fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
+                    }}>{cat}</button>
+                  ))}
                 </div>
               </div>
+
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--sf-fg-3)' }}>Options</label>
+                  {predictOptions.length < 4 && (
+                    <button onClick={() => setPredictOptions([...predictOptions, ''])} style={{
+                      border: 'none', background: 'none', color: 'var(--sf-coral)',
+                      fontSize: 11, fontWeight: 800,
+                    }}>+ Add</button>
+                  )}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {predictOptions.map((o, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: 6 }}>
+                      <input
+                        value={o}
+                        onChange={e => {
+                          const next = [...predictOptions];
+                          next[idx] = e.target.value;
+                          setPredictOptions(next);
+                        }}
+                        placeholder={`Option ${idx + 1}`}
+                        style={{
+                          flex: 1, padding: '10px 11px',
+                          borderRadius: 10, border: '1px solid var(--sf-line)',
+                          background: 'rgba(255,255,255,0.04)', color: '#fff',
+                          outline: 'none', fontSize: 12,
+                        }}
+                      />
+                      {predictOptions.length > 2 && (
+                        <button onClick={() => setPredictOptions(predictOptions.filter((_, i) => i !== idx))} style={{
+                          width: 36, borderRadius: 10,
+                          border: '1px solid rgba(255,107,107,0.3)',
+                          background: 'rgba(255,107,107,0.12)',
+                          color: '#FF6B6B',
+                          fontSize: 16,
+                        }}>×</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--sf-fg-3)', display: 'block', marginBottom: 6 }}>Duration</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 5 }}>
+                  {[1, 6, 12, 24, 48].map(h => (
+                    <button key={h} onClick={() => setPredictDuration(h)} style={{
+                      padding: '8px 0', borderRadius: 8,
+                      background: predictDuration === h ? 'var(--sf-coral)' : 'transparent',
+                      color: predictDuration === h ? '#fff' : 'var(--sf-fg-2)',
+                      border: '1px solid var(--sf-line)',
+                      fontSize: 11, fontWeight: 800,
+                    }}>{h}h</button>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                onClick={handleCreateMarket}
+                disabled={!predictQuestion.trim() || predictOptions.filter(o => o.trim()).length < 2}
+                className="sf-btn sf-btn-coral"
+                style={{ height: 44, width: '100%', fontSize: 12, opacity: (!predictQuestion.trim() || predictOptions.filter(o => o.trim()).length < 2) ? 0.5 : 1 }}
+              >
+                CREATE MARKET
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Footer Navigation */}
-      <footer className="flex-shrink-0 bg-sf-bg-secondary/95 backdrop-blur-xl border-2 border-sf-glass-border safe-area-bottom">
-        <div className="flex justify-around py-3 px-4">
-          <button
-            onClick={() => toggleOverlay('chat')}
-            className={`flex flex-col items-center gap-1 px-6 py-2 rounded-2xl transition-all ${
-              activeOverlay === 'chat'
-                ? 'bg-sf-accent-primary/20 text-sf-accent-primary scale-105'
-                : 'text-sf-text-tertiary hover:text-white'
-            }`}
-          >
-            <div className="relative">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              {activeOverlay === 'chat' && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-sf-status-live rounded-full animate-pulse" />
-              )}
+      {/* Channel drawer (left) */}
+      {showChannelDrawer && (
+        <div className="fixed inset-0 z-[60]">
+          <div onClick={() => setShowChannelDrawer(false)} style={{
+            position: 'absolute', inset: 0,
+            background: 'rgba(10,8,20,0.7)', backdropFilter: 'blur(4px)',
+          }} />
+          <div className="sf-drawer-in" style={{
+            position: 'absolute', left: 0, top: 0, bottom: 0, width: 280,
+            background: 'var(--sf-stage-2)', borderRight: '1px solid var(--sf-line-strong)',
+            display: 'flex', flexDirection: 'column',
+          }}>
+            <div style={{ padding: 16, borderBottom: '1px solid var(--sf-line)' }}>
+              <div className="sf-eyebrow" style={{ color: 'var(--sf-fg-3)' }}>STARFACTOR</div>
+              <div style={{ fontSize: 16, color: '#fff', fontWeight: 900, marginTop: 2 }}>Cameras</div>
             </div>
-            <span className="font-bold uppercase tracking-wider text-[0.625rem]">Chat</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveOverlay('none');
-              setOverlayHeight('half');
-            }}
-            className={`flex flex-col items-center gap-1 px-6 py-2 rounded-2xl transition-all ${
-              activeOverlay === 'none'
-                ? 'bg-sf-bg-tertiary text-white scale-105'
-                : 'text-sf-text-tertiary hover:text-white'
-            }`}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-            <span className="font-bold uppercase tracking-wider text-[0.625rem]">Cameras</span>
-          </button>
-
-          <button
-            onClick={() => toggleOverlay('interact')}
-            className={`flex flex-col items-center gap-1 px-6 py-2 rounded-2xl transition-all ${
-              activeOverlay === 'interact'
-                ? 'bg-sf-accent-secondary/20 text-sf-accent-secondary scale-105'
-                : 'text-sf-text-tertiary hover:text-white'
-            }`}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            <span className="font-bold uppercase tracking-wider text-[0.625rem]">Interact</span>
-          </button>
+            <nav style={{ flex: 1, padding: 10, display: 'flex', flexDirection: 'column', gap: 6, overflow: 'auto' }} className="sf-no-scrollbar">
+              {cameras.map((cam, i) => (
+                <button
+                  key={cam.id}
+                  onClick={() => {
+                    setActiveChannel(i);
+                    onStreamClick(cam.playbackId, cam.name);
+                    setShowChannelDrawer(false);
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: 10, borderRadius: 12,
+                    background: i === activeChannel ? 'rgba(255,78,43,0.10)' : 'transparent',
+                    border: i === activeChannel ? '1px solid var(--sf-coral)' : '1px solid var(--sf-line)',
+                    cursor: 'pointer', textAlign: 'left',
+                  }}
+                >
+                  <div style={{ width: 56, height: 36, borderRadius: 8, overflow: 'hidden' }}>
+                    <PaletteFill palette={PALETTES[i % PALETTES.length]} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: '#fff' }}>{cam.name}</div>
+                    <div style={{ fontSize: 9, color: 'var(--sf-fg-3)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                      {cam.isActive ? '● LIVE' : '○ Idle'} · {((i + 1) * 4321).toLocaleString()}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </nav>
+            <div style={{ padding: 14, borderTop: '1px solid var(--sf-line)' }}>
+              <Link href="/" className="sf-btn sf-btn-ghost" style={{ width: '100%', height: 36, fontSize: 11 }}>← BACK TO HOME</Link>
+            </div>
+          </div>
         </div>
-      </footer>
+      )}
+    </div>
+  );
+};
+
+// ── Mini market card for sheet ──
+const MarketCard: React.FC<{
+  market: PredictionMarket;
+  onPick: (optionId: string) => void;
+  pickedOptionId: string | null;
+  userBetOptionId?: string;
+}> = ({ market, onPick, pickedOptionId, userBetOptionId }) => {
+  return (
+    <div className="sf-fade-in" style={{
+      padding: 12,
+      background: 'var(--sf-stage-2)',
+      border: '1px solid var(--sf-line)',
+      borderRadius: 14,
+    }}>
+      <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', lineHeight: 1.25, marginBottom: 4 }}>{market.question}</div>
+      <div style={{ fontSize: 10, color: 'var(--sf-fg-3)', marginBottom: 8 }}>
+        Pool <span style={{ color: 'var(--sf-amber)', fontWeight: 800 }}>{market.totalPool.toLocaleString()}</span> · {market.category}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+        {market.options.map((o, i) => {
+          const isPicked = pickedOptionId === o.id;
+          const isBet = userBetOptionId === o.id;
+          const dot = optionDot(i);
+          return (
+            <button key={o.id} onClick={() => onPick(o.id)} className={`sf-pred-row ${isPicked ? 'on' : ''}`} style={{ borderColor: isPicked ? 'var(--sf-coral)' : isBet ? 'var(--sf-mint)' : undefined }}>
+              <div className="sf-pred-fill" style={{ width: `${o.percentage}%`, background: optionFill(i, isPicked) }} />
+              <div style={{ position: 'relative', padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 6, height: 6, borderRadius: 999, background: dot, flexShrink: 0 }} />
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', flex: 1 }}>{o.label}</span>
+                {isBet && <span style={{ fontSize: 8, color: 'var(--sf-mint)', fontWeight: 800 }}>BACKED</span>}
+                <span style={{ fontSize: 9, color: 'var(--sf-fg-2)' }}>{o.percentage}%</span>
+                <span style={{ fontSize: 10, fontWeight: 900, color: dot, minWidth: 32, textAlign: 'right' }}>{o.odds.toFixed(1)}x</span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };

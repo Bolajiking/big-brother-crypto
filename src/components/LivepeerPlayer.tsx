@@ -6,6 +6,9 @@ import Hls from 'hls.js';
 interface LivepeerPlayerProps {
   playbackId: string;
   isMainPlayer?: boolean;
+  autoPlay?: boolean;
+  showControls?: boolean;
+  showStatus?: boolean;
   className?: string;
   onClick?: () => void;
 }
@@ -13,6 +16,9 @@ interface LivepeerPlayerProps {
 const LivepeerPlayer: React.FC<LivepeerPlayerProps> = ({
   playbackId,
   isMainPlayer = false,
+  autoPlay,
+  showControls,
+  showStatus = true,
   className = '',
   onClick
 }) => {
@@ -21,6 +27,8 @@ const LivepeerPlayer: React.FC<LivepeerPlayerProps> = ({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLive, setIsLive] = useState(false);
+  const shouldAutoPlay = autoPlay ?? isMainPlayer;
+  const shouldShowControls = showControls ?? isMainPlayer;
   useEffect(() => {
     if (!playbackId) return;
 
@@ -45,9 +53,7 @@ const LivepeerPlayer: React.FC<LivepeerPlayerProps> = ({
       
       // Set a timeout to prevent hanging
       timeoutRef.current = setTimeout(() => {
-        if (isLoading) {
-          setIsLoading(false);
-        }
+        setIsLoading(false);
       }, 10000); // 10 second timeout
 
       if (Hls.isSupported()) {
@@ -194,7 +200,7 @@ const LivepeerPlayer: React.FC<LivepeerPlayerProps> = ({
         hlsRef.current = null;
       }
     };
-  }, [playbackId, isLoading]);
+  }, [playbackId]);
 
   return (
     <div 
@@ -260,7 +266,7 @@ const LivepeerPlayer: React.FC<LivepeerPlayerProps> = ({
 
       {/* Loading State */}
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center z-10">
+        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
           <div className="text-white text-center">
             <div className="animate-pulse">
               <p className="text-gray-300 text-sm">Connecting...</p>
@@ -270,18 +276,20 @@ const LivepeerPlayer: React.FC<LivepeerPlayerProps> = ({
       )}
 
       {/* Status Indicator */}
-      <div className="absolute top-2 right-2 z-20">
-        <div className={`w-4 h-4 rounded-full border-2 border-white ${
-          isLive ? 'bg-green-500 animate-pulse' : 'bg-red-500'
-        }`}></div>
-      </div>
+      {showStatus && (
+        <div className="absolute top-2 right-2 z-20">
+          <div className={`w-4 h-4 rounded-full border-2 border-white ${
+            isLive ? 'bg-green-500 animate-pulse' : 'bg-red-500'
+          }`}></div>
+        </div>
+      )}
 
 
       {/* Video Player */}
       <video
         ref={videoRef}
-        autoPlay={isMainPlayer}
-        controls={isMainPlayer}
+        autoPlay={shouldAutoPlay}
+        controls={shouldShowControls}
         muted={!isMainPlayer}
         playsInline
         loop
