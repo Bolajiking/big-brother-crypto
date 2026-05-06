@@ -2,6 +2,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import SunArcIndicator from '@/components/SunArcIndicator';
+import { useDaylight } from '@/lib/daylight';
 
 // ─────────────────────────────────────────────────────────────
 // PRIMITIVES — scoped to .sf-watch-root tokens (globals.css)
@@ -164,11 +166,13 @@ const Reveal: React.FC<{ children: React.ReactNode; delay?: number; y?: number }
 //  where it landed; tightened only for product accuracy.)
 // ─────────────────────────────────────────────────────────────
 const Nav: React.FC = () => {
+  const day = useDaylight({ mode: 'auto' });
   const links = [
-    { label: 'CAMERAS',      href: '#cameras' },
-    { label: 'CASTING',      href: '#casting' },
+    { label: 'CAMERAS',   href: '#cameras' },
     { label: 'HOW IT WORKS', href: '#how' },
-    { label: 'TIMELINE',     href: '#timeline' },
+    { label: 'WHO IT’S FOR', href: '#built-for' },
+    { label: 'CASTING',   href: '#casting' },
+    { label: 'TIMELINE',  href: '#timeline' },
   ];
   return (
     <header style={{
@@ -196,6 +200,9 @@ const Nav: React.FC = () => {
           ))}
         </nav>
         <div style={{ flex: 1 }} />
+        <div className="sf-hide-mobile">
+          <SunArcIndicator state={day} dark compact={false} />
+        </div>
         <span className="sf-hide-xs" style={{
           display: 'inline-flex', alignItems: 'center', gap: 7,
           padding: '5px 12px', borderRadius: 999,
@@ -248,8 +255,8 @@ const Hero: React.FC = () => {
   );
 
   const STATS = [
-    { v: '8',    l: 'Cameras at launch' },
-    { v: '24/7', l: 'Always streaming', accent: 'var(--sf-amber)' },
+    { v: '16',   l: 'Housemates Season 01' },
+    { v: '24/7', l: 'Multi-cam streaming', accent: 'var(--sf-amber)' },
     { v: '0%',   l: 'Platform cut on payouts', accent: 'var(--sf-mint)' },
     { v: 'Q4',   l: 'Season 01 launch window' },
   ];
@@ -285,7 +292,7 @@ const Hero: React.FC = () => {
               borderRadius: 999,
             }}>
               <span className="sf-pulse"></span>
-              <span className="sf-eyebrow" style={{ color: 'var(--sf-coral)', fontSize: 11 }}>SEASON 01 · ONE HOUSE · 8 CAMERAS · CASTING SOON</span>
+              <span className="sf-eyebrow" style={{ color: 'var(--sf-coral)', fontSize: 11 }}>SEASON 01 · ONE HOUSE · MULTI-CAM · CASTING SOON</span>
             </span>
           </div>
         </Reveal>
@@ -296,19 +303,19 @@ const Hero: React.FC = () => {
             maxWidth: 920, letterSpacing: '-0.05em',
             lineHeight: 0.86, marginBottom: 28,
           }}>
-            One house. Eight rooms.<br />
-            <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>Eight cameras.</span><br />
+            One house. Every room.<br />
+            <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>Always-on cameras.</span><br />
             Twenty-four seven.
           </h1>
         </Reveal>
 
         <Reveal delay={160}>
           <p style={{
-            maxWidth: 560, fontSize: 18, lineHeight: 1.55,
+            maxWidth: 600, fontSize: 18, lineHeight: 1.55,
             color: 'var(--sf-fg-2)', marginBottom: 40,
           }}>
-            One house. Eight cameras. Twenty-four hours a day. When we go live, you&apos;ll watch every angle, predict
-            every moment, and earn every win — directly to your wallet. Season 01 starts at eight cameras, and we&apos;ll keep adding.
+            Africa&apos;s first reality show that pays the audience. Sixteen housemates, multi-camera coverage, 24/7 — watch from any angle, predict
+            what happens next, and cash out your wins straight to your wallet. No SMS taxes. No platform cut. Just receipts.
           </p>
         </Reveal>
 
@@ -354,7 +361,7 @@ const Ticker: React.FC = () => {
     '🎬 Casting applications open in 3 weeks',
     '💰 First 10,000 signups get a ₦500 starter pot at launch',
     '📺 Watch the platform preview — see how the markets work',
-    '🏠 Eight cameras confirmed for Season 01 — more every season',
+    '🏠 Multi-camera coverage across every key room — no edits, no cuts',
     '⚡ Zero platform cut on payouts — wallet to wallet',
   ];
   return (
@@ -379,6 +386,99 @@ const Ticker: React.FC = () => {
         ))}
       </div>
     </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────
+// RECEIPTS — pain-anchored proof that the gap is real
+// ─────────────────────────────────────────────────────────────
+const Receipts: React.FC = () => {
+  const stats = [
+    { v: '1.53B', l: 'Votes cast last BBNaija season', sub: 'Each one paid to vote. Zero paid back.' },
+    { v: '₦115B', l: 'In SMS revenue captured by telcos', sub: '~$72M from fans like you. Pure extraction.' },
+    { v: '60M',   l: 'Nigerians already predicting outcomes', sub: 'On Bet9ja, Sportybet, BetKing. Daily.' },
+    { v: '$3.6B', l: 'Spent on those predictions every year', sub: 'Same demographic. Same phones. Different rails.' },
+  ];
+  return (
+    <section
+      style={{
+        padding: 'clamp(56px, 8vw, 120px) clamp(14px, 4vw, 64px)',
+        background: 'var(--sf-stage)',
+        borderBottom: '1px solid var(--sf-line)',
+      }}
+    >
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+        <Reveal>
+          <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 14 }}>
+            ● THE RECEIPTS
+          </div>
+          <h2 className="sf-display" style={{
+            fontSize: 'clamp(40px, 7vw, 88px)', color: '#fff',
+            letterSpacing: '-0.045em', lineHeight: 0.92,
+            maxWidth: 980, marginBottom: 24,
+          }}>
+            You voted. You watched. You posted.<br />
+            <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>Then they cashed your check.</span>
+          </h2>
+          <p style={{
+            maxWidth: 640, fontSize: 17, lineHeight: 1.6,
+            color: 'var(--sf-fg-2)', marginBottom: 48,
+          }}>
+            Reality TV in Africa is a one-way street. Audiences make the show go, then watch a network and a few telcos
+            walk away with the money. We pulled the receipts. The gap between two of Nigeria&apos;s biggest cultural
+            behaviors is structural, not accidental — and it&apos;s exactly where Star Factor sits.
+          </p>
+        </Reveal>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: 14,
+        }}>
+          {stats.map((s, i) => (
+            <Reveal key={s.l} delay={i * 70}>
+              <div style={{
+                padding: 26, borderRadius: 18,
+                background: 'var(--sf-stage-2)',
+                border: '1px solid var(--sf-line)',
+                minHeight: 200,
+                display: 'flex', flexDirection: 'column',
+                position: 'relative', overflow: 'hidden',
+              }}>
+                <div style={{
+                  position: 'absolute', top: -30, right: -30, width: 140, height: 140,
+                  borderRadius: 999, background: 'radial-gradient(circle, rgba(255,78,43,0.16) 0%, transparent 70%)',
+                  pointerEvents: 'none',
+                }} />
+                <div className="sf-display" style={{
+                  fontSize: 'clamp(36px, 5vw, 56px)',
+                  color: i % 2 === 0 ? '#fff' : 'var(--sf-amber)',
+                  letterSpacing: '-0.04em', marginBottom: 14, position: 'relative',
+                }}>{s.v}</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', lineHeight: 1.3, marginBottom: 6, position: 'relative' }}>{s.l}</div>
+                <div style={{ fontSize: 12, color: 'var(--sf-fg-3)', lineHeight: 1.5, position: 'relative' }}>{s.sub}</div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal delay={200}>
+          <div style={{
+            marginTop: 24, padding: '24px 28px',
+            borderRadius: 18,
+            background: 'linear-gradient(120deg, rgba(255,78,43,0.10), rgba(107,63,229,0.08))',
+            border: '1px solid rgba(255,78,43,0.35)',
+            display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap',
+          }}>
+            <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', flexShrink: 0 }}>★ THE WEDGE</div>
+            <p style={{ flex: 1, minWidth: 280, fontSize: 14, lineHeight: 1.55, color: 'var(--sf-fg-2)', margin: 0 }}>
+              50 million reality TV obsessives. 60 million active predictors. Same phones, same demographic, completely
+              separate apps. We built the bridge.
+            </p>
+          </div>
+        </Reveal>
+      </div>
+    </section>
   );
 };
 
@@ -408,7 +508,7 @@ const Channels: React.FC = () => {
             <div>
               <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 12, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ width: 24, height: 16 }}><CamGlyph kind="wide" color="var(--sf-coral)" /></span>
-                ONE HOUSE · 8 CAMERAS AT LAUNCH · SCALING UP
+                ONE HOUSE · MULTI-CAMERA · SCALING UP EVERY SEASON
               </div>
               <h2 className="sf-display" style={{
                 fontSize: 'clamp(40px, 6vw, 76px)', color: '#fff',
@@ -420,7 +520,7 @@ const Channels: React.FC = () => {
             </div>
             <div style={{ maxWidth: 360, paddingBottom: 12 }}>
               <p style={{ fontSize: 15, lineHeight: 1.55, color: 'var(--sf-fg-2)' }}>
-                One house. Eight cameras running in parallel at launch — and we&apos;ll keep adding angles every season. Hop between them like changing seats in the room.
+                Multiple HD feeds rolling in parallel from every key room. Living room to diary room, kitchen to garden, garden to front door — switch like you&apos;re flipping seats in the same room. No edit. No cut. No spin.
               </p>
               <Link href="/watch" className="sf-eyebrow" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -563,7 +663,7 @@ const HowItWorks: React.FC = () => {
   const steps = [
     { n: '01', eyebrow: 'WATCH',   palette: 'coral', color: '#FF4E2B',
       title: 'Pick a room. Pick your angle.',
-      body: 'Eight cameras stream 24/7 from one house. Hop from the Living Room to the Pool Deck to the Diary Room — anywhere the cast goes, a camera is already there.' },
+      body: 'Multi-cam coverage across every key room, streaming 24/7. Hop from the Living Room to the Pool Deck to the Diary Room — anywhere the cast goes, a camera is already there.' },
     { n: '02', eyebrow: 'PREDICT', palette: 'gold',  color: '#F2B544',
       title: 'Markets open every minute.',
       body: 'Will a kiss happen tonight? Who wins the task? Who gets evicted? Stake from ₦100. Markets settle the moment it happens.' },
@@ -590,7 +690,7 @@ const HowItWorks: React.FC = () => {
               </h2>
             </div>
             <p style={{ fontSize: 16, lineHeight: 1.55, color: 'rgba(10,8,20,0.7)', maxWidth: 380, paddingBottom: 20 }}>
-              We took reality TV, opened every camera, opened every market, and gave the audience the remote. And the wallet.
+              We opened every camera. We opened every market. Then we handed over the remote — and the wallet. Three taps to the wins.
             </p>
           </div>
         </Reveal>
@@ -711,7 +811,7 @@ const MarketsPreview: React.FC = () => {
               </h2>
             </div>
             <p style={{ fontSize: 14, color: 'var(--sf-fg-3)', lineHeight: 1.55, maxWidth: 360, paddingBottom: 18 }}>
-              These are sample markets to show the format. Real pools, real odds, real settlements go live on launch day.
+              Sample markets to show the format. From day one, every pool is real, every odd is on-chain, and every settlement clears the second it&apos;s called.
             </p>
           </div>
         </Reveal>
@@ -792,6 +892,145 @@ const MarketsPreview: React.FC = () => {
   );
 };
 
+// ─────────────────────────────────────────────────────────────
+// BUILT FOR — three-audience positioning (viewers / cast / brands)
+// ─────────────────────────────────────────────────────────────
+const BuiltFor: React.FC = () => {
+  const audiences = [
+    {
+      tag: 'FOR VIEWERS',
+      headline: 'Get paid for paying attention.',
+      palette: 'coral',
+      accent: '#FF4E2B',
+      body: 'You already watched 100+ hours last season. You already had the right read on every eviction. Now your read is worth money. Predict from ₦100. Win, hold, or cash out — straight to your bank, no platform cut.',
+      bullets: [
+        { k: 'Predict from ₦100', v: 'Bet small. Win in real time.' },
+        { k: 'Cash out wallet-to-bank', v: 'Paystack. Instant. Naira out.' },
+        { k: 'Free Clout daily', v: 'Earn just by showing up.' },
+      ],
+      cta: { label: 'JOIN THE WAITLIST', href: '#cta' },
+    },
+    {
+      tag: 'FOR THE CAST',
+      headline: 'Get paid while the cameras roll.',
+      palette: 'violet',
+      accent: '#6B3FE5',
+      body: 'Traditional reality TV pays you in fame after the fact — and only if you make it to the end. Star Factor pays you while you&apos;re in the house. Tips, fan support, and a $30,000 grand prize. The audience picks who they&apos;re backing in real time.',
+      bullets: [
+        { k: '$30K grand prize', v: 'Plus weekly challenge cash.' },
+        { k: 'Direct fan tips', v: '70% to you, in-show, every day.' },
+        { k: '42 days, multi-cam', v: 'Build your audience while you live.' },
+      ],
+      cta: { label: 'APPLY TO BE CAST', href: '/apply' },
+    },
+    {
+      tag: 'FOR BRANDS',
+      headline: 'Sponsor the room. Own the moment.',
+      palette: 'gold',
+      accent: '#F2B544',
+      body: 'BetNaija got a 35% brand-awareness lift from a single BBNaija sponsorship. We offer the same audience — younger, mobile-first, and already transacting — at a fraction of broadcast pricing. Title sponsor, named rooms, branded challenges, prediction-market sponsors.',
+      bullets: [
+        { k: 'Name a room', v: 'Your brand on every camera.' },
+        { k: 'Sponsor a market', v: 'Be the brand that pays the winners.' },
+        { k: 'Real-time engagement data', v: 'Per minute, per cast member.' },
+      ],
+      cta: { label: 'PARTNER WITH US', href: 'mailto:bolaji@chainfren.com?subject=Star%20Factor%20%E2%80%94%20Sponsor%20Inquiry' },
+    },
+  ];
+
+  return (
+    <section
+      id="built-for"
+      style={{
+        padding: 'clamp(56px, 8vw, 120px) clamp(14px, 4vw, 64px)',
+        background: 'var(--sf-stage)',
+        borderBottom: '1px solid var(--sf-line)',
+      }}
+    >
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+        <Reveal>
+          <div style={{ marginBottom: 56 }}>
+            <div className="sf-eyebrow" style={{ color: 'var(--sf-amber)', marginBottom: 12 }}>● BUILT FOR EVERY SEAT IN THE ROOM</div>
+            <h2 className="sf-display" style={{
+              fontSize: 'clamp(44px, 7vw, 84px)', color: '#fff',
+              letterSpacing: '-0.05em', lineHeight: 0.92, maxWidth: 980,
+            }}>
+              The audience earns. The cast earns.<br />
+              <span style={{ fontStyle: 'italic', color: 'var(--sf-amber)' }}>The brands get a front-row seat.</span>
+            </h2>
+            <p style={{ maxWidth: 620, fontSize: 16, lineHeight: 1.55, color: 'var(--sf-fg-2)', marginTop: 18 }}>
+              Reality TV has always been a one-sided economy. We rebuilt it so everyone with skin in the game has skin in the upside.
+            </p>
+          </div>
+        </Reveal>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: 16,
+        }}>
+          {audiences.map((a, i) => (
+            <Reveal key={a.tag} delay={i * 80}>
+              <div style={{
+                position: 'relative', overflow: 'hidden',
+                padding: 28, borderRadius: 22,
+                background: 'var(--sf-stage-2)',
+                border: `1px solid ${a.accent}55`,
+                minHeight: 480,
+                display: 'flex', flexDirection: 'column', gap: 16,
+              }}>
+                <div style={{
+                  position: 'absolute', top: -40, right: -40, width: 200, height: 200,
+                  borderRadius: 999,
+                  background: `radial-gradient(circle, ${a.accent}30 0%, transparent 70%)`,
+                  pointerEvents: 'none',
+                }} />
+                <div className="sf-eyebrow" style={{ color: a.accent }}>{a.tag}</div>
+                <h3 className="sf-display" style={{
+                  fontSize: 28, color: '#fff', lineHeight: 1.05, letterSpacing: '-0.03em',
+                }}>{a.headline}</h3>
+                <p style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--sf-fg-2)' }}>{a.body}</p>
+
+                <ul style={{
+                  listStyle: 'none', padding: 0, margin: '4px 0 0',
+                  display: 'flex', flexDirection: 'column', gap: 8,
+                  borderTop: '1px dashed var(--sf-line)', paddingTop: 14,
+                }}>
+                  {a.bullets.map(b => (
+                    <li key={b.k} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: '#fff', letterSpacing: '-0.005em' }}>{b.k}</span>
+                      <span style={{ fontSize: 11.5, color: 'var(--sf-fg-3)', lineHeight: 1.45 }}>{b.v}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <div style={{ marginTop: 'auto', paddingTop: 14 }}>
+                  {a.cta.href.startsWith('mailto:') ? (
+                    <a href={a.cta.href} className="sf-btn sf-btn-coral" style={{ height: 42, padding: '0 18px', fontSize: 11, background: a.accent, borderColor: a.accent }}>
+                      {a.cta.label}
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
+                    </a>
+                  ) : a.cta.href.startsWith('/') ? (
+                    <Link href={a.cta.href} className="sf-btn sf-btn-coral" style={{ height: 42, padding: '0 18px', fontSize: 11, background: a.accent, borderColor: a.accent }}>
+                      {a.cta.label}
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
+                    </Link>
+                  ) : (
+                    <a href={a.cta.href} className="sf-btn sf-btn-coral" style={{ height: 42, padding: '0 18px', fontSize: 11, background: a.accent, borderColor: a.accent }}>
+                      {a.cta.label}
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
+                    </a>
+                  )}
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const Casting: React.FC = () => {
   const slots = [
     { palette: 'coral',  tag: 'CHARM',    line: 'The flirt who reads the room.' },
@@ -814,13 +1053,13 @@ const Casting: React.FC = () => {
         <Reveal>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 56, gap: 32, flexWrap: 'wrap' }}>
             <div>
-              <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 12 }}>● CASTING SOON · 8 SLOTS</div>
+              <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 12 }}>● CASTING SOON · 16 HOUSEMATES</div>
               <h2 className="sf-display" style={{ fontSize: 'clamp(48px, 7vw, 84px)', color: '#fff', letterSpacing: '-0.05em', lineHeight: 0.9, maxWidth: 880 }}>
-                Eight slots. <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>One winner.</span>
+                Sixteen housemates. <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>One winner.</span>
               </h2>
             </div>
             <p style={{ fontSize: 16, lineHeight: 1.55, color: 'var(--sf-fg-2)', maxWidth: 380, paddingBottom: 18 }}>
-              Casting opens soon for Season 01. We&apos;re assembling a cast of eight from across the continent — every archetype, every region — to live in one house under eight cameras for forty-eight straight days. Apply, or nominate someone you&apos;d watch.
+              Sixteen people. Multi-cam coverage. Forty-two days. One $30,000 grand prize, plus weekly challenge cash and direct fan tips while you&apos;re still in the house. Apply yourself, or nominate the friend you know is built for it.
             </p>
           </div>
         </Reveal>
@@ -918,7 +1157,7 @@ const Mechanics: React.FC = () => {
               <span style={{ fontStyle: 'italic', color: 'var(--sf-amber)' }}>real stakes.</span>
             </h2>
             <p style={{ fontSize: 15, color: 'var(--sf-fg-2)', lineHeight: 1.6, marginBottom: 28, maxWidth: 460 }}>
-              Cash payouts to viewers. Wallet to wallet. Zero platform cut. We don&apos;t take a cent of your winnings — the markets fund themselves from the pool.
+              Cash payouts settled in seconds. Wallet to wallet. Zero platform cut on payouts — the markets fund themselves from the pool. Stablecoin rails under the hood, Naira on the surface. Buy in like you&apos;re buying airtime; cash out to your bank in seconds.
             </p>
 
             <div style={{
@@ -989,9 +1228,9 @@ const Mechanics: React.FC = () => {
 const Timeline: React.FC = () => {
   const steps = [
     { phase: 'NOW',         title: 'Waitlist open',                body: 'Get on the list — first 10,000 signups get a starter pot when we go live.', color: '#FF4E2B', live: true },
-    { phase: 'NEXT',        title: 'Casting opens',                body: 'Open applications for 8 cast slots. Rolling shortlist published weekly.', color: '#F2B544' },
+    { phase: 'NEXT',        title: 'Casting opens',                body: 'Open applications for 16 housemate slots. Rolling shortlist published weekly.', color: '#F2B544' },
     { phase: 'PRE-LAUNCH',  title: 'Cast reveal & house build',    body: 'Final 8 announced. Cameras installed. Markets primed. Director’s booth opens to early backers.', color: '#6B3FE5' },
-    { phase: 'LAUNCH',      title: 'Season 01 goes live',          body: '48 days. 8 cameras. 24/7 streaming. Eviction every Sunday at 19:00 WAT.', color: '#1FD17A', big: true },
+    { phase: 'LAUNCH',      title: 'Season 01 goes live',          body: '42 days. Multi-cam coverage. 24/7 streaming. Eviction every Sunday at 19:00 WAT.', color: '#1FD17A', big: true },
   ];
 
   return (
@@ -1123,7 +1362,7 @@ const FinalCTA: React.FC = () => {
             fontSize: 19, lineHeight: 1.5, color: 'var(--sf-fg-2)',
             maxWidth: 600, margin: '0 auto 48px',
           }}>
-            Cast can hear the chat. Markets settle in real time. Evictions are decided by you. Get on the list — we&apos;ll send a starter pot when we go live.
+            The cast hears the chat. The markets clear in real time. The evictions are decided by you. Get on the list — first 10,000 walk in with a ₦500 starter pot already in the wallet.
           </p>
         </Reveal>
 
@@ -1213,8 +1452,8 @@ const Footer: React.FC = () => {
           <div style={{ minWidth: 240 }}>
             <SFWordmark size={28} />
             <p style={{ fontSize: 14, color: 'var(--sf-fg-2)', lineHeight: 1.55, marginTop: 18, maxWidth: 320 }}>
-              Africa&apos;s first interactive reality TV platform. Launching Season 01 with one house, eight live cameras, real-money markets,
-              and zero platform cut on payouts.
+              Africa&apos;s first reality show that pays its audience. One house, multi-camera coverage, real-money prediction markets,
+              and zero platform cut on payouts. Built in Lagos for the room watching.
             </p>
             <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
               {['X', 'IG', 'TT', 'YT'].map(s => (
@@ -1257,14 +1496,27 @@ const Footer: React.FC = () => {
 // PAGE
 // ─────────────────────────────────────────────────────────────
 const HomePage: React.FC = () => {
+  const day = useDaylight({ mode: 'auto' });
   return (
-    <div className="sf-watch-root" style={{ minHeight: '100vh', background: 'var(--sf-stage)' }}>
+    <div
+      className="sf-watch-root sf-daylight-root"
+      style={{
+        minHeight: '100vh',
+        background: 'var(--sf-stage)',
+        ['--sf-coral' as string]: day.accent,
+        ['--sf-coral-deep' as string]: day.accentSoft,
+        ['--sf-paper' as string]: day.paper,
+        ['--sf-paper-warm' as string]: day.paper2,
+      } as React.CSSProperties}
+    >
       <Nav />
       <Hero />
       <Ticker />
+      <Receipts />
       <Channels />
       <HowItWorks />
       <MarketsPreview />
+      <BuiltFor />
       <Casting />
       <Mechanics />
       <Timeline />

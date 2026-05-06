@@ -1219,6 +1219,31 @@ body {
   .sf-watch-root .sf-react-float { animation: none !important; }
 }
 
+/* ============================================================
+   DAYLIGHT — smooth color drift on paper / coral surfaces
+   The wrapper sets --sf-coral / --sf-paper from React state every
+   60s (auto mode). Add transitions on the elements that read those
+   vars so the change feels like dawn breaking, not a flicker.
+   ============================================================ */
+.sf-watch-root.sf-daylight-root,
+.sf-watch-root.sf-daylight-root header,
+.sf-watch-root.sf-daylight-root .sf-paper,
+.sf-watch-root.sf-daylight-root .sf-btn-paper {
+  transition:
+    background-color 1400ms cubic-bezier(.22,1,.36,1),
+    background 1400ms cubic-bezier(.22,1,.36,1),
+    border-color 1400ms cubic-bezier(.22,1,.36,1),
+    color 1400ms cubic-bezier(.22,1,.36,1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sf-watch-root.sf-daylight-root,
+  .sf-watch-root.sf-daylight-root header,
+  .sf-watch-root.sf-daylight-root .sf-paper,
+  .sf-watch-root.sf-daylight-root .sf-btn-paper {
+    transition: none;
+  }
+}
+
 @keyframes sf-drawer-in {
   from { transform: translateX(-100%); opacity: 0.6; }
   to   { transform: translateX(0); opacity: 1; }

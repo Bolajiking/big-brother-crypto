@@ -6,6 +6,8 @@ import Link from 'next/link';
 import LivepeerPlayer from '@/components/LivepeerPlayer';
 import ClientOnly from '@/components/ClientOnly';
 import MobileLayout from '@/components/MobileLayout';
+import SunArcIndicator from '@/components/SunArcIndicator';
+import { useDaylight } from '@/lib/daylight';
 import { useUserStore } from '@/stores/userStore';
 import { usePredictionStore } from '@/stores/predictionStore';
 import { MarketCreationData, PredictionMarket } from '@/types/prediction';
@@ -106,6 +108,46 @@ const HOT_STRIP = [
   { tag: 'HOT',   color: '#1FD17A', label: 'Bayo → Diary Room' },
 ];
 
+// House Map rooms (Director's Booth D). camIdx = which camera index this room maps to.
+// rect coords inside 800x280 viewbox.
+interface HouseRoom {
+  x: number; y: number; w: number; h: number;
+  label: string;
+  camIdx: number;
+  tag: 'PRIME' | 'HOT' | 'TASK' | 'CHILL' | 'SOLO' | 'IDLE' | 'NSFW' | 'B-ROLL';
+  watchers: number;
+  hot?: boolean;
+}
+const HOUSE_ROOMS: HouseRoom[] = [
+  { x: 40,  y: 40,  w: 220, h: 110, label: 'Living Room',  camIdx: 0, tag: 'PRIME',  watchers: 18420, hot: true },
+  { x: 270, y: 40,  w: 140, h: 110, label: 'Kitchen',      camIdx: 1, tag: 'CHILL',  watchers: 4210 },
+  { x: 420, y: 40,  w: 160, h: 70,  label: 'Diary',        camIdx: 6, tag: 'SOLO',   watchers: 4120 },
+  { x: 420, y: 120, w: 160, h: 30,  label: 'Hallway',      camIdx: 7, tag: 'IDLE',   watchers: 640 },
+  { x: 590, y: 40,  w: 170, h: 110, label: 'Bedroom 1',    camIdx: 4, tag: 'NSFW',   watchers: 2410 },
+  { x: 40,  y: 160, w: 170, h: 80,  label: 'Bedroom 2',    camIdx: 5, tag: 'HOT',    watchers: 8410, hot: true },
+  { x: 220, y: 160, w: 130, h: 80,  label: 'Gym',          camIdx: 0, tag: 'IDLE',   watchers: 1280 },
+  { x: 360, y: 160, w: 120, h: 80,  label: 'Bathroom',     camIdx: 1, tag: 'IDLE',   watchers: 120 },
+  { x: 490, y: 160, w: 130, h: 80,  label: 'Pool',         camIdx: 2, tag: 'TASK',   watchers: 9120 },
+  { x: 630, y: 160, w: 130, h: 80,  label: 'Garden',       camIdx: 3, tag: 'IDLE',   watchers: 1820 },
+];
+
+const TAG_COLOR: Record<HouseRoom['tag'], string> = {
+  PRIME: '#FF4E2B', HOT: '#FF1F3D', TASK: '#1FD17A', CHILL: '#F2B544',
+  SOLO: '#4D7AFF', IDLE: 'rgba(255,255,255,0.22)', NSFW: '#6B3FE5', 'B-ROLL': '#5ACDFF',
+};
+
+// Cast positions on the floor plan (viewBox 800x280)
+const CAST_POSITIONS: { name: string; color: string; x: number; y: number }[] = [
+  { name: 'Tunde',  color: '#6B3FE5', x: 130, y: 90 },
+  { name: 'Ada',    color: '#FF4E2B', x: 165, y: 95 },
+  { name: 'Kemi',   color: '#F2B544', x: 340, y: 90 },
+  { name: 'Bayo',   color: '#1FD17A', x: 555, y: 200 },
+  { name: 'Ngozi',  color: '#4D7AFF', x: 110, y: 200 },
+  { name: 'Femi',   color: '#FF1F3D', x: 90,  y: 200 },
+  { name: 'Zainab', color: '#5ACDFF', x: 670, y: 80 },
+  { name: 'Chuka',  color: '#FFB020', x: 480, y: 70 },
+];
+
 const TICKER_MESSAGES = [
   '🔥 Kemi & Tunde argument · The Mansion',
   '💰 ₦902K eviction pool open until Sunday 19:00',
@@ -174,17 +216,17 @@ const optionFill = (idx: number, picked = false) => {
 };
 
 const PRODUCT_STACK = [
-  { kicker: 'Watch', title: 'Every room stays live', copy: 'Jump between Mansion, Poolside, Kitchen and Diary without losing the main stage.', stat: '8 cams', color: '#FF4E2B' },
-  { kicker: 'Predict', title: 'Markets ride beside chat', copy: 'Back the moment, switch to the crowd, then return to the odds without leaving the stream.', stat: '₦902K', color: '#1FD17A' },
-  { kicker: 'Vote', title: 'Eviction pressure is visible', copy: 'Sunday stakes, fan momentum and cast risk all live in the same viewing flow.', stat: 'Sun 19:00', color: '#FF1F3D' },
-  { kicker: 'Earn', title: 'Winnings stay one tap away', copy: 'Stake balance, clout and cash-out controls stay present while the show keeps moving.', stat: '+12K', color: '#F2B544' },
+  { kicker: 'Watch', title: 'Switch any room. Never lose stage.', copy: 'Mansion, Pool, Kitchen, Diary — all live, one tap.', stat: '8 cams', color: '#FF4E2B' },
+  { kicker: 'Predict', title: 'Back the moment. Stay in stream.', copy: 'Markets ride the side rail. No tabs.', stat: '₦902K', color: '#1FD17A' },
+  { kicker: 'Vote', title: 'Save your fav. Watch the pool move.', copy: 'Sunday eviction. Fan stakes show real-time.', stat: 'Sun 19:00', color: '#FF1F3D' },
+  { kicker: 'Earn', title: 'Cash out without leaving.', copy: 'Stake, clout, and cash-out one tap from chat.', stat: '+12K', color: '#F2B544' },
 ];
 
 const FLOW_STACK = [
-  { step: '01', label: 'Pick a room', detail: 'Camera rail and multicam booth keep the house explorable.' },
-  { step: '02', label: 'Read the room', detail: 'Chat, hot strip and ticker surface the crowd pulse in real time.' },
-  { step: '03', label: 'Back the call', detail: 'Side-panel markets let viewers stake without covering the stream.' },
-  { step: '04', label: 'Follow through', detail: 'Schedule, cast odds and leaderboards carry the night into the next beat.' },
+  { step: '01', label: 'Pick a room', detail: 'Multicam grid + camera rail. Tap to switch.' },
+  { step: '02', label: 'Read the crowd', detail: 'Chat, hot strip, ticker. Crowd pulse live.' },
+  { step: '03', label: 'Back the call', detail: 'Stake on the side panel. Stream keeps playing.' },
+  { step: '04', label: 'Cash out · keep watching', detail: 'Win, claim, ride the night to the next beat.' },
 ];
 
 const palettes: Record<string, { a: string; b: string; c: string }> = {
@@ -605,8 +647,239 @@ const DirectorGrid: React.FC<{
   );
 };
 
+// ── Floating Demo / Live toggle ───────────────────────────────
+const DemoToggle: React.FC<{
+  mode: 'demo' | 'real';
+  onChange: (m: 'demo' | 'real') => void;
+  position?: 'fixed' | 'absolute';
+}> = ({ mode, onChange, position = 'fixed' }) => {
+  const [hover, setHover] = useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        position,
+        bottom: 18,
+        left: 18,
+        zIndex: 60,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: 4,
+        borderRadius: 999,
+        background: 'rgba(10,8,20,0.7)',
+        backdropFilter: 'blur(14px)',
+        border: '1px solid rgba(255,255,255,0.12)',
+        boxShadow: hover ? '0 12px 30px -10px rgba(0,0,0,0.55)' : '0 6px 18px -8px rgba(0,0,0,0.45)',
+        opacity: hover ? 1 : 0.78,
+        transition: 'opacity 220ms, box-shadow 220ms',
+      }}
+      title={mode === 'demo' ? 'Showing demo data — switch to live' : 'Showing live data — switch to demo'}
+    >
+      {(['demo', 'real'] as const).map(m => (
+        <button
+          key={m}
+          onClick={() => onChange(m)}
+          aria-label={m === 'demo' ? 'Demo data' : 'Live data'}
+          style={{
+            padding: '6px 12px',
+            borderRadius: 999,
+            border: 'none',
+            background: mode === m ? (m === 'demo' ? 'var(--sf-coral)' : 'var(--sf-mint)') : 'transparent',
+            color: mode === m ? '#0A0814' : 'rgba(255,255,255,0.78)',
+            fontSize: 10,
+            fontWeight: 900,
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 5,
+          }}
+        >
+          {m === 'demo'
+            ? <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: 999, background: mode === m ? '#0A0814' : 'var(--sf-coral)' }} />
+            : <span className="sf-pulse" style={{ background: mode === m ? '#0A0814' : 'var(--sf-mint)' }} />}
+          {m === 'demo' ? 'Demo' : 'Live'}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+// ── House Heatmap (Director's Booth · variation D) ───────────
+// Click a room to switch primary cam. Heat shade encodes live attention.
+const HouseHeatMap: React.FC<{
+  cameras: Camera[];
+  activeChannel: number;
+  followCast: string | null;
+  onSelectCam: (camIdx: number) => void;
+  onFollowCast: (name: string | null) => void;
+  isIdle: boolean;
+}> = ({ cameras, activeChannel, followCast, onSelectCam, onFollowCast, isIdle }) => {
+  const [hoverRoom, setHoverRoom] = useState<string | null>(null);
+  const liveRooms = HOUSE_ROOMS.filter(r => r.tag !== 'IDLE').length;
+  const idleRooms = HOUSE_ROOMS.length - liveRooms;
+  const totalWatchers = HOUSE_ROOMS.reduce((a, r) => a + r.watchers, 0);
+
+  return (
+    <section style={{ marginTop: 32 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 4 }}>HOUSE MAP · DIRECTOR&apos;S BOOTH</div>
+          <h2 className="sf-display" style={{ fontSize: 26, color: '#fff' }}>
+            Tap a room. Jump the cam.
+          </h2>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 11, color: 'var(--sf-fg-3)' }}>
+          <span><span style={{ color: '#fff', fontWeight: 800 }}>{liveRooms}</span> live</span>
+          <span style={{ opacity: 0.5 }}>·</span>
+          <span>{idleRooms} idle</span>
+          <span style={{ opacity: 0.5 }}>·</span>
+          <span><span style={{ color: 'var(--sf-amber)', fontWeight: 800 }}>{fmt(totalWatchers)}</span> watching</span>
+        </div>
+      </div>
+
+      <div style={{
+        position: 'relative',
+        background: 'var(--sf-stage-2)',
+        border: '1px solid var(--sf-line)',
+        borderRadius: 18,
+        padding: 18,
+        overflow: 'hidden',
+      }}>
+        {/* Heat backdrop glow */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(120% 90% at 30% 30%, rgba(255,78,43,0.08), transparent 60%), radial-gradient(60% 60% at 75% 70%, rgba(31,209,122,0.06), transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+
+        <svg viewBox="0 0 800 280" style={{ width: '100%', height: 'auto', display: 'block', position: 'relative' }}>
+          {/* House outline */}
+          <rect x="20" y="20" width="760" height="240" rx="10"
+            fill="rgba(255,255,255,0.02)"
+            stroke="var(--sf-line-strong)" strokeWidth="1" strokeDasharray="2 4"/>
+
+          {/* Rooms */}
+          {HOUSE_ROOMS.map(r => {
+            const cam = cameras[r.camIdx];
+            const heat = isIdle ? 0 : Math.min(1, r.watchers / 20000);
+            const isPrimary = r.camIdx === activeChannel;
+            const isHovered = hoverRoom === r.label;
+            const tagFill = TAG_COLOR[r.tag];
+            return (
+              <g key={r.label}
+                style={{ cursor: 'pointer' }}
+                onMouseEnter={() => setHoverRoom(r.label)}
+                onMouseLeave={() => setHoverRoom(null)}
+                onClick={() => cam && onSelectCam(r.camIdx)}>
+                <rect x={r.x} y={r.y} width={r.w} height={r.h} rx="8"
+                  fill={isPrimary ? `var(--sf-coral)` : `rgba(255,78,43,${heat * 0.32})`}
+                  fillOpacity={isPrimary ? 0.32 : 1}
+                  stroke={isPrimary ? 'var(--sf-coral)' : isHovered ? 'rgba(255,255,255,0.45)' : 'var(--sf-line-strong)'}
+                  strokeWidth={isPrimary ? 2 : 1}/>
+                {/* Camera dot */}
+                <circle cx={r.x + 12} cy={r.y + 12} r="5"
+                  fill={r.tag === 'IDLE' || isIdle ? 'rgba(255,255,255,0.22)' : tagFill}/>
+                {r.hot && !isIdle && (
+                  <circle cx={r.x + 12} cy={r.y + 12} r="9" fill="none"
+                    stroke={tagFill} strokeWidth="1" opacity="0.65">
+                    <animate attributeName="r" values="5;14;5" dur="1.6s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="0.65;0;0.65" dur="1.6s" repeatCount="indefinite"/>
+                  </circle>
+                )}
+                <text x={r.x + 8} y={r.y + r.h - 10} fill="#fff"
+                  fontSize="11" fontWeight="800"
+                  fontFamily="Inter Display, Inter, sans-serif">{r.label}</text>
+                <text x={r.x + r.w - 8} y={r.y + r.h - 10}
+                  fill="rgba(255,255,255,0.55)" fontSize="9" fontWeight="700"
+                  textAnchor="end" fontFamily="ui-monospace, monospace">
+                  {isIdle ? '—' : fmt(r.watchers)}
+                </text>
+                <text x={r.x + r.w - 8} y={r.y + 16}
+                  fill="rgba(255,255,255,0.7)" fontSize="9" fontWeight="800"
+                  textAnchor="end" fontFamily="ui-monospace, monospace" letterSpacing="0.1em">
+                  CAM {String(r.camIdx + 1).padStart(2, '0')}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Cast position dots — followable */}
+          {!isIdle && CAST_POSITIONS.map(p => {
+            const followed = followCast === p.name;
+            return (
+              <g key={p.name} style={{ cursor: 'pointer' }} onClick={() => onFollowCast(followed ? null : p.name)}>
+                {followed && (
+                  <circle cx={p.x} cy={p.y} r="14" fill="none"
+                    stroke="var(--sf-amber)" strokeWidth="1.5" strokeDasharray="2 3"/>
+                )}
+                <circle cx={p.x} cy={p.y} r="7" fill={p.color}
+                  stroke="var(--sf-stage)" strokeWidth="2"/>
+                <text x={p.x} y={p.y + 22} fill="#fff" fontSize="9" fontWeight="800"
+                  textAnchor="middle" fontFamily="Inter Display, Inter, sans-serif">{p.name}</text>
+              </g>
+            );
+          })}
+        </svg>
+
+        {/* Legend + actions */}
+        <div style={{
+          position: 'relative',
+          marginTop: 12,
+          paddingTop: 12,
+          borderTop: '1px solid var(--sf-line)',
+          display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+        }}>
+          {[
+            { label: 'Hot', color: '#FF1F3D' },
+            { label: 'Task', color: '#1FD17A' },
+            { label: 'Solo', color: '#4D7AFF' },
+            { label: 'Idle', color: 'rgba(255,255,255,0.22)' },
+          ].map(l => (
+            <span key={l.label} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              fontSize: 10, color: 'var(--sf-fg-3)',
+              fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+            }}>
+              <span style={{ width: 8, height: 8, borderRadius: 999, background: l.color }} />
+              {l.label}
+            </span>
+          ))}
+          <span style={{ flex: 1 }} />
+          {followCast && (
+            <button onClick={() => onFollowCast(null)} title="Stop following" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '4px 4px 4px 10px', borderRadius: 999,
+              background: 'var(--sf-amber)', color: '#1A0F00',
+              border: 'none', fontSize: 11, fontWeight: 900,
+              cursor: 'pointer',
+            }}>
+              ⌖ {followCast}
+              <span style={{
+                width: 18, height: 18, borderRadius: 999,
+                background: '#0A0814', color: '#FFB020',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 11,
+              }}>×</span>
+            </button>
+          )}
+          <span style={{ fontSize: 11, color: 'var(--sf-fg-2)' }}>
+            Tap a room → primary cam · Tap a name → follow
+          </span>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 // ── Page ─────────────────────────────────────────────────────
 const WatchPage: React.FC = () => {
+  // Daylight engine — auto-tunes accent + paper to Lagos time-of-day
+  const day = useDaylight({ mode: 'auto' });
+
   // Auth + stores
   const { authenticated, user, logout: privyLogout, login: privyLogin } = usePrivy();
   const { setUser: setStoreUser, updateBalance, logout: storeLogout, balance, deductStakes } = useUserStore();
@@ -628,6 +901,12 @@ const WatchPage: React.FC = () => {
   const [isDockMinimized, setIsDockMinimized] = useState(false);
   const [showStageWidgets, setShowStageWidgets] = useState(true);
   const [showEventStrip, setShowEventStrip] = useState(true);
+  // Demo vs Real (live) data mode. Demo always uses mocked content.
+  // Real shows idle states until the host opens markets / cast goes live.
+  // Default = real (idle). Demo is opt-in via the floating toggle.
+  const [dataMode, setDataMode] = useState<'demo' | 'real'>('real');
+  const [followCast, setFollowCast] = useState<string | null>(null);
+  const [pinnedCamIdx, setPinnedCamIdx] = useState<number | null>(null);
 
   // Right dock
   const [dockTab, setDockTab] = useState<'predict' | 'chat' | 'leader'>('predict');
@@ -749,10 +1028,25 @@ const WatchPage: React.FC = () => {
   // Active camera (single mode)
   const activeCam = cameras[activeChannel] || null;
 
-  // Active prediction for the in-frame "live market" overlay
-  const featuredMarket = useMemo<PredictionMarket | null>(() => {
-    return markets.find(m => m.status === 'active') || null;
-  }, [markets]);
+  // Real mode = idle. No live show running yet; suppress all demo activity.
+  // Demo mode = full populated experience.
+  const isIdle = dataMode === 'real';
+
+  // Demo-only data sources. In real-idle every demo seed is suppressed and
+  // the UI surfaces communicate "what goes here" rather than fake activity.
+  const effectiveMarkets = isIdle ? [] : markets;
+  const activeMarkets = effectiveMarkets.filter(m => m.status === 'active');
+  const featuredMarket = activeMarkets[0] || null;
+  const displayChat = isIdle
+    ? chatMessages.filter(m => !SEED_CHAT.find(s => s.id === m.id))
+    : chatMessages;
+  const displayLeaderboard = isIdle ? [] : LEADERBOARD;
+  const displayCast = isIdle ? [] : CAST;
+  const displaySchedule = isIdle ? [] : SCHEDULE;
+  const displayHotStrip = isIdle ? [] : HOT_STRIP;
+  const displayTicker = isIdle
+    ? ['👋 Stream goes live · 19:00 WAT · markets open with the show']
+    : TICKER_MESSAGES;
 
   // ── Bet placement ──
   const handlePickOption = (marketId: string, optionId: string) => {
@@ -863,6 +1157,8 @@ const WatchPage: React.FC = () => {
           isAuthenticated={authenticated}
           userEmail={user?.email?.address}
           onCreateMarket={(d: MarketCreationData) => addMarket(d, user?.email?.address?.split('@')[0] || 'Anonymous')}
+          dataMode={dataMode}
+          onDataModeChange={setDataMode}
         />
         <LoginPromptModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onLogin={handleLogin} action={loginAction} />
       </div>
@@ -873,7 +1169,20 @@ const WatchPage: React.FC = () => {
 
   // ── Desktop magazine layout ──
   return (
-    <div className="sf-watch-root" style={{ minHeight: '100vh' }} suppressHydrationWarning>
+    <div
+      className="sf-watch-root sf-daylight-root"
+      style={{
+        minHeight: '100vh',
+        // Drive the brand accent + paper tints from Lagos time-of-day.
+        // CSS vars cascade through every existing var(--sf-coral) /
+        // var(--sf-paper) usage so the whole product drifts together.
+        ['--sf-coral' as string]: day.accent,
+        ['--sf-coral-deep' as string]: day.accentSoft,
+        ['--sf-paper' as string]: day.paper,
+        ['--sf-paper-warm' as string]: day.paper2,
+      } as React.CSSProperties}
+      suppressHydrationWarning
+    >
       <LoginPromptModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onLogin={handleLogin} action={loginAction} />
 
       {/* HEADER — paper cream */}
@@ -1055,9 +1364,19 @@ const WatchPage: React.FC = () => {
             <span className="sf-display-italic" style={{ fontSize: 28, fontWeight: 900, color: 'var(--sf-stage)' }}>
               DAY <span className="sf-grad-text" style={{ fontStyle: 'italic' }}>47</span>
             </span>
-            <div style={{ width: 1, height: 36, background: 'rgba(10,8,20,0.2)' }}></div>
+            <SunArcIndicator state={day} dark={false} />
+            <div className="sf-hide-mobile" style={{ width: 1, height: 36, background: 'rgba(10,8,20,0.2)' }}></div>
             <div style={{ flex: 1, display: 'flex', gap: 24, overflowX: 'auto' }} className="sf-no-scrollbar">
-              {HOT_STRIP.map((s, i) => (
+              {displayHotStrip.length === 0 ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'rgba(10,8,20,0.55)', fontSize: 12, fontWeight: 700 }}>
+                  <span style={{
+                    padding: '3px 8px', borderRadius: 4,
+                    background: 'rgba(10,8,20,0.08)', color: 'var(--sf-stage)',
+                    fontSize: 10, fontWeight: 900, letterSpacing: '0.14em',
+                  }}>SOON</span>
+                  Tonight&apos;s hot beats appear here once the house wakes up.
+                </div>
+              ) : displayHotStrip.map((s, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                   <span style={{
                     padding: '3px 8px', borderRadius: 4,
@@ -1087,7 +1406,7 @@ const WatchPage: React.FC = () => {
               <span style={{ fontSize: 10, fontWeight: 900, color: '#fff', letterSpacing: '0.16em' }}>LIVE NOW</span>
             </div>
             <div className="sf-marquee" style={{ paddingLeft: 24 }}>
-              {[...TICKER_MESSAGES, ...TICKER_MESSAGES].map((t, i) => (
+              {[...displayTicker, ...displayTicker].map((t, i) => (
                 <span key={i} style={{ fontSize: 11, color: 'var(--sf-fg-2)', fontWeight: 600 }}>{t}</span>
               ))}
             </div>
@@ -1129,20 +1448,51 @@ const WatchPage: React.FC = () => {
                   boxShadow: `0 0 0 1px rgba(255,78,43,0.55), 0 30px 90px -20px rgba(255,78,43,0.44)`,
                   background: '#000',
                 }}>
-                  {activeCam ? (
+                  {activeCam && !isIdle ? (
                     <LivepeerPlayer playbackId={activeCam.playbackId} isMainPlayer={true} showStatus={false} className="w-full h-full" />
                   ) : (
-                    <PaletteFill palette="coral" />
+                    <PaletteFill palette="coral">
+                      {isIdle && (
+                        <div style={{
+                          position: 'absolute', inset: 0,
+                          background: 'rgba(10,8,20,0.65)',
+                          display: 'flex', flexDirection: 'column',
+                          alignItems: 'center', justifyContent: 'center',
+                          gap: 14, padding: 24, textAlign: 'center',
+                        }}>
+                          <div style={{
+                            padding: '6px 14px', borderRadius: 999,
+                            background: 'rgba(255,255,255,0.08)',
+                            color: 'rgba(255,255,255,0.7)',
+                            fontSize: 10, fontWeight: 900, letterSpacing: '0.18em',
+                          }}>● OFFLINE · STREAM RESUMES SOON</div>
+                          <h2 className="sf-display" style={{ fontSize: 32, color: '#fff', maxWidth: 520, lineHeight: 1.1 }}>
+                            The house is quiet. Be the first one watching.
+                          </h2>
+                          <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, maxWidth: 460, lineHeight: 1.5 }}>
+                            Cameras stream the moment cast wakes. Open a market, drop a chat, or flip to demo to feel the full experience.
+                          </p>
+                          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                            <button onClick={() => setDataMode('demo')} className="sf-btn sf-btn-coral" style={{ height: 38, fontSize: 11, padding: '0 16px' }}>
+                              SEE IT IN DEMO
+                            </button>
+                            <button onClick={() => requireLogin('open the first market', () => setShowPredictModal(true))} className="sf-btn sf-btn-paper" style={{ height: 38, fontSize: 11, padding: '0 16px' }}>
+                              OPEN A MARKET
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </PaletteFill>
                   )}
 
                   {/* Top overlays */}
                   <div style={{ position: 'absolute', top: 16, left: 16, display: 'flex', gap: 8, pointerEvents: 'none' }}>
-                    <LiveDot label="LIVE NOW" />
-                    <span style={{
+                    {!isIdle && <LiveDot label="LIVE NOW" />}
+                    {!isIdle && <span style={{
                       background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)',
                       padding: '5px 11px', borderRadius: 999,
                       fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', color: '#fff',
-                    }}>👁 {(38400 + activeChannel * 1200).toLocaleString()}</span>
+                    }}>👁 {(38400 + activeChannel * 1200).toLocaleString()}</span>}
                   </div>
 
                   <div style={{
@@ -1194,59 +1544,95 @@ const WatchPage: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Bottom controls */}
+                  {/* Bottom controls — icon CTAs w/ hover tooltips */}
                   <div style={{ position: 'absolute', bottom: 12, left: 12, right: 12, display: 'flex', gap: 8, alignItems: 'center', zIndex: 30 }}>
-                    <button className="sf-btn-icon" style={{ background: 'rgba(0,0,0,0.55)', borderColor: 'rgba(255,255,255,0.1)' }}>
+                    <button title="Pause stream" aria-label="Pause stream" className="sf-btn-icon" style={{ background: 'rgba(0,0,0,0.55)', borderColor: 'rgba(255,255,255,0.1)' }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
                     </button>
-                    <button className="sf-btn-icon" style={{ background: 'rgba(0,0,0,0.55)', borderColor: 'rgba(255,255,255,0.1)' }}>
+                    <button title="Mute audio" aria-label="Mute audio" className="sf-btn-icon" style={{ background: 'rgba(0,0,0,0.55)', borderColor: 'rgba(255,255,255,0.1)' }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
                     </button>
-                    <span style={{ flex: 1 }}></span>
-                    <button onClick={() => setStageMode('multicam')} className="sf-btn sf-btn-paper" style={{ height: 30, fontSize: 10 }}>
-                      MULTICAM ({cameras.length})
+                    <button title="Pin this cam" aria-label="Pin this cam"
+                      onClick={() => setPinnedCamIdx(pinnedCamIdx === activeChannel ? null : activeChannel)}
+                      className="sf-btn-icon" style={{
+                        background: pinnedCamIdx === activeChannel ? 'var(--sf-coral)' : 'rgba(0,0,0,0.55)',
+                        borderColor: 'rgba(255,255,255,0.1)', color: '#fff',
+                      }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 17v5M5 11h14l-2-7H7zM12 11v6"/>
+                      </svg>
                     </button>
-                    <button onClick={enterFocusMode} className="sf-btn sf-btn-stage" style={{ height: 30, fontSize: 10 }}>
+                    <button title="Clip last 30s" aria-label="Clip last 30s" onClick={() => requireLogin('clip')} className="sf-btn-icon" style={{ background: 'rgba(0,0,0,0.55)', borderColor: 'rgba(255,255,255,0.1)' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/>
+                      </svg>
+                    </button>
+                    <button title="Share clip" aria-label="Share clip" onClick={() => requireLogin('share')} className="sf-btn-icon" style={{ background: 'rgba(0,0,0,0.55)', borderColor: 'rgba(255,255,255,0.1)' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>
+                      </svg>
+                    </button>
+                    <span style={{ flex: 1 }}></span>
+                    <button onClick={() => setStageMode('multicam')} title="Watch every room at once" className="sf-btn sf-btn-paper" style={{ height: 30, fontSize: 10 }}>
+                      WATCH ALL ROOMS · {cameras.length}
+                    </button>
+                    <button onClick={enterFocusMode} title="Hide widgets, full focus" className="sf-btn sf-btn-stage" style={{ height: 30, fontSize: 10 }}>
                       FOCUS
                     </button>
-                    <button className="sf-btn-icon" style={{ background: 'rgba(0,0,0,0.55)', borderColor: 'rgba(255,255,255,0.1)' }}>
+                    <button title="Fullscreen" aria-label="Fullscreen" className="sf-btn-icon" style={{ background: 'rgba(0,0,0,0.55)', borderColor: 'rgba(255,255,255,0.1)' }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* CAMERA RAIL — switch between rooms */}
-              <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: `repeat(${Math.min(cameras.length || 6, 8)}, minmax(96px, 1fr))`, gap: 8, overflowX: 'auto', paddingBottom: 2 }} className="sf-no-scrollbar">
-                {cameras.map((cam, i) => (
-                  <button
-                    key={cam.id}
-                    onClick={() => { setActiveChannel(i); setStageMode('single'); }}
-                    className={`sf-tile ${i === activeChannel && stageMode === 'single' ? 'active' : ''}`}
-                    style={{ aspectRatio: '16/9', padding: 0, background: 'transparent' }}
-                    aria-label={cam.name}
-                  >
-                    <PaletteFill palette={paletteForIdx(i)} style={{ height: '100%' }}>
-                      <div style={{ position: 'absolute', top: 4, left: 4 }}>
-                        <span style={{
-                          background: 'rgba(0,0,0,0.7)', color: '#fff',
-                          fontSize: 8, fontWeight: 900, padding: '2px 5px',
-                          borderRadius: 3, letterSpacing: '0.14em',
-                        }}>{cam.isActive ? '● LIVE' : '○ IDLE'}</span>
-                      </div>
-                      <div style={{
-                        position: 'absolute', bottom: 4, left: 4, right: 4,
-                        display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
-                      }}>
-                        <span style={{ fontSize: 10, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{cam.name}</span>
-                        <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.85)', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
-                          {((i + 1) * 4321).toLocaleString()}
-                        </span>
-                      </div>
-                    </PaletteFill>
-                  </button>
-                ))}
-              </div>
+              {/* CAMERA RAIL — live tiles in demo, neutral placeholders in idle */}
+              {isIdle ? (
+                <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'repeat(8, minmax(0, 1fr))', gap: 8 }}>
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} style={{
+                      aspectRatio: '16/9',
+                      borderRadius: 10,
+                      border: '1px dashed var(--sf-line-strong)',
+                      background: 'rgba(255,255,255,0.02)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: 'var(--sf-fg-3)',
+                      fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
+                    }}>CAM {String(i + 1).padStart(2, '0')}</div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: `repeat(${Math.min(cameras.length || 6, 8)}, minmax(96px, 1fr))`, gap: 8, overflowX: 'auto', paddingBottom: 2 }} className="sf-no-scrollbar">
+                  {cameras.map((cam, i) => (
+                    <button
+                      key={cam.id}
+                      onClick={() => { setActiveChannel(i); setStageMode('single'); }}
+                      className={`sf-tile ${i === activeChannel && stageMode === 'single' ? 'active' : ''}`}
+                      style={{ aspectRatio: '16/9', padding: 0, background: 'transparent' }}
+                      aria-label={cam.name}
+                    >
+                      <PaletteFill palette={paletteForIdx(i)} style={{ height: '100%' }}>
+                        <div style={{ position: 'absolute', top: 4, left: 4 }}>
+                          <span style={{
+                            background: 'rgba(0,0,0,0.7)', color: '#fff',
+                            fontSize: 8, fontWeight: 900, padding: '2px 5px',
+                            borderRadius: 3, letterSpacing: '0.14em',
+                          }}>{cam.isActive ? '● LIVE' : '○ IDLE'}</span>
+                        </div>
+                        <div style={{
+                          position: 'absolute', bottom: 4, left: 4, right: 4,
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+                        }}>
+                          <span style={{ fontSize: 10, fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{cam.name}</span>
+                          <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.85)', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
+                            {((i + 1) * 4321).toLocaleString()}
+                          </span>
+                        </div>
+                      </PaletteFill>
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* SHOW META */}
               <div style={{ marginTop: 22 }}>
@@ -1254,26 +1640,58 @@ const WatchPage: React.FC = () => {
                   STARFACTOR · S01 · DAY 47 · {(activeCam?.name || 'MAIN').toUpperCase()}
                 </div>
                 <h1 className="sf-display" style={{ fontSize: 36, color: '#fff', marginBottom: 12, maxWidth: 720 }}>
-                  {activeCam?.description || 'Live from the house. Tap any camera to switch the room.'}
+                  {isIdle
+                    ? 'House goes live shortly. Stay in the room.'
+                    : activeCam?.description || 'Pick a room. Read the crowd. Back the moment.'}
                 </h1>
-                <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ display: 'flex' }}>
-                      {CAST.slice(0, 3).map((c, i) => (
-                        <div key={c.handle} style={{ marginLeft: i === 0 ? 0 : -8 }}>
-                          <Avatar name={c.name} color={c.color} size={28} />
-                        </div>
-                      ))}
-                    </div>
-                    <span style={{ fontSize: 12, color: 'var(--sf-fg-2)' }}>
-                      <span style={{ color: '#fff', fontWeight: 800 }}>{CAST.slice(0, 3).map(c => c.name).join(', ')}</span> + 5 in house
+                <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
+                  {isIdle ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderRadius: 999, border: '1px dashed var(--sf-line-strong)', color: 'var(--sf-fg-2)', fontSize: 12 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: 999, background: 'var(--sf-fg-3)' }} />
+                      Cast revealed at lights-on
                     </span>
-                  </div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ display: 'flex' }}>
+                        {CAST.slice(0, 3).map((c, i) => (
+                          <div key={c.handle} style={{ marginLeft: i === 0 ? 0 : -8 }}>
+                            <Avatar name={c.name} color={c.color} size={28} />
+                          </div>
+                        ))}
+                      </div>
+                      <span style={{ fontSize: 12, color: 'var(--sf-fg-2)' }}>
+                        <span style={{ color: '#fff', fontWeight: 800 }}>{CAST.slice(0, 3).map(c => c.name).join(', ')}</span> + 5 in house
+                      </span>
+                    </div>
+                  )}
                   <div style={{ width: 1, height: 24, background: 'var(--sf-line)' }}></div>
-                  <span style={{ fontSize: 12, color: 'var(--sf-fg-2)' }}>Started 23 min ago · <span className="sf-mono" style={{ color: '#fff' }}>02:14:08</span></span>
+                  <span style={{ fontSize: 12, color: 'var(--sf-fg-2)' }}>{isIdle ? 'Goes live · ' : 'Started 23 min ago · '}<span className="sf-mono" style={{ color: '#fff' }}>{isIdle ? '19:00 WAT' : '02:14:08'}</span></span>
+                  {/* Quick-action icon row w/ tooltips */}
+                  <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+                    <button title="Follow show — alerts before live" aria-label="Follow show"
+                      onClick={() => requireLogin('follow the show')}
+                      className="sf-btn-icon" style={{ background: 'var(--sf-stage-2)', borderColor: 'var(--sf-line)', color: '#fff', height: 34, width: 34 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                    </button>
+                    <button title="Tip the cast" aria-label="Tip the cast"
+                      onClick={() => requireLogin('tip the cast')}
+                      className="sf-btn-icon" style={{ background: 'var(--sf-stage-2)', borderColor: 'var(--sf-line)', color: '#fff', height: 34, width: 34 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </button>
+                    <button title="Send gift to cast" aria-label="Send gift"
+                      onClick={() => requireLogin('send a gift')}
+                      className="sf-btn-icon" style={{ background: 'var(--sf-stage-2)', borderColor: 'var(--sf-line)', color: '#fff', height: 34, width: 34 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 1 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 1 0 0-5C13 2 12 7 12 7z"/></svg>
+                    </button>
+                    <button title="Copy share link" aria-label="Share"
+                      onClick={() => navigator.clipboard?.writeText(window.location.href)}
+                      className="sf-btn-icon" style={{ background: 'var(--sf-stage-2)', borderColor: 'var(--sf-line)', color: '#fff', height: 34, width: 34 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+                    </button>
+                  </div>
                 </div>
 
-                {showStageWidgets && (
+                {showStageWidgets && !isIdle && (
                   <div className="sf-fade-in" style={{
                     padding: '10px 14px', borderRadius: 999,
                     background: 'var(--sf-stage-2)',
@@ -1297,6 +1715,19 @@ const WatchPage: React.FC = () => {
                     </span>
                   </div>
                 )}
+                {showStageWidgets && isIdle && (
+                  <div className="sf-fade-in" style={{
+                    padding: '10px 14px', borderRadius: 999,
+                    background: 'var(--sf-stage-2)',
+                    border: '1px dashed var(--sf-line-strong)',
+                    display: 'inline-flex', alignItems: 'center', gap: 10,
+                    color: 'var(--sf-fg-3)', fontSize: 11,
+                  }}>
+                    <span className="sf-eyebrow" style={{ color: 'var(--sf-fg-3)' }}>REACT</span>
+                    Reactions unlock when cameras go live.
+                    <button onClick={() => requireLogin('get notified')} className="sf-btn sf-btn-coral" style={{ height: 28, fontSize: 10, padding: '0 12px' }}>NOTIFY ME</button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1305,12 +1736,37 @@ const WatchPage: React.FC = () => {
           <section style={{ marginTop: 40 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 16 }}>
               <h2 className="sf-display" style={{ fontSize: 28, color: '#fff' }}>
-                The Cast <span style={{ color: 'var(--sf-fg-3)', fontSize: 16, fontWeight: 600 }}>· Day 47 · 8 standing</span>
+                The Cast <span style={{ color: 'var(--sf-fg-3)', fontSize: 16, fontWeight: 600 }}>{isIdle ? '· Roster locked until launch' : '· Day 47 · 8 standing'}</span>
               </h2>
               <a className="sf-eyebrow" style={{ color: 'var(--sf-fg-3)', cursor: 'pointer' }}>FULL ROSTER →</a>
             </div>
+            {isIdle ? (
+              <div style={{
+                padding: 28,
+                borderRadius: 18,
+                border: '1px dashed var(--sf-line-strong)',
+                background: 'linear-gradient(135deg, rgba(255,78,43,0.04), rgba(107,63,229,0.04))',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{
+                    width: 56, height: 56, borderRadius: 18,
+                    background: 'rgba(255,78,43,0.12)', border: '1px solid rgba(255,78,43,0.3)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26,
+                  }}>👥</div>
+                  <div>
+                    <div style={{ fontSize: 14, color: '#fff', fontWeight: 800 }}>Cast revealed at lights-on</div>
+                    <div style={{ fontSize: 12, color: 'var(--sf-fg-3)', marginTop: 2 }}>Names, odds and BACK buttons drop the moment cameras flip live.</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button onClick={() => requireLogin('get cast alert')} className="sf-btn sf-btn-coral" style={{ height: 36, fontSize: 11 }}>NOTIFY ME</button>
+                  <Link href="/apply" className="sf-btn sf-btn-stage" style={{ height: 36, fontSize: 11 }}>APPLY TO BE CAST</Link>
+                </div>
+              </div>
+            ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
-              {CAST.slice(0, 4).map((c, i) => (
+              {displayCast.slice(0, 4).map((c, i) => (
                 <div key={c.handle} style={{
                   background: i === 0 ? 'var(--sf-paper)' : 'var(--sf-stage-2)',
                   color: i === 0 ? 'var(--sf-stage)' : '#fff',
@@ -1356,16 +1812,33 @@ const WatchPage: React.FC = () => {
                 </div>
               ))}
             </div>
+            )}
           </section>
 
           {/* SCHEDULE */}
           <section style={{ marginTop: 32 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14 }}>
-              <h2 className="sf-display" style={{ fontSize: 22, color: '#fff' }}>Tonight&apos;s schedule</h2>
+              <h2 className="sf-display" style={{ fontSize: 22, color: '#fff' }}>{isIdle ? 'Show schedule' : 'Tonight’s schedule'}</h2>
               <a className="sf-eyebrow" style={{ color: 'var(--sf-fg-3)', cursor: 'pointer' }}>FULL SCHEDULE →</a>
             </div>
+            {isIdle ? (
+              <div style={{
+                padding: 22,
+                borderRadius: 16,
+                border: '1px dashed var(--sf-line-strong)',
+                background: 'rgba(255,255,255,0.02)',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap',
+              }}>
+                <div>
+                  <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 4 }}>NEXT UP · LIGHTS-ON</div>
+                  <div style={{ fontSize: 14, color: '#fff', fontWeight: 800 }}>Tonight&apos;s slate posts at 19:00 WAT</div>
+                  <div style={{ fontSize: 12, color: 'var(--sf-fg-3)', marginTop: 2 }}>Tasks · diary rotations · eviction window will fill in here.</div>
+                </div>
+                <button onClick={() => requireLogin('add to calendar')} className="sf-btn sf-btn-paper" style={{ height: 34, fontSize: 11 }}>ADD TO CALENDAR</button>
+              </div>
+            ) : (
             <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }} className="sf-no-scrollbar">
-              {SCHEDULE.map((s, i) => (
+              {displaySchedule.map((s, i) => (
                 <div key={i} style={{
                   flex: '0 0 240px',
                   padding: 16,
@@ -1391,10 +1864,21 @@ const WatchPage: React.FC = () => {
                 </div>
               ))}
             </div>
+            )}
           </section>
 
+          {/* HOUSE MAP / HEATMAP — Director's Booth D */}
+          <HouseHeatMap
+            cameras={cameras}
+            activeChannel={activeChannel}
+            followCast={followCast}
+            onSelectCam={(idx) => { setActiveChannel(idx); setStageMode('single'); }}
+            onFollowCast={(name) => setFollowCast(name)}
+            isIdle={isIdle}
+          />
+
           {/* PREDICT GRID — full-version horizontal markets */}
-          {markets.length > 0 && (
+          {effectiveMarkets.length > 0 ? (
             <section style={{
               marginTop: 32, padding: '24px 0',
               borderTop: '1px solid var(--sf-line)',
@@ -1406,7 +1890,7 @@ const WatchPage: React.FC = () => {
                     Predict & Earn <span style={{ color: 'var(--sf-coral)' }}>•</span>
                   </h2>
                   <div style={{ fontSize: 12, color: 'var(--sf-fg-3)', marginTop: 4 }}>
-                    {markets.filter(m => m.status === 'active').length} open markets · pool <span style={{ color: 'var(--sf-amber)', fontWeight: 800 }}>{markets.reduce((a, m) => a + m.totalPool, 0).toLocaleString()} stakes</span>
+                    {activeMarkets.length} open markets · pool <span style={{ color: 'var(--sf-amber)', fontWeight: 800 }}>{effectiveMarkets.reduce((a, m) => a + m.totalPool, 0).toLocaleString()} stakes</span>
                   </div>
                 </div>
                 <button onClick={() => requireLogin('create a market', () => setShowPredictModal(true))} className="sf-btn sf-btn-ghost">
@@ -1414,7 +1898,7 @@ const WatchPage: React.FC = () => {
                 </button>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
-                {markets.filter(m => m.status === 'active').slice(0, 6).map(m => {
+                {activeMarkets.slice(0, 6).map(m => {
                   const userBet = userBets.find(b => b.marketId === m.id);
                   return (
                     <PredictionCard
@@ -1429,6 +1913,33 @@ const WatchPage: React.FC = () => {
                     />
                   );
                 })}
+              </div>
+            </section>
+          ) : isIdle && (
+            <section style={{ marginTop: 32 }}>
+              <div style={{
+                padding: 24,
+                borderRadius: 18,
+                border: '1px dashed var(--sf-line-strong)',
+                background: 'linear-gradient(135deg, rgba(255,176,32,0.04), rgba(31,209,122,0.04))',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{
+                    width: 56, height: 56, borderRadius: 18,
+                    background: 'rgba(255,176,32,0.14)', border: '1px solid rgba(255,176,32,0.3)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26,
+                  }}>🎯</div>
+                  <div>
+                    <div className="sf-eyebrow" style={{ color: 'var(--sf-amber)', marginBottom: 4 }}>PREDICT &amp; EARN</div>
+                    <div style={{ fontSize: 14, color: '#fff', fontWeight: 800 }}>Markets open with the show</div>
+                    <div style={{ fontSize: 12, color: 'var(--sf-fg-3)', marginTop: 2 }}>Live cams trigger live odds. Be first — open the first market yourself.</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button onClick={() => requireLogin('open the first market', () => setShowPredictModal(true))} className="sf-btn sf-btn-coral" style={{ height: 36, fontSize: 11 }}>OPEN FIRST MARKET</button>
+                  <button onClick={() => requireLogin('get notified')} className="sf-btn sf-btn-ghost" style={{ height: 36, fontSize: 11 }}>NOTIFY ME</button>
+                </div>
               </div>
             </section>
           )}
@@ -1449,13 +1960,21 @@ const WatchPage: React.FC = () => {
                 borderBottom: '2px solid var(--sf-stage)',
               }} className="sf-product-intro">
                 <div style={{ padding: 22, borderRight: '2px solid var(--sf-stage)' }}>
-                  <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 10 }}>FULL PRODUCT</div>
+                  <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 10 }}>WHAT YOU GET</div>
                   <h2 className="sf-display" style={{ fontSize: 34, color: 'var(--sf-stage)', maxWidth: 390 }}>
                     The whole house, in play.
                   </h2>
                   <p style={{ color: 'rgba(10,8,20,0.68)', fontSize: 14, lineHeight: 1.55, marginTop: 12, maxWidth: 430 }}>
-                    Live rooms, crowd heat, predictions, voting nights and wallet moments stay stitched into one continuous watch flow.
+                    Watch live · predict · vote · cash out — all without leaving the stream.
                   </p>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 16 }}>
+                    <button onClick={() => requireLogin('start watching')} className="sf-btn sf-btn-coral" style={{ height: 34, fontSize: 11 }}>
+                      START WATCHING
+                    </button>
+                    <button onClick={() => setDataMode(dataMode === 'demo' ? 'real' : 'demo')} className="sf-btn sf-btn-stage" style={{ height: 34, fontSize: 11 }}>
+                      {dataMode === 'demo' ? 'SEE LIVE' : 'SEE DEMO'}
+                    </button>
+                  </div>
                 </div>
                 <div style={{
                   display: 'grid',
@@ -1524,9 +2043,9 @@ const WatchPage: React.FC = () => {
           <section style={{ marginTop: 26, display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 14 }} className="sf-evening-grid">
             <div className="sf-surface-raised" style={{ padding: 20, position: 'relative', overflow: 'hidden' }}>
               <div className="sf-ring" style={{ width: 260, height: 260, right: -80, top: -80 }} />
-              <div className="sf-eyebrow" style={{ color: 'var(--sf-live)', marginBottom: 12 }}>EVICTION NIGHT</div>
+              <div className="sf-eyebrow" style={{ color: 'var(--sf-live)', marginBottom: 12 }}>EVICTION NIGHT · SUN 19:00</div>
               <h2 className="sf-display" style={{ fontSize: 30, color: '#fff', maxWidth: 460 }}>
-                Sunday becomes a live market before the vote closes.
+                Stake before the gavel drops.
               </h2>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 18 }}>
                 {['Fan vote', 'Cast risk', 'Pool movement', 'Cash-out window'].map((label, i) => (
@@ -1543,6 +2062,14 @@ const WatchPage: React.FC = () => {
                   }}>{label}</span>
                 ))}
               </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
+                <button onClick={() => requireLogin('back the eviction pool', () => setDockTab('predict'))} className="sf-btn sf-btn-coral" style={{ height: 36, fontSize: 11 }}>
+                  BACK A CAST
+                </button>
+                <button onClick={() => requireLogin('save fav', () => setDockTab('predict'))} className="sf-btn sf-btn-ghost" style={{ height: 36, fontSize: 11 }}>
+                  SAVE A FAV
+                </button>
+              </div>
             </div>
             <div className="sf-paper-warm" style={{
               padding: 20,
@@ -1553,17 +2080,21 @@ const WatchPage: React.FC = () => {
               minHeight: 240,
             }}>
               <div>
-                <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 12 }}>WALLET LOOP</div>
-                <h3 className="sf-display" style={{ fontSize: 26, color: 'var(--sf-stage)' }}>Stake, win, cash out, return.</h3>
-                <p style={{ color: 'rgba(10,8,20,0.66)', fontSize: 13, lineHeight: 1.55, marginTop: 12 }}>
-                  The balance chip, bet bar and leaderboard keep the money story visible while the show keeps breathing.
+                <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 12 }}>YOUR WALLET</div>
+                <h3 className="sf-display" style={{ fontSize: 26, color: 'var(--sf-stage)' }}>Stake. Win. Cash out.</h3>
+                <p style={{ color: 'rgba(10,8,20,0.66)', fontSize: 13, lineHeight: 1.55, marginTop: 8 }}>
+                  Balance, bet bar, leaderboard — never out of reach.
                 </p>
+                <div style={{ display: 'flex', gap: 6, marginTop: 14 }}>
+                  <button onClick={() => requireLogin('cash out')} className="sf-btn sf-btn-stage" style={{ height: 32, fontSize: 10 }}>CASH OUT</button>
+                  <button onClick={() => requireLogin('top up')} className="sf-btn sf-btn-coral" style={{ height: 32, fontSize: 10 }}>+ TOP UP</button>
+                </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginTop: 18 }}>
                 {[
                   { label: 'Stake', value: balance.stakes.toLocaleString() },
                   { label: 'Clout', value: balance.clout.toLocaleString() },
-                  { label: 'Open', value: markets.filter(m => m.status === 'active').length.toString() },
+                  { label: 'Open', value: activeMarkets.length.toString() },
                 ].map(item => (
                   <div key={item.label} style={{
                     padding: 10,
@@ -1608,8 +2139,8 @@ const WatchPage: React.FC = () => {
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 6l-6 6 6 6"/></svg>
               </button>
               {[
-                { id: 'predict' as const, label: 'P', full: 'Predict', count: markets.filter(m => m.status === 'active').length },
-                { id: 'chat' as const, label: 'C', full: 'Chat', count: chatMessages.length },
+                { id: 'predict' as const, label: 'P', full: 'Predict', count: activeMarkets.length },
+                { id: 'chat' as const, label: 'C', full: 'Chat', count: displayChat.length },
                 { id: 'leader' as const, label: 'L', full: 'Top', count: null },
               ].map(t => (
                 <button
@@ -1670,8 +2201,8 @@ const WatchPage: React.FC = () => {
           {/* Tab bar */}
           <div style={{ display: 'flex', borderBottom: '1px solid var(--sf-line)', padding: '0 14px' }}>
             {[
-              { id: 'predict' as const, label: 'Predict', count: markets.filter(m => m.status === 'active').length || null },
-              { id: 'chat'    as const, label: 'Chat',    count: chatMessages.length },
+              { id: 'predict' as const, label: 'Predict', count: activeMarkets.length || null },
+              { id: 'chat'    as const, label: 'Chat',    count: displayChat.length },
               { id: 'leader'  as const, label: 'Top Earners', count: null },
             ].map(t => (
               <button key={t.id} onClick={() => setDockTab(t.id)} className={`sf-tab ${dockTab === t.id ? 'on' : ''}`}>
@@ -1739,7 +2270,7 @@ const WatchPage: React.FC = () => {
                 </ClientOnly>
 
                 {/* Closing soon banner */}
-                {markets.find(m => {
+                {effectiveMarkets.find(m => {
                   const ms = new Date(m.expiresAt).getTime() - Date.now();
                   return ms > 0 && ms < 1000 * 60 * 60 * 2;
                 }) && (
@@ -1756,13 +2287,25 @@ const WatchPage: React.FC = () => {
                 )}
 
                 <ClientOnly>
-                  {markets.filter(m => m.status === 'active').length === 0 ? (
+                  {activeMarkets.length === 0 ? (
                     <div style={{ padding: 24, textAlign: 'center', borderRadius: 14, border: '1px dashed var(--sf-line-strong)', color: 'var(--sf-fg-3)' }}>
-                      <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>No active markets</p>
-                      <p style={{ fontSize: 11 }}>Type /predict in chat to create one</p>
+                      <div style={{ fontSize: 26, marginBottom: 8 }}>🎯</div>
+                      <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6, color: '#fff' }}>
+                        {isIdle ? 'Markets open with the show' : 'No active markets'}
+                      </p>
+                      <p style={{ fontSize: 11, marginBottom: 12 }}>
+                        {isIdle ? 'Live cams trigger live odds. First market drops at lights-on.' : 'Type /predict in chat or use the button below.'}
+                      </p>
+                      <button
+                        onClick={() => requireLogin('open the first market', () => setShowPredictModal(true))}
+                        className="sf-btn sf-btn-coral"
+                        style={{ height: 32, fontSize: 10, padding: '0 14px' }}
+                      >
+                        OPEN FIRST MARKET
+                      </button>
                     </div>
                   ) : (
-                    markets.filter(m => m.status === 'active').map(m => {
+                    activeMarkets.map(m => {
                       const userBet = userBets.find(b => b.marketId === m.id);
                       return (
                         <PredictionCard
@@ -1800,12 +2343,24 @@ const WatchPage: React.FC = () => {
             {dockTab === 'chat' && (
               <div className="sf-fade-in" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                  <span className="sf-pulse"></span>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: '#fff', letterSpacing: '0.1em' }}>{(chatMessages.length * 215).toLocaleString()} in chat</span>
-                  <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--sf-fg-3)' }}>SLOW MODE OFF</span>
+                  <span className="sf-pulse" style={isIdle ? { background: 'var(--sf-fg-3)', boxShadow: 'none' } : undefined}></span>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: '#fff', letterSpacing: '0.1em' }}>
+                    {isIdle ? 'Chat warming up' : `${(displayChat.length * 215).toLocaleString()} in chat`}
+                  </span>
+                  <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--sf-fg-3)' }}>{isIdle ? 'SHOW SOON' : 'SLOW MODE OFF'}</span>
                 </div>
+                {isIdle && displayChat.length === 0 && (
+                  <div style={{
+                    padding: 16, marginBottom: 8, textAlign: 'center',
+                    borderRadius: 12, border: '1px dashed var(--sf-line-strong)',
+                    color: 'var(--sf-fg-3)',
+                  }}>
+                    <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#fff', marginBottom: 4 }}>Be the first take</p>
+                    <p style={{ fontSize: 11, lineHeight: 1.4 }}>Drop a hot take. Lock the floor before lights-on.</p>
+                  </div>
+                )}
                 <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }} className="sf-no-scrollbar">
-                  {chatMessages.map(m => (
+                  {displayChat.map(m => (
                     <div key={m.id} style={{
                       padding: '8px 0',
                       borderBottom: '1px solid rgba(255,255,255,0.04)',
@@ -1866,9 +2421,21 @@ const WatchPage: React.FC = () => {
             {dockTab === 'leader' && (
               <div className="sf-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ fontSize: 11, color: 'var(--sf-fg-3)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>
-                  This week · resets Sunday 23:59
+                  {isIdle ? 'Last week · top earners' : 'This week · resets Sunday 23:59'}
                 </div>
-                {LEADERBOARD.map(l => (
+                {isIdle ? (
+                  <div style={{
+                    padding: 18,
+                    borderRadius: 12, background: 'rgba(255,176,32,0.06)',
+                    border: '1px dashed rgba(255,176,32,0.35)',
+                    color: 'var(--sf-fg-2)',
+                  }}>
+                    <div style={{ fontSize: 22, marginBottom: 6 }}>🏆</div>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Leaderboard resets weekly</div>
+                    <div style={{ fontSize: 11, lineHeight: 1.4, marginBottom: 12 }}>Win the first market tonight, claim the first slot.</div>
+                    <button onClick={() => requireLogin('claim a spot', () => setShowPredictModal(true))} className="sf-btn sf-btn-coral" style={{ height: 30, fontSize: 10, padding: '0 12px' }}>OPEN FIRST MARKET</button>
+                  </div>
+                ) : displayLeaderboard.map(l => (
                   <div key={l.rank} style={{
                     display: 'flex', alignItems: 'center', gap: 10,
                     padding: 10,
@@ -2080,6 +2647,9 @@ const WatchPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Floating Demo / Live toggle — subtle, persistent */}
+      <DemoToggle mode={dataMode} onChange={setDataMode} />
     </div>
   );
 };

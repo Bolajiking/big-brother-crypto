@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import LivepeerPlayer from './LivepeerPlayer';
 import ClientOnly from './ClientOnly';
+import SunArcIndicator from './SunArcIndicator';
+import { useDaylight } from '@/lib/daylight';
 import { usePredictionStore } from '@/stores/predictionStore';
 import { useUserStore } from '@/stores/userStore';
 import { MarketCreationData, PredictionMarket } from '@/types/prediction';
@@ -25,6 +27,8 @@ interface MobileLayoutProps {
   isAuthenticated?: boolean;
   userEmail?: string;
   onCreateMarket?: (data: MarketCreationData) => void;
+  dataMode?: 'demo' | 'real';
+  onDataModeChange?: (mode: 'demo' | 'real') => void;
 }
 
 type SheetState = 'closed' | 'half' | 'full';
@@ -82,7 +86,10 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
   isAuthenticated = false,
   userEmail,
   onCreateMarket,
+  dataMode = 'demo',
+  onDataModeChange,
 }) => {
+  const day = useDaylight({ mode: 'auto' });
   const [activeChannel, setActiveChannel] = useState(0);
   const [sheetTab, setSheetTab] = useState<SheetTab>('predict');
   const [sheetState, setSheetState] = useState<SheetState>('half');
@@ -176,8 +183,14 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
   }, [isDragging, handleDragMove, handleDragEnd]);
 
   const activeCam = cameras[activeChannel];
-  const activeMarket = markets.find(m => m.status === 'active');
   const otherCameras = cameras.map((cam, idx) => ({ cam, idx })).filter(({ idx }) => idx !== activeChannel);
+  const isIdle = dataMode === 'real';
+  const effectiveMarkets = isIdle ? [] : markets;
+  const activeMarkets = effectiveMarkets.filter(m => m.status === 'active');
+  const activeMarket = activeMarkets[0] || null;
+  const displayChat = isIdle
+    ? chatMessages.filter(m => !SEED_CHAT.find(s => s.id === m.id))
+    : chatMessages;
 
   const handlePickOption = (marketId: string, optionId: string) => {
     if (!isAuthenticated) { onRequireLogin?.(); return; }
@@ -253,7 +266,16 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
   }
 
   return (
-    <div className="sf-watch-root" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+    <div
+      className="sf-watch-root sf-daylight-root"
+      style={{
+        minHeight: '100vh', position: 'relative', overflow: 'hidden',
+        ['--sf-coral' as string]: day.accent,
+        ['--sf-coral-deep' as string]: day.accentSoft,
+        ['--sf-paper' as string]: day.paper,
+        ['--sf-paper-warm' as string]: day.paper2,
+      } as React.CSSProperties}
+    >
       {/* HEADER — paper */}
       <header style={{
         position: 'sticky', top: 0, zIndex: 40,
@@ -281,7 +303,33 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
         <span className="sf-display-italic" style={{ fontSize: 18, marginLeft: 8 }}>
           DAY <span style={{ color: 'var(--sf-coral)' }}>47</span>
         </span>
+        {/* Subtle demo / live toggle */}
+        {onDataModeChange && (
+          <button
+            onClick={() => onDataModeChange(dataMode === 'demo' ? 'real' : 'demo')}
+            title={dataMode === 'demo' ? 'Showing demo · tap for live' : 'Showing live · tap for demo'}
+            style={{
+              marginLeft: 6,
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              padding: '4px 8px', borderRadius: 999,
+              background: dataMode === 'demo' ? 'rgba(255,78,43,0.14)' : 'rgba(31,209,122,0.14)',
+              border: `1px solid ${dataMode === 'demo' ? 'rgba(255,78,43,0.4)' : 'rgba(31,209,122,0.4)'}`,
+              color: dataMode === 'demo' ? 'var(--sf-coral)' : '#1FD17A',
+              fontSize: 9, fontWeight: 900, letterSpacing: '0.14em',
+              textTransform: 'uppercase', cursor: 'pointer',
+            }}
+          >
+            <span style={{
+              width: 5, height: 5, borderRadius: 999,
+              background: dataMode === 'demo' ? 'var(--sf-coral)' : '#1FD17A',
+            }} />
+            {dataMode === 'demo' ? 'Demo' : 'Live'}
+          </button>
+        )}
         <div style={{ flex: 1 }} />
+        <div style={{ marginRight: 8 }}>
+          <SunArcIndicator state={day} dark={false} compact />
+        </div>
         <ClientOnly>
           <div style={{
             display: 'flex', alignItems: 'center', gap: 6,
@@ -301,22 +349,47 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
 
       {/* PLAYER */}
       <div style={{ position: 'relative', aspectRatio: '16/9', background: '#000' }}>
-        {activeCam ? (
+        {activeCam && !isIdle ? (
           <LivepeerPlayer playbackId={activeCam.playbackId} isMainPlayer={true} showStatus={false} className="w-full h-full" />
         ) : (
-          <PaletteFill palette="coral" />
+          <PaletteFill palette="coral">
+            {isIdle && (
+              <div style={{
+                position: 'absolute', inset: 0,
+                background: 'rgba(10,8,20,0.7)',
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                gap: 10, padding: 16, textAlign: 'center',
+              }}>
+                <span style={{
+                  padding: '4px 10px', borderRadius: 999,
+                  background: 'rgba(255,255,255,0.08)',
+                  color: 'rgba(255,255,255,0.7)',
+                  fontSize: 9, fontWeight: 900, letterSpacing: '0.18em',
+                }}>● OFFLINE · STREAM RESUMES SOON</span>
+                <h2 className="sf-display" style={{ fontSize: 18, color: '#fff', maxWidth: 280, lineHeight: 1.15 }}>
+                  House goes live shortly. Be the first one in.
+                </h2>
+                <button onClick={() => onDataModeChange?.('demo')} className="sf-btn sf-btn-coral" style={{ height: 32, fontSize: 10, padding: '0 14px' }}>
+                  SEE IT IN DEMO
+                </button>
+              </div>
+            )}
+          </PaletteFill>
         )}
         <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 6 }}>
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: 5,
-            padding: '3px 9px', borderRadius: 999,
-            background: 'var(--sf-live)', color: '#fff',
-            fontSize: 9, fontWeight: 900, letterSpacing: '0.16em',
-          }}>
-            <span className="sf-pulse" style={{ background: '#fff', boxShadow: '0 0 0 3px rgba(255,255,255,0.3)' }}></span>
-            LIVE
-          </span>
-          {showMobileWidgets && (
+          {!isIdle && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              padding: '3px 9px', borderRadius: 999,
+              background: 'var(--sf-live)', color: '#fff',
+              fontSize: 9, fontWeight: 900, letterSpacing: '0.16em',
+            }}>
+              <span className="sf-pulse" style={{ background: '#fff', boxShadow: '0 0 0 3px rgba(255,255,255,0.3)' }}></span>
+              LIVE
+            </span>
+          )}
+          {showMobileWidgets && !isIdle && (
             <span style={{
               background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)',
               padding: '4px 9px', borderRadius: 999,
@@ -408,7 +481,16 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
             </button>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
-            {otherCameras.map(({ cam, idx }) => (
+            {isIdle && Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} style={{
+                aspectRatio: '4/3', borderRadius: 10,
+                border: '1px dashed var(--sf-line-strong)',
+                background: 'rgba(255,255,255,0.02)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--sf-fg-3)', fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
+              }}>CAM {String(i + 1).padStart(2, '0')}</div>
+            ))}
+            {!isIdle && otherCameras.map(({ cam, idx }) => (
               <button
                 key={cam.id}
                 onClick={() => {
@@ -454,18 +536,65 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
         </div>
       )}
 
-      {/* SHOW META + CAST PILLS */}
+      {/* SHOW META + QUICK ACTIONS */}
       <div style={{ padding: '14px 14px 10px' }}>
         <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 6, fontSize: 10 }}>
           STARFACTOR · S01 · DAY 47 · {(activeCam?.name || 'MAIN').toUpperCase()}
         </div>
         <h1 className="sf-display" style={{ fontSize: 18, color: '#fff', marginBottom: 10, lineHeight: 1.1 }}>
-          {activeCam?.description || 'Live from the house. Tap any camera to switch.'}
+          {isIdle
+            ? 'Cameras wake at 19:00 WAT. Stay in the room.'
+            : activeCam?.description || 'Pick a room. Read the crowd. Back the moment.'}
         </h1>
+        {/* Quick-action icon row */}
+        <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+          <button title="Follow show" aria-label="Follow show"
+            onClick={() => onRequireLogin?.()}
+            className="sf-btn-icon" style={{ background: 'var(--sf-stage-2)', borderColor: 'var(--sf-line)', color: '#fff', height: 32, width: 32 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          </button>
+          <button title="Tip the cast" aria-label="Tip the cast"
+            onClick={() => onRequireLogin?.()}
+            className="sf-btn-icon" style={{ background: 'var(--sf-stage-2)', borderColor: 'var(--sf-line)', color: '#fff', height: 32, width: 32 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </button>
+          <button title="Send gift" aria-label="Send gift"
+            onClick={() => onRequireLogin?.()}
+            className="sf-btn-icon" style={{ background: 'var(--sf-stage-2)', borderColor: 'var(--sf-line)', color: '#fff', height: 32, width: 32 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7"/></svg>
+          </button>
+          <button title="Clip 30s" aria-label="Clip last 30s"
+            onClick={() => onRequireLogin?.()}
+            className="sf-btn-icon" style={{ background: 'var(--sf-stage-2)', borderColor: 'var(--sf-line)', color: '#fff', height: 32, width: 32 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/></svg>
+          </button>
+          <button title="Share" aria-label="Share"
+            onClick={() => navigator.clipboard?.writeText(window.location.href)}
+            className="sf-btn-icon" style={{ background: 'var(--sf-stage-2)', borderColor: 'var(--sf-line)', color: '#fff', height: 32, width: 32 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+          </button>
+        </div>
       </div>
 
       {/* HORIZONTAL CHANNEL RAIL */}
-      {viewMode === 'single' && (
+      {viewMode === 'single' && isIdle && (
+        <div style={{
+          padding: '0 14px 16px',
+          display: 'flex', gap: 8, overflowX: 'auto',
+        }} className="sf-no-scrollbar">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} style={{
+              flex: '0 0 140px', aspectRatio: '16/9',
+              borderRadius: 10,
+              border: '1px dashed var(--sf-line-strong)',
+              background: 'rgba(255,255,255,0.02)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--sf-fg-3)', fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
+            }}>CAM {String(i + 1).padStart(2, '0')}</div>
+          ))}
+        </div>
+      )}
+      {viewMode === 'single' && !isIdle && (
         <div style={{
           padding: '0 14px 16px',
           display: 'flex', gap: 8, overflowX: 'auto',
@@ -525,8 +654,8 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
         {/* Tab bar */}
         <div style={{ display: 'flex', borderBottom: '1px solid var(--sf-line)', padding: '0 14px' }}>
           {([
-            { id: 'predict', label: 'Predict', count: markets.filter(m => m.status === 'active').length },
-            { id: 'chat',    label: 'Chat',    count: chatMessages.length },
+            { id: 'predict', label: 'Predict', count: activeMarkets.length },
+            { id: 'chat',    label: 'Chat',    count: displayChat.length },
           ] as { id: SheetTab; label: string; count: number }[]).map(t => (
             <button key={t.id} onClick={() => { setSheetTab(t.id); if (sheetState === 'closed') setSheetState('half'); }} className={`sf-tab ${sheetTab === t.id ? 'on' : ''}`}>
               {t.label}
@@ -607,12 +736,27 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
               </button>
 
               <ClientOnly>
-                {markets.filter(m => m.status === 'active').length === 0 ? (
+                {activeMarkets.length === 0 ? (
                   <div style={{ padding: 18, textAlign: 'center', borderRadius: 14, border: '1px dashed var(--sf-line-strong)', color: 'var(--sf-fg-3)' }}>
-                    <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>No active markets</p>
+                    <div style={{ fontSize: 22, marginBottom: 6 }}>🎯</div>
+                    <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#fff', marginBottom: 4 }}>
+                      {isIdle ? 'Markets open with the show' : 'No active markets'}
+                    </p>
+                    <p style={{ fontSize: 11, lineHeight: 1.4, marginBottom: 10 }}>
+                      {isIdle ? 'Live cams trigger live odds. Be first.' : 'Type /predict in chat to make one.'}
+                    </p>
+                    <button
+                      onClick={() => {
+                        if (!isAuthenticated) { onRequireLogin?.(); return; }
+                        setShowMarketComposer(true);
+                        setSheetState('full');
+                      }}
+                      className="sf-btn sf-btn-coral"
+                      style={{ height: 30, fontSize: 10, padding: '0 12px' }}
+                    >OPEN FIRST MARKET</button>
                   </div>
                 ) : (
-                  markets.filter(m => m.status === 'active').map(m => (
+                  activeMarkets.map(m => (
                     <MarketCard key={m.id} market={m} onPick={(opt) => handlePickOption(m.id, opt)}
                       pickedOptionId={pickedBet?.marketId === m.id ? pickedBet.optionId : null}
                       userBetOptionId={userBets.find(b => b.marketId === m.id)?.optionId} />
@@ -624,8 +768,18 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
 
           {sheetTab === 'chat' && (
             <div className="sf-fade-in" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              {isIdle && (
+                <div style={{
+                  padding: 14, marginBottom: 8, textAlign: 'center',
+                  borderRadius: 12, border: '1px dashed var(--sf-line-strong)',
+                  color: 'var(--sf-fg-3)',
+                }}>
+                  <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#fff', marginBottom: 4 }}>Chat opens with the show</p>
+                  <p style={{ fontSize: 11, lineHeight: 1.4 }}>First takes drop the moment cameras go live.</p>
+                </div>
+              )}
               <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }} className="sf-no-scrollbar">
-                {chatMessages.map(m => (
+                {displayChat.map(m => (
                   <div key={m.id} style={{
                     padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.04)',
                     display: 'flex', gap: 8, alignItems: 'flex-start',
