@@ -45,6 +45,9 @@ const PALETTES: Record<string, { a: string; b: string; c: string }> = {
   ink:    { a: '#0E0A1F', b: '#1A1247', c: '#FF4E2B' },
 };
 
+const CONTACT_EMAIL = 'bolaji@chainfren.com';
+const contactHref = (subject: string) => `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}`;
+
 const Photo: React.FC<{ palette?: string; children?: React.ReactNode; style?: React.CSSProperties }> = ({
   palette = 'coral', children, style,
 }) => {
@@ -212,7 +215,7 @@ const Nav: React.FC = () => {
           <span className="sf-pulse"></span>
           CASTING SOON
         </span>
-        <Link href="/watch" className="sf-btn sf-btn-ghost sf-hide-mobile" style={{ height: 38, padding: '0 18px' }}>SEE PREVIEW</Link>
+        <Link href="/watch" className="sf-btn sf-btn-ghost sf-hide-mobile" style={{ height: 38, padding: '0 18px' }}>PREVIEW THE SHOW</Link>
         <a href="#cta" className="sf-btn sf-btn-coral" style={{ height: 38, padding: '0 14px', fontSize: 11 }}>JOIN WAITLIST</a>
       </div>
     </header>
@@ -255,10 +258,10 @@ const Hero: React.FC = () => {
   );
 
   const STATS = [
-    { v: '16',   l: 'Housemates Season 01' },
-    { v: '24/7', l: 'Multi-cam streaming', accent: 'var(--sf-amber)' },
-    { v: '0%',   l: 'Platform cut on payouts', accent: 'var(--sf-mint)' },
-    { v: 'Q4',   l: 'Season 01 launch window' },
+    { v: '16',   l: 'Housemates · Season 1' },
+    { v: '24/7', l: 'Multi-cam · every room', accent: 'var(--sf-amber)' },
+    { v: '42',   l: 'Days · 6 weeks', accent: 'var(--sf-mint)' },
+    { v: 'Q4',   l: '2026 · Lagos' },
   ];
 
   return (
@@ -284,16 +287,12 @@ const Hero: React.FC = () => {
       <div className="sf-hero-pad" style={{ position: 'relative', zIndex: 5, maxWidth: 1280, margin: '0 auto' }}>
         <Reveal>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '6px 14px',
-              background: 'rgba(255,78,43,0.10)',
-              border: '1px solid rgba(255,78,43,0.4)',
-              borderRadius: 999,
-            }}>
+            <Link href="/apply" className="sf-apply-pill" aria-label="Casting open — apply for Season 1">
               <span className="sf-pulse"></span>
-              <span className="sf-eyebrow" style={{ color: 'var(--sf-coral)', fontSize: 11 }}>SEASON 01 · ONE HOUSE · MULTI-CAM · CASTING SOON</span>
-            </span>
+              <span className="sf-eyebrow" style={{ color: 'var(--sf-coral)', fontSize: 11 }}>REALITY TV · LAGOS · SEASON 1 · Q4 2026</span>
+              <span className="sf-apply-cta sf-eyebrow" style={{ fontSize: 11 }}>APPLY</span>
+              <span className="sf-apply-arrow" aria-hidden="true">›</span>
+            </Link>
           </div>
         </Reveal>
 
@@ -303,20 +302,33 @@ const Hero: React.FC = () => {
             maxWidth: 920, letterSpacing: '-0.05em',
             lineHeight: 0.86, marginBottom: 28,
           }}>
-            One house. Every room.<br />
-            <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>Always-on cameras.</span><br />
-            Twenty-four seven.
+            Live reality TV<br />
+            where everybody gets paid.<br />
+            <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>Watch. Predict. Earn.</span>
           </h1>
         </Reveal>
 
         <Reveal delay={160}>
-          <p style={{
-            maxWidth: 600, fontSize: 18, lineHeight: 1.55,
-            color: 'var(--sf-fg-2)', marginBottom: 40,
-          }}>
-            Africa&apos;s first reality show that pays the audience. Sixteen housemates, multi-camera coverage, 24/7 — watch from any angle, predict
-            what happens next, and cash out your wins straight to your wallet. No SMS taxes. No platform cut. Just receipts.
-          </p>
+          <div style={{ maxWidth: 600, marginBottom: 40 }}>
+            <p style={{
+              fontSize: 18, lineHeight: 1.55,
+              color: 'var(--sf-fg-2)', margin: 0,
+            }}>
+              Live reality TV where viewers have skin in the game. Watch the house. Predict the drama. Earn from your takes.
+              <br />
+              Sixteen housemates, every room taped and live-streamed, six weeks.
+            </p>
+            <p style={{
+              marginTop: 18, marginBottom: 0,
+              fontSize: 11,
+              fontWeight: 300,
+              letterSpacing: '0.42em',
+              textTransform: 'uppercase',
+              color: 'var(--sf-fg-3)',
+            }}>
+              S1 <span style={{ opacity: 0.4, margin: '0 6px' }}>·</span> Q4 2026
+            </p>
+          </div>
         </Reveal>
 
         <Reveal delay={220}>
@@ -329,7 +341,7 @@ const Hero: React.FC = () => {
               APPLY TO BE CAST
             </Link>
             <Link href="/watch" className="sf-btn sf-btn-ghost" style={{ height: 56, padding: '0 24px', fontSize: 12 }}>
-              SEE THE PREVIEW →
+              PREVIEW THE SHOW →
             </Link>
           </div>
         </Reveal>
@@ -357,12 +369,12 @@ const Hero: React.FC = () => {
 
 const Ticker: React.FC = () => {
   const items = [
-    '★ Season 01 waitlist now open',
-    '🎬 Casting applications open in 3 weeks',
-    '💰 First 10,000 signups get a ₦500 starter pot at launch',
-    '📺 Watch the platform preview — see how the markets work',
-    '🏠 Multi-camera coverage across every key room — no edits, no cuts',
-    '⚡ Zero platform cut on payouts — wallet to wallet',
+    '★ Season 1 waitlist · open now',
+    '🎬 Casting open · Q4 2026 launch · Lagos',
+    '💰 First 10,000 sign-ups walk in with ₦500 already in the balance',
+    '📺 Preview the show — every camera, every market',
+    '🏠 Multi-camera. Every key room. No edits, no cuts.',
+    '⚡ Cash out in seconds',
   ];
   return (
     <div style={{
@@ -394,8 +406,8 @@ const Ticker: React.FC = () => {
 // ─────────────────────────────────────────────────────────────
 const Receipts: React.FC = () => {
   const stats = [
-    { v: '1.53B', l: 'Votes cast last BBNaija season', sub: 'Each one paid to vote. Zero paid back.' },
-    { v: '₦115B', l: 'In SMS revenue captured by telcos', sub: '~$72M from fans like you. Pure extraction.' },
+    { v: '1.53B', l: 'Votes cast last season of the country’s biggest reality show', sub: 'Each one paid to vote. Zero paid back.' },
+    { v: '₦115B', l: 'Captured by networks and telcos', sub: '~$72M from fans like you.' },
     { v: '60M',   l: 'Nigerians already predicting outcomes', sub: 'On Bet9ja, Sportybet, BetKing. Daily.' },
     { v: '$3.6B', l: 'Spent on those predictions every year', sub: 'Same demographic. Same phones. Different rails.' },
   ];
@@ -424,9 +436,7 @@ const Receipts: React.FC = () => {
             maxWidth: 640, fontSize: 17, lineHeight: 1.6,
             color: 'var(--sf-fg-2)', marginBottom: 48,
           }}>
-            Reality TV in Africa is a one-way street. Audiences make the show go, then watch a network and a few telcos
-            walk away with the money. We pulled the receipts. The gap between two of Nigeria&apos;s biggest cultural
-            behaviors is structural, not accidental — and it&apos;s exactly where Star Factor sits.
+            Reality TV in Africa is a one-way street. Audiences make the show go. The networks and the telcos walk away with the money. We pulled the receipts. The gap between two of Nigeria&apos;s biggest behaviours is structural — and it&apos;s exactly where Star Factor sits.
           </p>
         </Reveal>
 
@@ -508,7 +518,7 @@ const Channels: React.FC = () => {
             <div>
               <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 12, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ width: 24, height: 16 }}><CamGlyph kind="wide" color="var(--sf-coral)" /></span>
-                ONE HOUSE · MULTI-CAMERA · SCALING UP EVERY SEASON
+                MULTI-CAMERA · ONE HOUSE · 24/7
               </div>
               <h2 className="sf-display" style={{
                 fontSize: 'clamp(40px, 6vw, 76px)', color: '#fff',
@@ -520,7 +530,7 @@ const Channels: React.FC = () => {
             </div>
             <div style={{ maxWidth: 360, paddingBottom: 12 }}>
               <p style={{ fontSize: 15, lineHeight: 1.55, color: 'var(--sf-fg-2)' }}>
-                Multiple HD feeds rolling in parallel from every key room. Living room to diary room, kitchen to garden, garden to front door — switch like you&apos;re flipping seats in the same room. No edit. No cut. No spin.
+                Multiple HD feeds rolling in parallel from every key room — all live. Living room to diary, kitchen to garden, front door to pool deck — switch like you&apos;re flipping seats in the same room. No edit. No cut. No spin.
               </p>
               <Link href="/watch" className="sf-eyebrow" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -668,8 +678,8 @@ const HowItWorks: React.FC = () => {
       title: 'Markets open every minute.',
       body: 'Will a kiss happen tonight? Who wins the task? Who gets evicted? Stake from ₦100. Markets settle the moment it happens.' },
     { n: '03', eyebrow: 'EARN',    palette: 'mint',  color: '#1FD17A',
-      title: 'Cash out, wallet to wallet.',
-      body: 'Win, hold, withdraw. No platform cut on payouts. Your prediction history, your wallet, your money — yours.' },
+      title: 'Cash out, end-to-end.',
+      body: 'Win, hold, withdraw. Your predictions, your balance, your money — yours.' },
   ];
 
   return (
@@ -690,7 +700,7 @@ const HowItWorks: React.FC = () => {
               </h2>
             </div>
             <p style={{ fontSize: 16, lineHeight: 1.55, color: 'rgba(10,8,20,0.7)', maxWidth: 380, paddingBottom: 20 }}>
-              We opened every camera. We opened every market. Then we handed over the remote — and the wallet. Three taps to the wins.
+              Every camera, open. Every market, open. Then we handed over the remote — and the balance. Three taps to a win.
             </p>
           </div>
         </Reveal>
@@ -762,7 +772,7 @@ const MarketsPreview: React.FC = () => {
       ],
     },
     {
-      title: 'Who gets evicted Sunday?',
+      title: 'Who gets evicted this week?',
       sub: 'Weekly official market · 4 nominees',
       type: 'OFFICIAL',
       options: [
@@ -784,7 +794,7 @@ const MarketsPreview: React.FC = () => {
   ];
 
   return (
-    <section style={{
+    <section id="markets" style={{
       padding: 'clamp(56px, 8vw, 120px) clamp(14px, 4vw, 64px)',
       background: 'var(--sf-stage)',
       borderBottom: '1px solid var(--sf-line)',
@@ -811,7 +821,7 @@ const MarketsPreview: React.FC = () => {
               </h2>
             </div>
             <p style={{ fontSize: 14, color: 'var(--sf-fg-3)', lineHeight: 1.55, maxWidth: 360, paddingBottom: 18 }}>
-              Sample markets to show the format. From day one, every pool is real, every odd is on-chain, and every settlement clears the second it&apos;s called.
+              Sample markets to show the format. From day one, every pool is real and every settlement clears the second it&apos;s called — settled in front of every camera, in front of every viewer.
             </p>
           </div>
         </Reveal>
@@ -884,7 +894,13 @@ const MarketsPreview: React.FC = () => {
               <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>User-created markets are coming.</div>
               <div style={{ fontSize: 12, color: 'var(--sf-fg-3)', marginTop: 2 }}>Set the question, set the odds, settle on chain. Available from launch.</div>
             </div>
-            <button className="sf-btn sf-btn-ghost" style={{ height: 38, padding: '0 18px' }}>READ THE WHITEPAPER</button>
+            <a
+              href={contactHref('Star Factor - Whitepaper request')}
+              className="sf-btn sf-btn-ghost"
+              style={{ height: 38, padding: '0 18px' }}
+            >
+              REQUEST THE WHITEPAPER
+            </a>
           </div>
         </Reveal>
       </div>
@@ -902,7 +918,7 @@ const BuiltFor: React.FC = () => {
       headline: 'Get paid for paying attention.',
       palette: 'coral',
       accent: '#FF4E2B',
-      body: 'You already watched 100+ hours last season. You already had the right read on every eviction. Now your read is worth money. Predict from ₦100. Win, hold, or cash out — straight to your bank, no platform cut.',
+      body: 'You already watched 100+ hours last season. You already had the right read on every eviction. Now your read is worth money. Predict from ₦100. Win, hold, or cash out — straight to your bank with clear receipts.',
       bullets: [
         { k: 'Predict from ₦100', v: 'Bet small. Win in real time.' },
         { k: 'Cash out wallet-to-bank', v: 'Paystack. Instant. Naira out.' },
@@ -915,10 +931,10 @@ const BuiltFor: React.FC = () => {
       headline: 'Get paid while the cameras roll.',
       palette: 'violet',
       accent: '#6B3FE5',
-      body: 'Traditional reality TV pays you in fame after the fact — and only if you make it to the end. Star Factor pays you while you&apos;re in the house. Tips, fan support, and a $30,000 grand prize. The audience picks who they&apos;re backing in real time.',
+      body: "Traditional reality TV pays you in fame after the fact — and only if you make it to the end. Star Factor pays you while you're in the house. Tips, fan support, and a $30,000 grand prize. The audience picks who they're backing in real time.",
       bullets: [
         { k: '$30K grand prize', v: 'Plus weekly challenge cash.' },
-        { k: 'Direct fan tips', v: '70% to you, in-show, every day.' },
+        { k: 'Direct fan tips', v: '100% to you, in-show, every day.' },
         { k: '42 days, multi-cam', v: 'Build your audience while you live.' },
       ],
       cta: { label: 'APPLY TO BE CAST', href: '/apply' },
@@ -934,7 +950,7 @@ const BuiltFor: React.FC = () => {
         { k: 'Sponsor a market', v: 'Be the brand that pays the winners.' },
         { k: 'Real-time engagement data', v: 'Per minute, per cast member.' },
       ],
-      cta: { label: 'PARTNER WITH US', href: 'mailto:bolaji@chainfren.com?subject=Star%20Factor%20%E2%80%94%20Sponsor%20Inquiry' },
+      cta: { label: 'PARTNER WITH US', href: contactHref('Star Factor - Sponsor Inquiry') },
     },
   ];
 
@@ -1053,13 +1069,13 @@ const Casting: React.FC = () => {
         <Reveal>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 56, gap: 32, flexWrap: 'wrap' }}>
             <div>
-              <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 12 }}>● CASTING SOON · 16 HOUSEMATES</div>
+              <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 12 }}>● CASTING OPEN · 16 HOUSEMATES · LAGOS</div>
               <h2 className="sf-display" style={{ fontSize: 'clamp(48px, 7vw, 84px)', color: '#fff', letterSpacing: '-0.05em', lineHeight: 0.9, maxWidth: 880 }}>
                 Sixteen housemates. <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>One winner.</span>
               </h2>
             </div>
             <p style={{ fontSize: 16, lineHeight: 1.55, color: 'var(--sf-fg-2)', maxWidth: 380, paddingBottom: 18 }}>
-              Sixteen people. Multi-cam coverage. Forty-two days. One $30,000 grand prize, plus weekly challenge cash and direct fan tips while you&apos;re still in the house. Apply yourself, or nominate the friend you know is built for it.
+              Sixteen people. One house. Forty-two days. $30,000 grand prize, plus weekly challenge cash and direct fan tips while you&apos;re still in the house. Apply yourself, or nominate the friend you know is built for it.
             </p>
           </div>
         </Reveal>
@@ -1114,17 +1130,23 @@ const Casting: React.FC = () => {
             display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap',
           }}>
             <div style={{ flex: 1, minWidth: 280 }}>
-              <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)' }}>★ APPLICATIONS OPEN SOON</div>
+              <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)' }}>★ APPLICATIONS OPEN · LAGOS · Q4 2026</div>
               <div className="sf-display" style={{ fontSize: 32, color: '#fff', marginTop: 8, marginBottom: 6, letterSpacing: '-0.03em' }}>
-                Think you&apos;ve got it? <span style={{ fontStyle: 'italic' }}>Get on the list.</span>
+                The old shows pay you in fame. <span style={{ fontStyle: 'italic' }}>Star Factor pays you while.</span>
               </div>
               <div style={{ fontSize: 13, color: 'var(--sf-fg-2)' }}>
-                18+, residents of any African country. Drop your handle and we&apos;ll send the application the day it opens.
+                18+, Lagos-based or relocatable for six weeks. Apply now — shortlist is rolling.
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <Link href="/apply" className="sf-btn sf-btn-coral" style={{ height: 48, padding: '0 22px', fontSize: 12 }}>APPLY TO BE CAST</Link>
-              <button className="sf-btn sf-btn-ghost" style={{ height: 48, padding: '0 22px', fontSize: 12 }}>NOMINATE A FRIEND</button>
+              <a
+                href={contactHref('Star Factor - Nominate a cast member')}
+                className="sf-btn sf-btn-ghost"
+                style={{ height: 48, padding: '0 22px', fontSize: 12 }}
+              >
+                NOMINATE A FRIEND
+              </a>
             </div>
           </div>
         </Reveal>
@@ -1135,14 +1157,14 @@ const Casting: React.FC = () => {
 
 const Mechanics: React.FC = () => {
   const ms = [
-    { tag: 'OFFICIAL', icon: '★',  color: 'var(--sf-amber)',  q: 'Who gets evicted Sunday?',     body: 'Big-pool markets every Sunday. House nominees. Open all week.' },
+    { tag: 'OFFICIAL', icon: '★',  color: 'var(--sf-amber)',  q: 'Who gets evicted this week?', body: 'Big-pool eviction markets every week. House nominees. Open all week.' },
     { tag: 'LIVE',     icon: '🔥', color: '#FF4E2B',           q: 'Will a kiss happen tonight?',  body: 'Daily binary markets. Settle as soon as it happens.' },
     { tag: 'TASK',     icon: '⚡', color: 'var(--sf-mint)',    q: "Who wins tonight's task?",     body: 'Open during challenges. Closes when the buzzer goes.' },
     { tag: 'USER',     icon: '👤', color: 'var(--sf-violet)',  q: 'Argument before dinner?',      body: 'You set the question. You set the odds. We settle it.' },
   ];
 
   return (
-    <section style={{
+    <section id="mechanics" style={{
       padding: 'clamp(56px, 8vw, 120px) clamp(14px, 4vw, 64px)',
       background: 'var(--sf-stage-2)',
       borderTop: '1px solid var(--sf-line)',
@@ -1157,7 +1179,7 @@ const Mechanics: React.FC = () => {
               <span style={{ fontStyle: 'italic', color: 'var(--sf-amber)' }}>real stakes.</span>
             </h2>
             <p style={{ fontSize: 15, color: 'var(--sf-fg-2)', lineHeight: 1.6, marginBottom: 28, maxWidth: 460 }}>
-              Cash payouts settled in seconds. Wallet to wallet. Zero platform cut on payouts — the markets fund themselves from the pool. Stablecoin rails under the hood, Naira on the surface. Buy in like you&apos;re buying airtime; cash out to your bank in seconds.
+              Cash payouts in seconds. Pay in Naira like you&apos;re buying airtime. Cash out to your bank, or hold it for the next market. Settled in front of every camera, in front of every viewer.
             </p>
 
             <div style={{
@@ -1175,8 +1197,8 @@ const Mechanics: React.FC = () => {
                 color: '#1A0F00', fontWeight: 900, fontSize: 28, flexShrink: 0,
               }}>★</div>
               <div>
-                <div className="sf-display" style={{ fontSize: 44, color: '#fff', letterSpacing: '-0.04em' }}>0%</div>
-                <div className="sf-eyebrow" style={{ color: 'var(--sf-fg-3)', marginTop: 4 }}>PLATFORM CUT ON PAYOUTS · EVER</div>
+                <div className="sf-display" style={{ fontSize: 44, color: '#fff', letterSpacing: '-0.04em' }}>42</div>
+                <div className="sf-eyebrow" style={{ color: 'var(--sf-fg-3)', marginTop: 4 }}>DAYS · 6 WEEKS · SEASON 01</div>
               </div>
             </div>
           </div>
@@ -1229,8 +1251,8 @@ const Timeline: React.FC = () => {
   const steps = [
     { phase: 'NOW',         title: 'Waitlist open',                body: 'Get on the list — first 10,000 signups get a starter pot when we go live.', color: '#FF4E2B', live: true },
     { phase: 'NEXT',        title: 'Casting opens',                body: 'Open applications for 16 housemate slots. Rolling shortlist published weekly.', color: '#F2B544' },
-    { phase: 'PRE-LAUNCH',  title: 'Cast reveal & house build',    body: 'Final 8 announced. Cameras installed. Markets primed. Director’s booth opens to early backers.', color: '#6B3FE5' },
-    { phase: 'LAUNCH',      title: 'Season 01 goes live',          body: '42 days. Multi-cam coverage. 24/7 streaming. Eviction every Sunday at 19:00 WAT.', color: '#1FD17A', big: true },
+    { phase: 'PRE-LAUNCH',  title: 'Cast reveal & house build',    body: 'Final 16 announced. Cameras installed. Markets primed. Director’s booth opens to early backers.', color: '#6B3FE5' },
+    { phase: 'LAUNCH',      title: 'Season 01 goes live',          body: '42 days. Multi-cam coverage. 24/7 streaming. Evictions every week.', color: '#1FD17A', big: true },
   ];
 
   return (
@@ -1362,7 +1384,7 @@ const FinalCTA: React.FC = () => {
             fontSize: 19, lineHeight: 1.5, color: 'var(--sf-fg-2)',
             maxWidth: 600, margin: '0 auto 48px',
           }}>
-            The cast hears the chat. The markets clear in real time. The evictions are decided by you. Get on the list — first 10,000 walk in with a ₦500 starter pot already in the wallet.
+            The cast hears the chat. The markets clear in real time. The evictions are decided by you. Get on the list — the first 10,000 walk in with ₦500 already in the balance.
           </p>
         </Reveal>
 
@@ -1431,10 +1453,54 @@ const FinalCTA: React.FC = () => {
 
 const Footer: React.FC = () => {
   const cols = [
-    { title: 'PRODUCT', items: ['Cameras', 'How it works', 'Markets preview', 'Watch the demo'] },
-    { title: 'JOIN',    items: ['Waitlist', 'Apply to be cast', 'Nominate someone', 'Partner with us'] },
-    { title: 'LEARN',   items: ['FAQ', 'Whitepaper', 'How payouts work', 'Responsible play'] },
-    { title: 'COMPANY', items: ['About', 'Press kit', 'Careers', 'Contact'] },
+    {
+      title: 'PRODUCT',
+      items: [
+        { label: 'Cameras', href: '#cameras' },
+        { label: 'How it works', href: '#how' },
+        { label: 'Markets preview', href: '#markets' },
+        { label: 'Watch the demo', href: '/watch' },
+      ],
+    },
+    {
+      title: 'JOIN',
+      items: [
+        { label: 'Waitlist', href: '#cta' },
+        { label: 'Apply to be cast', href: '/apply' },
+        { label: 'Nominate someone', href: contactHref('Star Factor - Nominate a cast member') },
+        { label: 'Partner with us', href: contactHref('Star Factor - Sponsor inquiry') },
+      ],
+    },
+    {
+      title: 'LEARN',
+      items: [
+        { label: 'FAQ', href: '#how' },
+        { label: 'Whitepaper', href: contactHref('Star Factor - Whitepaper request') },
+        { label: 'How payouts work', href: '#mechanics' },
+        { label: 'Responsible play', href: contactHref('Star Factor - Responsible play') },
+      ],
+    },
+    {
+      title: 'COMPANY',
+      items: [
+        { label: 'About', href: '#built-for' },
+        { label: 'Press kit', href: contactHref('Star Factor - Press kit') },
+        { label: 'Careers', href: contactHref('Star Factor - Careers') },
+        { label: 'Contact', href: contactHref('Star Factor - Contact') },
+      ],
+    },
+  ];
+  const socialLinks = [
+    { label: 'X', href: 'https://x.com/starfactortv' },
+    { label: 'IG', href: 'https://instagram.com/starfactortv' },
+    { label: 'TT', href: 'https://tiktok.com/@starfactortv' },
+    { label: 'YT', href: 'https://youtube.com/@starfactortv' },
+  ];
+  const legalLinks = [
+    { label: 'Privacy', href: contactHref('Star Factor - Privacy policy') },
+    { label: 'Terms', href: contactHref('Star Factor - Terms') },
+    { label: 'Responsible play', href: contactHref('Star Factor - Responsible play') },
+    { label: 'Cookies', href: contactHref('Star Factor - Cookie policy') },
   ];
   return (
     <footer style={{
@@ -1453,11 +1519,21 @@ const Footer: React.FC = () => {
             <SFWordmark size={28} />
             <p style={{ fontSize: 14, color: 'var(--sf-fg-2)', lineHeight: 1.55, marginTop: 18, maxWidth: 320 }}>
               Africa&apos;s first reality show that pays its audience. One house, multi-camera coverage, real-money prediction markets,
-              and zero platform cut on payouts. Built in Lagos for the room watching.
+              and transparent wallet-to-bank payouts. Built in Lagos for the room watching.
             </p>
             <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
-              {['X', 'IG', 'TT', 'YT'].map(s => (
-                <button key={s} className="sf-btn-icon" style={{ width: 40, height: 40, fontSize: 11, fontWeight: 900 }}>{s}</button>
+              {socialLinks.map(s => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`Star Factor on ${s.label}`}
+                  className="sf-btn-icon"
+                  style={{ width: 40, height: 40, fontSize: 11, fontWeight: 900 }}
+                >
+                  {s.label}
+                </a>
               ))}
             </div>
           </div>
@@ -1466,7 +1542,14 @@ const Footer: React.FC = () => {
               <div className="sf-eyebrow" style={{ color: '#fff', marginBottom: 18 }}>{c.title}</div>
               <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 12, padding: 0, margin: 0 }}>
                 {c.items.map(it => (
-                  <li key={it} style={{ fontSize: 13, color: 'var(--sf-fg-2)', cursor: 'pointer' }}>{it}</li>
+                  <li key={it.label}>
+                    <a
+                      href={it.href}
+                      style={{ fontSize: 13, color: 'var(--sf-fg-2)', textDecoration: 'none' }}
+                    >
+                      {it.label}
+                    </a>
+                  </li>
                 ))}
               </ul>
             </div>
@@ -1482,8 +1565,14 @@ const Footer: React.FC = () => {
             © {new Date().getFullYear()} Starfactor TV · Lagos, Nigeria · A Chainfren product · All rights reserved.
           </div>
           <div style={{ display: 'flex', gap: 24 }}>
-            {['Privacy', 'Terms', 'Responsible play', 'Cookies'].map(s => (
-              <span key={s} style={{ fontSize: 12, color: 'var(--sf-fg-3)', cursor: 'pointer' }}>{s}</span>
+            {legalLinks.map(s => (
+              <a
+                key={s.label}
+                href={s.href}
+                style={{ fontSize: 12, color: 'var(--sf-fg-3)', textDecoration: 'none' }}
+              >
+                {s.label}
+              </a>
             ))}
           </div>
         </div>

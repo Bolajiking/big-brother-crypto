@@ -70,6 +70,14 @@ const CAST: CastMember[] = [
   { name: 'Femi',    handle: 'femi.t',    city: 'Lagos',   age: 28, color: '#FF1F3D', odds: 8.4, status: 'Eviction risk',  palette: 'rose' },
   { name: 'Zainab',  handle: 'z_b',       city: 'Kaduna',  age: 25, color: '#5ACDFF', odds: 11,  status: 'Sleeping',       palette: 'sky' },
   { name: 'Chuka',   handle: 'chux',      city: 'Port H.', age: 29, color: '#FFB020', odds: 14,  status: 'Cooking',        palette: 'gold' },
+  { name: 'Sade',    handle: 'sade.live', city: 'Akure',   age: 24, color: '#C8EB6D', odds: 16,  status: 'In garden',      palette: 'mint' },
+  { name: 'Musa',    handle: 'musa.ng',   city: 'Kano',    age: 30, color: '#8DAAFF', odds: 18,  status: 'Strategy',       palette: 'violet' },
+  { name: 'Ife',     handle: 'ife_m',     city: 'Benin',   age: 23, color: '#FF7A59', odds: 20,  status: 'Cooking',        palette: 'coral' },
+  { name: 'Dara',    handle: 'dara.wav',  city: 'Lagos',   age: 26, color: '#C4A5FF', odds: 22,  status: 'Chilling',       palette: 'night' },
+  { name: 'Efe',     handle: 'efe.delta', city: 'Warri',   age: 27, color: '#7EE0FF', odds: 24,  status: 'Gym',            palette: 'sky' },
+  { name: 'Lola',    handle: 'lola_lit',  city: 'Ogun',    age: 22, color: '#FF6B8A', odds: 26,  status: 'In task',        palette: 'rose' },
+  { name: 'Korede',  handle: 'korede.k',  city: 'Ilorin',  age: 28, color: '#FFD166', odds: 28,  status: 'Diary queue',    palette: 'gold' },
+  { name: 'Nneka',   handle: 'nneka_n',   city: 'Owerri',  age: 25, color: '#44D7A8', odds: 30,  status: 'Pool deck',      palette: 'mint' },
 ];
 
 const SCHEDULE: ScheduleSlot[] = [
@@ -146,11 +154,19 @@ const CAST_POSITIONS: { name: string; color: string; x: number; y: number }[] = 
   { name: 'Femi',   color: '#FF1F3D', x: 90,  y: 200 },
   { name: 'Zainab', color: '#5ACDFF', x: 670, y: 80 },
   { name: 'Chuka',  color: '#FFB020', x: 480, y: 70 },
+  { name: 'Sade',   color: '#C8EB6D', x: 250, y: 205 },
+  { name: 'Musa',   color: '#8DAAFF', x: 315, y: 205 },
+  { name: 'Ife',    color: '#FF7A59', x: 455, y: 205 },
+  { name: 'Dara',   color: '#C4A5FF', x: 535, y: 205 },
+  { name: 'Efe',    color: '#7EE0FF', x: 705, y: 205 },
+  { name: 'Lola',   color: '#FF6B8A', x: 700, y: 115 },
+  { name: 'Korede', color: '#FFD166', x: 520, y: 96 },
+  { name: 'Nneka',  color: '#44D7A8', x: 600, y: 205 },
 ];
 
 const TICKER_MESSAGES = [
   '🔥 Kemi & Tunde argument · The Mansion',
-  '💰 ₦902K eviction pool open until Sunday 19:00',
+  '💰 ₦902K eviction pool open all week',
   '⚡ Pool task in 1h 22m · Team Sun 1.9x · Team Moon 2.0x',
   '👀 Bayo heading to Diary Room',
   '🎯 NaijaSage ₦412K won this week',
@@ -218,7 +234,7 @@ const optionFill = (idx: number, picked = false) => {
 const PRODUCT_STACK = [
   { kicker: 'Watch', title: 'Switch any room. Never lose stage.', copy: 'Mansion, Pool, Kitchen, Diary — all live, one tap.', stat: '8 cams', color: '#FF4E2B' },
   { kicker: 'Predict', title: 'Back the moment. Stay in stream.', copy: 'Markets ride the side rail. No tabs.', stat: '₦902K', color: '#1FD17A' },
-  { kicker: 'Vote', title: 'Save your fav. Watch the pool move.', copy: 'Sunday eviction. Fan stakes show real-time.', stat: 'Sun 19:00', color: '#FF1F3D' },
+  { kicker: 'Vote', title: 'Save your fav. Watch the pool move.', copy: 'Weekly eviction. Fan stakes show real-time.', stat: 'Weekly', color: '#FF1F3D' },
   { kicker: 'Earn', title: 'Cash out without leaving.', copy: 'Stake, clout, and cash-out one tap from chat.', stat: '+12K', color: '#F2B544' },
 ];
 
@@ -675,7 +691,7 @@ const DemoToggle: React.FC<{
         opacity: hover ? 1 : 0.78,
         transition: 'opacity 220ms, box-shadow 220ms',
       }}
-      title={mode === 'demo' ? 'Showing demo data — switch to live' : 'Showing live data — switch to demo'}
+      title={mode === 'demo' ? "You're previewing how Star Factor plays during a live show. Tap for live." : 'This is the live state. Tap to preview the experience.'}
     >
       {(['demo', 'real'] as const).map(m => (
         <button
@@ -867,7 +883,9 @@ const HouseHeatMap: React.FC<{
             </button>
           )}
           <span style={{ fontSize: 11, color: 'var(--sf-fg-2)' }}>
-            Tap a room → primary cam · Tap a name → follow
+            {isIdle
+              ? 'The house is dark. Heat shows where the room is hottest. Right now: nowhere.'
+              : 'Tap a room → primary cam · Tap a name → follow'}
           </span>
         </div>
       </div>
@@ -1467,17 +1485,17 @@ const WatchPage: React.FC = () => {
                             fontSize: 10, fontWeight: 900, letterSpacing: '0.18em',
                           }}>● OFFLINE · STREAM RESUMES SOON</div>
                           <h2 className="sf-display" style={{ fontSize: 32, color: '#fff', maxWidth: 520, lineHeight: 1.1 }}>
-                            The house is quiet. Be the first one watching.
+                            House wakes at lights-on. Stay in the room.
                           </h2>
                           <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, maxWidth: 460, lineHeight: 1.5 }}>
-                            Cameras stream the moment cast wakes. Open a market, drop a chat, or flip to demo to feel the full experience.
+                            Cameras. Cast. Markets. Everything fires when the show fires.
                           </p>
                           <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                            <button onClick={() => setDataMode('demo')} className="sf-btn sf-btn-coral" style={{ height: 38, fontSize: 11, padding: '0 16px' }}>
-                              SEE IT IN DEMO
+                            <button onClick={() => requireLogin('get notified when the show goes live')} className="sf-btn sf-btn-coral" style={{ height: 38, fontSize: 11, padding: '0 16px' }}>
+                              NOTIFY ME
                             </button>
-                            <button onClick={() => requireLogin('open the first market', () => setShowPredictModal(true))} className="sf-btn sf-btn-paper" style={{ height: 38, fontSize: 11, padding: '0 16px' }}>
-                              OPEN A MARKET
+                            <button onClick={() => setDataMode('demo')} className="sf-btn sf-btn-paper" style={{ height: 38, fontSize: 11, padding: '0 16px' }}>
+                              PREVIEW THE EXPERIENCE
                             </button>
                           </div>
                         </div>
@@ -1641,7 +1659,7 @@ const WatchPage: React.FC = () => {
                 </div>
                 <h1 className="sf-display" style={{ fontSize: 36, color: '#fff', marginBottom: 12, maxWidth: 720 }}>
                   {isIdle
-                    ? 'House goes live shortly. Stay in the room.'
+                    ? 'House wakes at lights-on. Stay in the room.'
                     : activeCam?.description || 'Pick a room. Read the crowd. Back the moment.'}
                 </h1>
                 <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
@@ -1660,7 +1678,7 @@ const WatchPage: React.FC = () => {
                         ))}
                       </div>
                       <span style={{ fontSize: 12, color: 'var(--sf-fg-2)' }}>
-                        <span style={{ color: '#fff', fontWeight: 800 }}>{CAST.slice(0, 3).map(c => c.name).join(', ')}</span> + 5 in house
+                        <span style={{ color: '#fff', fontWeight: 800 }}>{CAST.slice(0, 3).map(c => c.name).join(', ')}</span> + {CAST.length - 3} in house
                       </span>
                     </div>
                   )}
@@ -1756,7 +1774,7 @@ const WatchPage: React.FC = () => {
                   }}>👥</div>
                   <div>
                     <div style={{ fontSize: 14, color: '#fff', fontWeight: 800 }}>Cast revealed at lights-on</div>
-                    <div style={{ fontSize: 12, color: 'var(--sf-fg-3)', marginTop: 2 }}>Names, odds and BACK buttons drop the moment cameras flip live.</div>
+                    <div style={{ fontSize: 12, color: 'var(--sf-fg-3)', marginTop: 2 }}>Names. Odds. Stories. The lot. Everything drops the moment cameras flip live.</div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
@@ -1933,7 +1951,7 @@ const WatchPage: React.FC = () => {
                   <div>
                     <div className="sf-eyebrow" style={{ color: 'var(--sf-amber)', marginBottom: 4 }}>PREDICT &amp; EARN</div>
                     <div style={{ fontSize: 14, color: '#fff', fontWeight: 800 }}>Markets open with the show</div>
-                    <div style={{ fontSize: 12, color: 'var(--sf-fg-3)', marginTop: 2 }}>Live cams trigger live odds. Be first — open the first market yourself.</div>
+                    <div style={{ fontSize: 12, color: 'var(--sf-fg-3)', marginTop: 2 }}>Cameras flip on, odds flip on. You can be the first market on the books.</div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
@@ -2080,7 +2098,7 @@ const WatchPage: React.FC = () => {
               minHeight: 240,
             }}>
               <div>
-                <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 12 }}>YOUR WALLET</div>
+                <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 12 }}>YOUR BALANCE</div>
                 <h3 className="sf-display" style={{ fontSize: 26, color: 'var(--sf-stage)' }}>Stake. Win. Cash out.</h3>
                 <p style={{ color: 'rgba(10,8,20,0.66)', fontSize: 13, lineHeight: 1.55, marginTop: 8 }}>
                   Balance, bet bar, leaderboard — never out of reach.
@@ -2421,7 +2439,7 @@ const WatchPage: React.FC = () => {
             {dockTab === 'leader' && (
               <div className="sf-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ fontSize: 11, color: 'var(--sf-fg-3)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>
-                  {isIdle ? 'Last week · top earners' : 'This week · resets Sunday 23:59'}
+                  {isIdle ? 'Last week · top earners' : 'This week · weekly reset'}
                 </div>
                 {isIdle ? (
                   <div style={{

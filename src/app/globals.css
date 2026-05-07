@@ -896,6 +896,56 @@ body {
   display: inline-block;
 }
 
+/* Apply-pill (clickable eyebrow → /apply) */
+.sf-apply-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(255,78,43,0.10);
+  border: 1px solid rgba(255,78,43,0.40);
+  border-radius: 999px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 220ms ease, border-color 220ms ease, transform 220ms ease, box-shadow 220ms ease;
+}
+.sf-apply-pill .sf-apply-arrow {
+  display: inline-block;
+  margin-left: 2px;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--sf-coral);
+  opacity: 0.55;
+  transform: translateX(0);
+  transition: transform 220ms ease, opacity 220ms ease;
+}
+.sf-apply-pill:hover {
+  background: rgba(255,78,43,0.18);
+  border-color: rgba(255,78,43,0.75);
+  box-shadow: 0 0 0 4px rgba(255,78,43,0.10);
+}
+.sf-apply-pill:hover .sf-apply-arrow {
+  opacity: 1;
+  transform: translateX(3px);
+}
+.sf-apply-pill .sf-apply-cta {
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  margin-left: 0;
+  color: var(--sf-coral);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  transition: max-width 280ms ease, opacity 220ms ease, margin-left 220ms ease;
+}
+.sf-apply-pill:hover .sf-apply-cta {
+  max-width: 80px;
+  opacity: 1;
+  margin-left: 6px;
+}
+
 /* Reaction float */
 @keyframes sf-float {
   0%   { transform: translateY(0)    scale(0.4); opacity: 0; }

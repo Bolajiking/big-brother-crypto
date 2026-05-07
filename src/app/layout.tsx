@@ -11,8 +11,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <title>Star Factor - Africa&apos;s First Interactive Reality TV</title>
-        <meta name="description" content="Africa's first Interactive Reality TV platform. Watch, Predict, Earn" />
+        <title>Star Factor · Watch. Predict. Earn.</title>
+        <meta name="description" content="Live reality TV with skin in the game. Watch the house. Predict the drama. Earn from your takes. Lagos · Q4 2026." />
 
         {/* Inter Display Font */}
         <link rel="preconnect" href="https://rsms.me/" />
@@ -21,8 +21,8 @@ export default function RootLayout({
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://starfactor.tv/" />
-        <meta property="og:title" content="Star Factor - Africa's First Interactive Reality TV" />
-        <meta property="og:description" content="Africa's first Interactive Reality TV platform. Watch, Predict, Earn" />
+        <meta property="og:title" content="Star Factor · Watch. Predict. Earn." />
+        <meta property="og:description" content="Live reality TV with skin in the game. Watch the house. Predict the drama. Earn from your takes. Lagos · Q4 2026." />
         <meta property="og:image" content="https://starfactor.tv/starfactor.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="1200" />
@@ -31,8 +31,8 @@ export default function RootLayout({
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:url" content="https://starfactor.tv/" />
-        <meta name="twitter:title" content="Star Factor - Africa's First Interactive Reality TV" />
-        <meta name="twitter:description" content="Africa's first Interactive Reality TV platform. Watch, Predict, Earn" />
+        <meta name="twitter:title" content="Star Factor · Watch. Predict. Earn." />
+        <meta name="twitter:description" content="Live reality TV with skin in the game. Watch the house. Predict the drama. Earn from your takes. Lagos · Q4 2026." />
         <meta name="twitter:image" content="https://starfactor.tv/starfactor.png" />
         <meta name="twitter:site" content="@starfactortv" />
         <meta name="twitter:creator" content="@starfactortv" />

@@ -226,15 +226,14 @@ const ApplyPage: React.FC = () => {
             <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>We&apos;ll be in touch.</span>
           </h1>
           <p style={{ fontSize: 16, lineHeight: 1.6, color: 'var(--sf-fg-2)', marginBottom: 32 }}>
-            Thanks for putting yourself forward for Star Factor Season 01. We&apos;ll watch every video and reach out
-            to shortlisted applicants within 14 days of casting close. Keep an eye on <b style={{ color: '#fff' }}>{formData.email}</b> and your WhatsApp.
+            Thanks for putting yourself forward for Star Factor Season 1. We&apos;ll watch every video and reach out to shortlisted applicants on a rolling basis. Keep an eye on <b style={{ color: '#fff' }}>{formData.email}</b> and your WhatsApp.
           </p>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href="/" className="sf-btn sf-btn-coral" style={{ height: 46, padding: '0 22px', fontSize: 12 }}>
               BACK TO HOME
             </Link>
             <Link href="/watch" className="sf-btn sf-btn-ghost" style={{ height: 46, padding: '0 22px', fontSize: 12 }}>
-              SEE THE PREVIEW →
+              PREVIEW THE SHOW →
             </Link>
           </div>
         </div>
@@ -269,7 +268,7 @@ const ApplyPage: React.FC = () => {
         }}>
           <Link href="/" style={{ display: 'inline-flex' }}><SFWordmark size={20} /></Link>
           <span className="sf-eyebrow sf-hide-mobile" style={{ color: 'var(--sf-stage)', marginLeft: 12 }}>
-            ● SEASON 01 · CASTING APPLICATION
+            ● SEASON 1 · LAGOS · Q4 2026 · CASTING OPEN
           </span>
           <div style={{ flex: 1 }} />
           <div className="sf-hide-mobile">
@@ -290,21 +289,35 @@ const ApplyPage: React.FC = () => {
       }}>
         <div style={{ maxWidth: 980, margin: '0 auto' }}>
           <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 12 }}>
-            ● APPLY · 16 HOUSEMATE SLOTS
+            ● 16 HOUSEMATES · ONE WINNER · Q4 2026
           </div>
           <h1 className="sf-display" style={{
             fontSize: 'clamp(44px, 8vw, 96px)', letterSpacing: '-0.05em',
             lineHeight: 0.92, color: 'var(--sf-stage)',
             marginBottom: 14, maxWidth: 880,
           }}>
-            Sixteen housemates.<br />
-            <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>One winner.</span> Yours?
+            BBNaija makes you famous after.<br />
+            <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>Star Factor pays you while.</span>
           </h1>
           <p style={{ fontSize: 16, lineHeight: 1.55, color: 'rgba(10,8,20,0.7)', maxWidth: 620 }}>
-            Two minutes of your time. The basics, your socials, and a 90-second video telling us why
-            we should pick you. That&apos;s it. We&apos;ll review every submission and reach out to the shortlist within 14 days
-            of casting close.
+            Six weeks. One house. Cameras on. Fans backing you. Tips during the show. Real money during — not just after. Two minutes to apply: the basics, your socials, and a 90-second video.
           </p>
+
+          {/* WHAT YOU GET — value-prop block before the form */}
+          <div style={{
+            marginTop: 28,
+            padding: 22,
+            borderRadius: 18,
+            background: 'rgba(10,8,20,0.04)',
+            border: '1px solid rgba(10,8,20,0.18)',
+          }}>
+            <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 10 }}>★ WHAT YOU GET</div>
+            <ol style={{ display: 'flex', flexDirection: 'column', gap: 10, margin: 0, paddingLeft: 20, color: 'rgba(10,8,20,0.78)', fontSize: 14, lineHeight: 1.5 }}>
+              <li>Weekly tips from fans, paid out as you earn them.</li>
+              <li>More ways to earn from fan support during the show.</li>
+              <li>Grand prize at the end — plus everything you earned getting there.</li>
+            </ol>
+          </div>
         </div>
       </div>
 
@@ -386,7 +399,7 @@ const ApplyPage: React.FC = () => {
 
           {/* SECTION: SOCIALS */}
           <div style={{ paddingTop: 8, borderTop: '1px dashed var(--sf-line)' }} />
-          <SectionTitle n="02" title="Socials" hint="Optional · helps us see who you are" />
+          <SectionTitle n="02" title="Socials" hint="Optional · helps us see how you carry yourself online" />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
             <SocialField label="Instagram" prefix="@" value={formData.instagram} onChange={v => updateField('instagram', v)} />
             <SocialField label="TikTok"    prefix="@" value={formData.tiktok}    onChange={v => updateField('tiktok', v)} />
@@ -404,9 +417,7 @@ const ApplyPage: React.FC = () => {
           }}>
             <div className="sf-eyebrow" style={{ color: 'var(--sf-amber)', marginBottom: 6 }}>★ THE BRIEF</div>
             <p style={{ fontSize: 13, lineHeight: 1.55, color: 'var(--sf-fg-2)', margin: 0 }}>
-              Record a 90-second video — vertical, your phone, one take is fine. Tell us your name, your city,
-              and the one reason we should put you in the house. Post it anywhere public (TikTok, IG Reels, YouTube,
-              X, Drive) and drop the link below.
+              Vertical, your phone, one take. Your name. Your city. The one reason we should put you in the house. Post it anywhere public — TikTok, IG, YouTube, X, Drive — and drop the link below.
             </p>
           </div>
           <div>
@@ -468,7 +479,7 @@ const ApplyPage: React.FC = () => {
             display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
           }}>
             <span style={{ fontSize: 11, color: 'var(--sf-fg-3)', fontWeight: 700, letterSpacing: '0.08em', flex: 1 }}>
-              We&apos;ll reach out to shortlisted applicants within 14 days of casting close.
+              We&apos;ll reach out to shortlisted applicants on a rolling basis. Apply early.
             </span>
             <button
               type="submit"
@@ -476,7 +487,7 @@ const ApplyPage: React.FC = () => {
               className="sf-btn sf-btn-coral"
               style={{ height: 48, padding: '0 26px', fontSize: 12, opacity: isSubmitting ? 0.7 : 1 }}
             >
-              {isSubmitting ? 'SUBMITTING…' : 'SEND APPLICATION'}
+              {isSubmitting ? 'SUBMITTING…' : 'SEND IT IN'}
               {!isSubmitting && (
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
               )}
