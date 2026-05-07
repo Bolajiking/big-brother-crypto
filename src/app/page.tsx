@@ -302,9 +302,8 @@ const Hero: React.FC = () => {
             maxWidth: 920, letterSpacing: '-0.05em',
             lineHeight: 0.86, marginBottom: 28,
           }}>
-            Live reality TV<br />
-            where everybody gets paid.<br />
-            <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>Watch. Predict. Earn.</span>
+            DON&apos;T JUST WATCH,<br />
+            <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>PLAY &amp; WIN.</span>
           </h1>
         </Reveal>
 
