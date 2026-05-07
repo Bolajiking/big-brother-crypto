@@ -302,8 +302,9 @@ const Hero: React.FC = () => {
             maxWidth: 920, letterSpacing: '-0.05em',
             lineHeight: 0.86, marginBottom: 28,
           }}>
-            DON&apos;T JUST WATCH,<br />
-            <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>PLAY &amp; WIN.</span>
+            Live reality TV<br />
+            where everybody gets paid.<br />
+            <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>Watch. Predict. Earn.</span>
           </h1>
         </Reveal>
 
@@ -1374,8 +1375,8 @@ const FinalCTA: React.FC = () => {
             letterSpacing: '-0.06em', lineHeight: 0.85,
             marginBottom: 40,
           }}>
-            Don&apos;t watch.<br />
-            <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>Play.</span>
+            Don&apos;t just watch,<br />
+            <span style={{ fontStyle: 'italic', color: 'var(--sf-coral)' }}>play &amp; win.</span>
           </h2>
         </Reveal>
         <Reveal delay={160}>
