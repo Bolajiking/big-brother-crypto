@@ -157,7 +157,9 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
   const [chatInput, setChatInput] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<LivepeerPlayerHandle>(null);
+  const mobileControlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [playerState, setPlayerState] = useState<LivepeerPlayerState>(DEFAULT_PLAYER_STATE);
+  const [showStreamControls, setShowStreamControls] = useState(true);
 
   const [showMarketComposer, setShowMarketComposer] = useState(false);
   const [predictQuestion, setPredictQuestion] = useState('');
@@ -189,6 +191,18 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
   }, [dataMode, externalChatMessages, initializeDemoData]);
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages]);
+
+  const revealStreamControls = useCallback(() => {
+    setShowStreamControls(true);
+
+    if (mobileControlsTimerRef.current) {
+      clearTimeout(mobileControlsTimerRef.current);
+    }
+
+    mobileControlsTimerRef.current = setTimeout(() => {
+      setShowStreamControls(false);
+    }, 3600);
+  }, []);
 
   useEffect(() => {
     if (!selectedPlaybackId || cameras.length === 0) return;
@@ -252,6 +266,16 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
   const activeMarket = activeMarkets[0] || null;
   const displayChat = chatMessages;
   const isIdle = !isDemoMode && !liveHasStream && activeMarkets.length === 0 && displayChat.length === 0;
+
+  useEffect(() => {
+    revealStreamControls();
+
+    return () => {
+      if (mobileControlsTimerRef.current) {
+        clearTimeout(mobileControlsTimerRef.current);
+      }
+    };
+  }, [activeChannel, shouldPlayCameraSignal, revealStreamControls]);
 
   const handlePickOption = (marketId: string, optionId: string) => {
     if (!isAuthenticated) { onRequireLogin?.(); return; }
@@ -669,7 +693,11 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
       )}
 
       {/* PLAYER */}
-      <div style={{ position: 'relative', aspectRatio: '16/9', background: '#000' }}>
+      <div
+        className={`sf-stream-shell ${showStreamControls ? 'sf-stream-controls-visible' : ''}`}
+        onPointerDown={revealStreamControls}
+        style={{ position: 'relative', aspectRatio: '16/9', background: '#000' }}
+      >
         {activeCam && shouldPlayCameraSignal ? (
           <LivepeerPlayer
             ref={playerRef}
@@ -764,17 +792,17 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
           <StreamControlBar
             variant="mobile"
             state={playerState}
-            onTogglePlay={() => { playerRef.current?.togglePlay().catch(console.error); }}
-            onToggleMuted={() => playerRef.current?.toggleMuted()}
-            onVolumeChange={(volume) => playerRef.current?.setVolume(volume)}
-            onSyncLive={() => { playerRef.current?.syncToLive().catch(console.error); }}
-            onTogglePictureInPicture={() => { playerRef.current?.togglePictureInPicture().catch(console.error); }}
-            onFullscreen={() => { playerRef.current?.fullscreen().catch(console.error); }}
+            onTogglePlay={() => { revealStreamControls(); playerRef.current?.togglePlay().catch(console.error); }}
+            onToggleMuted={() => { revealStreamControls(); playerRef.current?.toggleMuted(); }}
+            onVolumeChange={(volume) => { revealStreamControls(); playerRef.current?.setVolume(volume); }}
+            onSyncLive={() => { revealStreamControls(); playerRef.current?.syncToLive().catch(console.error); }}
+            onTogglePictureInPicture={() => { revealStreamControls(); playerRef.current?.togglePictureInPicture().catch(console.error); }}
+            onFullscreen={() => { revealStreamControls(); playerRef.current?.fullscreen().catch(console.error); }}
           />
         )}
         {showMobileWidgets && activeMarket && (
           <div style={{
-            position: 'absolute', bottom: activeCam && shouldPlayCameraSignal ? 58 : 12, left: 8, right: 8,
+            position: 'absolute', bottom: activeCam && shouldPlayCameraSignal && showStreamControls ? 62 : 12, left: 8, right: 8,
             background: 'linear-gradient(90deg, rgba(255,78,43,0.92), rgba(255,176,32,0.92))',
             borderRadius: 10, padding: '8px 10px',
             display: 'flex', alignItems: 'center', gap: 8,

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { getEmbeddedConnectedWallet, usePrivy, useWallets } from '@privy-io/react-auth';
 import Link from 'next/link';
 import LivepeerPlayer, { type LivepeerPlayerHandle, type LivepeerPlayerState } from '@/components/LivepeerPlayer';
@@ -912,11 +912,12 @@ const HouseHeatMap: React.FC<{
   isDemoMode: boolean;
 }> = ({ cameras, activeChannel, followCast, onSelectCam, onFollowCast, isIdle, isDemoMode }) => {
   const [hoverRoom, setHoverRoom] = useState<string | null>(null);
-  const liveRooms = HOUSE_ROOMS.filter(r => r.tag !== 'IDLE').length;
+  const hasMapActivity = isDemoMode && !isIdle;
+  const liveRooms = hasMapActivity ? HOUSE_ROOMS.filter(r => r.tag !== 'IDLE').length : 0;
   const idleRooms = HOUSE_ROOMS.length - liveRooms;
-  const totalWatchers = HOUSE_ROOMS.reduce((a, r) => a + r.watchers, 0);
-  const showCast = !isIdle;
-  const animateCast = isDemoMode && showCast;
+  const totalWatchers = hasMapActivity ? HOUSE_ROOMS.reduce((a, r) => a + r.watchers, 0) : 0;
+  const showCast = hasMapActivity;
+  const animateCast = showCast;
   const movementPaths = useMemo(() => (
     CAST_POSITIONS.map((cast, index) => buildMovementPath(cast, index))
   ), []);
@@ -927,7 +928,7 @@ const HouseHeatMap: React.FC<{
         <div>
           <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 4 }}>HOUSE MAP · DIRECTOR&apos;S BOOTH</div>
           <h2 className="sf-display" style={{ fontSize: 26, color: '#fff' }}>
-            The house, at a glance.
+            {hasMapActivity ? 'The house, at a glance.' : 'House map is standing by.'}
           </h2>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 11, color: 'var(--sf-fg-3)' }}>
@@ -976,7 +977,7 @@ const HouseHeatMap: React.FC<{
           {HOUSE_ROOMS.map(r => {
             const camIdx = getRoomCameraIndex(r, cameras);
             const cam = camIdx >= 0 ? cameras[camIdx] : null;
-            const heat = isIdle ? 0 : Math.min(1, r.watchers / 20000);
+            const heat = hasMapActivity ? Math.min(1, r.watchers / 20000) : 0;
             const isPrimary = camIdx === activeChannel;
             const isHovered = hoverRoom === r.label;
             const tagFill = TAG_COLOR[r.tag];
@@ -998,9 +999,9 @@ const HouseHeatMap: React.FC<{
                 <rect x={r.x + 6} y={r.y + 6} width={r.w - 12} height={r.h - 12} rx="6"
                   fill="url(#sf-map-room-fill)" opacity={isHovered || isPrimary ? 1 : 0.72} />
                 <circle cx={r.x + 14} cy={r.y + 14} r="5.5"
-                  fill={r.tag === 'IDLE' || isIdle ? 'rgba(255,255,255,0.22)' : tagFill}
+                  fill={r.tag === 'IDLE' || !hasMapActivity ? 'rgba(255,255,255,0.22)' : tagFill}
                   stroke="rgba(10,8,20,0.92)" strokeWidth="2"/>
-                {r.hot && !isIdle && (
+                {r.hot && hasMapActivity && (
                   <circle cx={r.x + 14} cy={r.y + 14} r="9" fill="none"
                     stroke={tagFill} strokeWidth="1.2" opacity="0.65">
                     <animate attributeName="r" values="5;14;5" dur="1.6s" repeatCount="indefinite"/>
@@ -1013,7 +1014,7 @@ const HouseHeatMap: React.FC<{
                 <text x={r.x + r.w - 8} y={r.y + r.h - 10}
                   fill="rgba(255,255,255,0.55)" fontSize="9" fontWeight="700"
                   textAnchor="end" fontFamily="ui-monospace, monospace">
-                  {isIdle ? '—' : fmt(r.watchers)}
+                  {hasMapActivity ? fmt(r.watchers) : '—'}
                 </text>
                 <text x={r.x + r.w - 10} y={r.y + 18}
                   fill="rgba(255,255,255,0.7)" fontSize="9" fontWeight="800"
@@ -1098,7 +1099,7 @@ const HouseHeatMap: React.FC<{
             </span>
           ))}
           <span style={{ flex: 1 }} />
-          {followCast && (
+          {showCast && followCast && (
             <button onClick={() => onFollowCast(null)} title="Stop following" style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
               padding: '4px 4px 4px 10px', borderRadius: 999,
@@ -1116,11 +1117,11 @@ const HouseHeatMap: React.FC<{
             </button>
           )}
           <span style={{ fontSize: 11, color: 'var(--sf-fg-2)' }}>
-            {isIdle
-              ? 'The house is dark. Heat shows where the room is hottest. Right now: nowhere.'
-              : animateCast
+            {hasMapActivity
+              ? animateCast
                 ? 'Demo movement shows housemates slowly drifting between rooms. Tap a room to jump cams.'
-                : 'Tap a room -> primary cam · Tap a name -> follow'}
+                : 'Tap a room -> primary cam · Tap a name -> follow'
+              : 'No room activity yet. The map is ready; tap any room to preview its camera.'}
           </span>
         </div>
       </div>
@@ -1190,7 +1191,25 @@ const WatchPage: React.FC = () => {
   const profileRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<LivepeerPlayerHandle>(null);
+  const desktopControlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [playerState, setPlayerState] = useState<LivepeerPlayerState>(DEFAULT_PLAYER_STATE);
+  const [showDesktopStreamControls, setShowDesktopStreamControls] = useState(true);
+
+  const revealDesktopStreamControls = useCallback(() => {
+    setShowDesktopStreamControls(true);
+    if (desktopControlsTimerRef.current) {
+      clearTimeout(desktopControlsTimerRef.current);
+      desktopControlsTimerRef.current = null;
+    }
+  }, []);
+
+  const hideDesktopStreamControls = useCallback(() => {
+    if (desktopControlsTimerRef.current) {
+      clearTimeout(desktopControlsTimerRef.current);
+      desktopControlsTimerRef.current = null;
+    }
+    setShowDesktopStreamControls(false);
+  }, []);
 
   const embeddedWallet = useMemo(() => getEmbeddedConnectedWallet(wallets), [wallets]);
   const linkedWalletAddress = useMemo(() => getLinkedWalletAddress(user?.linkedAccounts), [user?.linkedAccounts]);
@@ -1211,6 +1230,16 @@ const WatchPage: React.FC = () => {
       setActiveChannel(0);
     }
   }, [activeChannel, cameras.length]);
+
+  useEffect(() => {
+    revealDesktopStreamControls();
+    return () => {
+      if (desktopControlsTimerRef.current) {
+        clearTimeout(desktopControlsTimerRef.current);
+        desktopControlsTimerRef.current = null;
+      }
+    };
+  }, [activeChannel, revealDesktopStreamControls]);
 
   // ── Verify user ──
   useEffect(() => {
@@ -1985,7 +2014,13 @@ const WatchPage: React.FC = () => {
                   onExit={() => setStageMode('single')}
                 />
               ) : (
-                <div className="sf-fade-in" style={{
+                <div
+                  className={`sf-fade-in sf-stream-shell ${showDesktopStreamControls ? 'sf-stream-controls-visible' : ''}`}
+                  onPointerDown={revealDesktopStreamControls}
+                  onPointerMove={revealDesktopStreamControls}
+                  onMouseEnter={revealDesktopStreamControls}
+                  onMouseLeave={hideDesktopStreamControls}
+                  style={{
                   position: 'relative', aspectRatio: '16/9',
                   borderRadius: 18, overflow: 'hidden',
                   border: '2px solid var(--sf-paper)',

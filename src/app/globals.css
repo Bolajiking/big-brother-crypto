@@ -1091,6 +1091,10 @@ body {
   background: rgba(0,0,0,0.56);
   transform: none;
 }
+.sf-watch-root .sf-stream-shell {
+  isolation: isolate;
+  touch-action: manipulation;
+}
 .sf-watch-root .sf-stream-control-bar {
   position: absolute;
   left: 12px;
@@ -1107,6 +1111,17 @@ body {
   background: linear-gradient(180deg, rgba(10,8,20,0.72), rgba(10,8,20,0.52));
   box-shadow: 0 16px 42px -20px rgba(0,0,0,0.72);
   backdrop-filter: blur(14px);
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 220ms cubic-bezier(.22,1,.36,1);
+}
+.sf-watch-root .sf-stream-shell:hover .sf-stream-control-bar,
+.sf-watch-root .sf-stream-shell:focus-within .sf-stream-control-bar,
+.sf-watch-root .sf-stream-shell.sf-stream-controls-visible .sf-stream-control-bar {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 .sf-watch-root .sf-stream-control-group {
   display: inline-flex;
@@ -1167,11 +1182,16 @@ body {
 .sf-watch-root .sf-stream-control-bar-mobile {
   left: 10px;
   right: 10px;
-  top: 52px;
-  bottom: auto;
+  top: auto;
+  bottom: max(10px, env(safe-area-inset-bottom));
   min-height: 36px;
   padding: 5px;
   justify-content: space-between;
+  transform: translateY(12px);
+  background: linear-gradient(180deg, rgba(10,8,20,0.78), rgba(10,8,20,0.62));
+}
+.sf-watch-root .sf-stream-shell.sf-stream-controls-visible .sf-stream-control-bar-mobile {
+  transform: translateY(0);
 }
 .sf-watch-root .sf-stream-control-bar-mobile .sf-stream-control-button {
   width: 30px;

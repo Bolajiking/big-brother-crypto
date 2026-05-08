@@ -44,14 +44,6 @@ const IconVolume = ({ muted }: { muted: boolean }) => (
   </svg>
 );
 
-const IconLive = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <path d="M21 12a9 9 0 1 1-2.6-6.4" />
-    <path d="M21 4v6h-6" />
-    <circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none" />
-  </svg>
-);
-
 const IconPin = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
     <path d="M12 17v5M5 11h14l-2-7H7zM12 11v6" />
