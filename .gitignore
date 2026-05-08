@@ -86,3 +86,21 @@ jspm_packages/
 .tern-port
 /src/generated/prisma
 .gstack/
+
+# Local strategy, research, and deck artifacts
+/.cursor/scratchpad.md
+/COPY-REVIEW.md
+/HANDOFF.md
+/INVESTOR-BRIEF-*.md
+/MARKET-RESEARCH.md
+/MESSAGING.md
+/MONETIZATION-ENGINE.md
+/PITCH-DECK-*.md
+/PRD.md
+/STREAMING_GUIDE.md
+/STREAM_ENDPOINTS.md
+/pitch-deck/
+
+# Local editor/build metadata
+*.code-workspace
+tsconfig.tsbuildinfo
