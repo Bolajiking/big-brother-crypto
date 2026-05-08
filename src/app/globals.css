@@ -1082,6 +1082,107 @@ body {
   transition: background 200ms, transform 200ms;
 }
 .sf-watch-root .sf-btn-icon:hover { background: rgba(255,255,255,0.08); transform: translateY(-1px); }
+.sf-watch-root .sf-btn-icon:disabled {
+  cursor: default;
+  opacity: 0.45;
+  transform: none;
+}
+.sf-watch-root .sf-btn-icon:disabled:hover {
+  background: rgba(0,0,0,0.56);
+  transform: none;
+}
+.sf-watch-root .sf-stream-control-bar {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 36;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(10,8,20,0.72), rgba(10,8,20,0.52));
+  box-shadow: 0 16px 42px -20px rgba(0,0,0,0.72);
+  backdrop-filter: blur(14px);
+}
+.sf-watch-root .sf-stream-control-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.sf-watch-root .sf-stream-control-spacer { flex: 1; }
+.sf-watch-root .sf-stream-control-button {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+}
+.sf-watch-root .sf-stream-text-button {
+  height: 30px;
+  padding: 0 12px;
+  font-size: 9px;
+  white-space: nowrap;
+}
+.sf-watch-root .sf-stream-volume {
+  display: inline-flex;
+  align-items: center;
+  width: 82px;
+  height: 32px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.sf-watch-root .sf-stream-volume input {
+  width: 100%;
+  accent-color: var(--sf-coral);
+  cursor: pointer;
+}
+.sf-watch-root .sf-stream-volume input:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+.sf-watch-root .sf-stream-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(31,209,122,0.34);
+  background: rgba(31,209,122,0.16);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+}
+.sf-watch-root .sf-stream-live-pill:disabled {
+  cursor: default;
+  opacity: 0.46;
+}
+.sf-watch-root .sf-stream-control-bar-mobile {
+  left: 10px;
+  right: 10px;
+  top: 52px;
+  bottom: auto;
+  min-height: 36px;
+  padding: 5px;
+  justify-content: space-between;
+}
+.sf-watch-root .sf-stream-control-bar-mobile .sf-stream-control-button {
+  width: 30px;
+  height: 30px;
+  flex-basis: 30px;
+}
+.sf-watch-root .sf-stream-control-bar-mobile .sf-stream-live-pill {
+  height: 28px;
+  padding: 0 9px;
+  font-size: 8px;
+}
 
 /* Coin chip */
 .sf-watch-root .sf-coin {

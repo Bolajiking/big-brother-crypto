@@ -291,7 +291,7 @@ Smoke check: visit `/watch`, toggle the bottom-left **Demo / Live** pill, confir
 
 The watch page is the product. Everything else (homepage, apply, login, payment) supports it. The page is intentionally one large file (~2.5k lines) so the entire layout is co-located; resist the urge to break it up until the data layer is wired — splitting prematurely will fight the tight render coupling between dock, stage, heatmap, and rail.
 
-The heatmap data (`HOUSE_ROOMS`, `CAST_POSITIONS`) is hard-coded by design — the 10 rooms and 8 cast slots are baked into the show format, not a dynamic catalogue. Cast names + watcher counts should bind to live data; room geometry should not.
+The heatmap data (`HOUSE_ROOMS`, `CAST_POSITIONS`) is hard-coded by design — the 10 rooms and 16-housemate Season 1 format are baked into the show format, not a dynamic catalogue. Cast names + watcher counts should bind to live data; room geometry should not.
 
 The DemoToggle is the most important UX primitive on the page right now. Every section reads `isIdle` and decides demo vs notice, so wiring real data is mostly: replace local seed → API hook → keep idle branch as fallback for empty/offline states.
 

@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { usePrivy } from '@privy-io/react-auth';
+import { getEmbeddedConnectedWallet, usePrivy, useWallets } from '@privy-io/react-auth';
 import Link from 'next/link';
-import LivepeerPlayer from '@/components/LivepeerPlayer';
+import LivepeerPlayer, { type LivepeerPlayerHandle, type LivepeerPlayerState } from '@/components/LivepeerPlayer';
 import ClientOnly from '@/components/ClientOnly';
 import MobileLayout from '@/components/MobileLayout';
+import StreamControlBar from '@/components/StreamControlBar';
 import SunArcIndicator from '@/components/SunArcIndicator';
 import { useDaylight } from '@/lib/daylight';
 import { useUserStore } from '@/stores/userStore';
@@ -19,6 +20,8 @@ interface Camera {
   playbackId: string;
   streamId: string;
   isActive: boolean;
+  isLive?: boolean;
+  viewerCount?: number;
   description: string;
 }
 
@@ -59,6 +62,82 @@ interface ChatLineData {
   tier?: 'hot' | 'system' | 'normal';
   coin?: number;
 }
+
+interface LiveContestant {
+  id: string;
+  name: string;
+  nickname?: string | null;
+  age?: number | null;
+  state?: string | null;
+  isNominated?: boolean;
+  isHoH?: boolean;
+  status?: string;
+}
+
+type LinkedWalletAccount = {
+  type?: string;
+  address?: string;
+  walletClientType?: string;
+};
+
+type ApiResponseData = {
+  success?: boolean;
+  error?: string;
+  message?: unknown;
+  [key: string]: unknown;
+};
+
+const getLinkedWalletAddress = (accounts?: unknown[]) => {
+  const wallet = accounts
+    ?.map(account => account as LinkedWalletAccount)
+    .find(account => (
+      (account.type === 'wallet' || account.type === 'smart_wallet') &&
+      typeof account.address === 'string' &&
+      account.address.length > 0
+    ));
+  return wallet?.address ?? null;
+};
+
+const shortAddress = (address?: string | null) => (
+  address ? `${address.slice(0, 6)}…${address.slice(-4)}` : 'Provisioning wallet'
+);
+const DIRECTOR_CAMERA_NAME = "director's view";
+const isDirectorCameraName = (name?: string | null) => (
+  name?.trim().toLowerCase() === DIRECTOR_CAMERA_NAME
+);
+const DEFAULT_PLAYER_STATE: LivepeerPlayerState = {
+  isPaused: true,
+  isMuted: true,
+  isLive: false,
+  isBuffering: false,
+  hasVideoFrame: false,
+  isPictureInPicture: false,
+  volume: 1,
+};
+
+const parseApiJson = async <T extends ApiResponseData = ApiResponseData>(
+  response: Response,
+  label: string
+): Promise<T> => {
+  const contentType = response.headers.get('content-type') || '';
+  const isJson = contentType.includes('application/json') || contentType.includes('+json');
+
+  if (!isJson) {
+    const body = await response.text().catch(() => '');
+    const preview = body
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 180);
+    throw new Error(`${label} returned ${response.status} ${response.statusText || 'non-JSON response'}${preview ? `: ${preview}` : ''}`);
+  }
+
+  try {
+    return await response.json() as T;
+  } catch (error) {
+    throw new Error(`${label} returned invalid JSON${error instanceof Error ? `: ${error.message}` : ''}`);
+  }
+};
 
 // ── Demo data (cast / schedule / leaderboard / chat / hot strip) ──
 const CAST: CastMember[] = [
@@ -122,21 +201,22 @@ interface HouseRoom {
   x: number; y: number; w: number; h: number;
   label: string;
   camIdx: number;
+  cameraName?: string;
   tag: 'PRIME' | 'HOT' | 'TASK' | 'CHILL' | 'SOLO' | 'IDLE' | 'NSFW' | 'B-ROLL';
   watchers: number;
   hot?: boolean;
 }
 const HOUSE_ROOMS: HouseRoom[] = [
-  { x: 40,  y: 40,  w: 220, h: 110, label: 'Living Room',  camIdx: 0, tag: 'PRIME',  watchers: 18420, hot: true },
-  { x: 270, y: 40,  w: 140, h: 110, label: 'Kitchen',      camIdx: 1, tag: 'CHILL',  watchers: 4210 },
-  { x: 420, y: 40,  w: 160, h: 70,  label: 'Diary',        camIdx: 6, tag: 'SOLO',   watchers: 4120 },
-  { x: 420, y: 120, w: 160, h: 30,  label: 'Hallway',      camIdx: 7, tag: 'IDLE',   watchers: 640 },
-  { x: 590, y: 40,  w: 170, h: 110, label: 'Bedroom 1',    camIdx: 4, tag: 'NSFW',   watchers: 2410 },
-  { x: 40,  y: 160, w: 170, h: 80,  label: 'Bedroom 2',    camIdx: 5, tag: 'HOT',    watchers: 8410, hot: true },
-  { x: 220, y: 160, w: 130, h: 80,  label: 'Gym',          camIdx: 0, tag: 'IDLE',   watchers: 1280 },
-  { x: 360, y: 160, w: 120, h: 80,  label: 'Bathroom',     camIdx: 1, tag: 'IDLE',   watchers: 120 },
-  { x: 490, y: 160, w: 130, h: 80,  label: 'Pool',         camIdx: 2, tag: 'TASK',   watchers: 9120 },
-  { x: 630, y: 160, w: 130, h: 80,  label: 'Garden',       camIdx: 3, tag: 'IDLE',   watchers: 1820 },
+  { x: 40,  y: 40,  w: 220, h: 110, label: 'Living Room',  camIdx: 3, cameraName: 'Lounge', tag: 'PRIME',  watchers: 18420, hot: true },
+  { x: 270, y: 40,  w: 140, h: 110, label: 'Kitchen',      camIdx: 1, cameraName: 'Kitchen', tag: 'CHILL',  watchers: 4210 },
+  { x: 420, y: 40,  w: 160, h: 70,  label: 'Diary',        camIdx: 0, cameraName: "director's view", tag: 'SOLO',   watchers: 4120 },
+  { x: 420, y: 120, w: 160, h: 30,  label: 'Hallway',      camIdx: 8, cameraName: 'Entrance', tag: 'IDLE',   watchers: 640 },
+  { x: 590, y: 40,  w: 170, h: 110, label: 'Bedroom 1',    camIdx: 6, cameraName: 'Bedroom', tag: 'NSFW',   watchers: 2410 },
+  { x: 40,  y: 160, w: 170, h: 80,  label: 'Bedroom 2',    camIdx: 6, cameraName: 'Bedroom', tag: 'HOT',    watchers: 8410, hot: true },
+  { x: 220, y: 160, w: 130, h: 80,  label: 'Gym',          camIdx: 0, cameraName: "director's view", tag: 'IDLE',   watchers: 1280 },
+  { x: 360, y: 160, w: 120, h: 80,  label: 'Bathroom',     camIdx: 0, cameraName: "director's view", tag: 'IDLE',   watchers: 120 },
+  { x: 490, y: 160, w: 130, h: 80,  label: 'Pool',         camIdx: 4, cameraName: 'Pool', tag: 'TASK',   watchers: 9120 },
+  { x: 630, y: 160, w: 130, h: 80,  label: 'Garden',       camIdx: 2, cameraName: 'Garden', tag: 'IDLE',   watchers: 1820 },
 ];
 
 const TAG_COLOR: Record<HouseRoom['tag'], string> = {
@@ -145,7 +225,14 @@ const TAG_COLOR: Record<HouseRoom['tag'], string> = {
 };
 
 // Cast positions on the floor plan (viewBox 800x280)
-const CAST_POSITIONS: { name: string; color: string; x: number; y: number }[] = [
+interface CastPosition {
+  name: string;
+  color: string;
+  x: number;
+  y: number;
+}
+
+const CAST_POSITIONS: CastPosition[] = [
   { name: 'Tunde',  color: '#6B3FE5', x: 130, y: 90 },
   { name: 'Ada',    color: '#FF4E2B', x: 165, y: 95 },
   { name: 'Kemi',   color: '#F2B544', x: 340, y: 90 },
@@ -163,6 +250,64 @@ const CAST_POSITIONS: { name: string; color: string; x: number; y: number }[] = 
   { name: 'Korede', color: '#FFD166', x: 520, y: 96 },
   { name: 'Nneka',  color: '#44D7A8', x: 600, y: 205 },
 ];
+
+const DEMO_MOVEMENT_ROUTES = [
+  ['Living Room', 'Kitchen', 'Hallway', 'Pool', 'Garden'],
+  ['Bedroom 2', 'Living Room', 'Kitchen', 'Diary', 'Hallway'],
+  ['Kitchen', 'Living Room', 'Bedroom 1', 'Hallway', 'Pool'],
+  ['Pool', 'Garden', 'Kitchen', 'Living Room', 'Diary'],
+  ['Bedroom 2', 'Gym', 'Living Room', 'Kitchen', 'Pool'],
+  ['Living Room', 'Bedroom 2', 'Hallway', 'Garden', 'Kitchen'],
+  ['Bedroom 1', 'Hallway', 'Kitchen', 'Living Room', 'Garden'],
+  ['Diary', 'Hallway', 'Living Room', 'Pool', 'Kitchen'],
+];
+
+const getRoomCenter = (label: string) => {
+  const room = HOUSE_ROOMS.find(r => r.label === label);
+  if (!room) return { x: 400, y: 140 };
+
+  return {
+    x: room.x + room.w / 2,
+    y: room.y + room.h / 2,
+  };
+};
+
+const buildMovementPath = (cast: CastPosition, index: number) => {
+  const route = DEMO_MOVEMENT_ROUTES[index % DEMO_MOVEMENT_ROUTES.length];
+  const points = [
+    { x: cast.x, y: cast.y },
+    ...route.map((label, routeIndex) => {
+      const center = getRoomCenter(label);
+      const sway = ((index + 1) * (routeIndex + 2)) % 17;
+      return {
+        x: center.x + (sway - 8),
+        y: center.y + (((sway * 3) % 15) - 7),
+      };
+    }),
+    { x: cast.x, y: cast.y },
+  ];
+
+  return points.map((point, pointIndex) => (
+    `${pointIndex === 0 ? 'M' : 'L'} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`
+  )).join(' ');
+};
+
+const castMovementDuration = (index: number) => 260 + (index % 7) * 32;
+const castMovementDelay = (index: number) => -(index % 8) * 26;
+const CAST_MOVEMENT_KEY_TIMES = '0;0.12;0.24;0.36;0.48;0.6;0.72;0.84;0.92;1';
+const CAST_MOVEMENT_KEY_POINTS = '0;0.14;0.14;0.34;0.34;0.56;0.56;0.78;0.78;1';
+
+const normalizeCameraName = (name?: string | null) => (
+  name?.trim().toLowerCase().replace(/[^a-z0-9]+/g, '') ?? ''
+);
+
+const getRoomCameraIndex = (room: HouseRoom, cameras: Camera[]) => {
+  const targetName = normalizeCameraName(room.cameraName || room.label);
+  const exactIndex = cameras.findIndex(cam => normalizeCameraName(cam.name) === targetName);
+  if (exactIndex >= 0) return exactIndex;
+
+  return room.camIdx < cameras.length ? room.camIdx : -1;
+};
 
 const TICKER_MESSAGES = [
   '🔥 Kemi & Tunde argument · The Mansion',
@@ -231,8 +376,19 @@ const optionFill = (idx: number, picked = false) => {
   return ['rgba(31,209,122,0.12)', 'rgba(255,78,43,0.12)', 'rgba(107,63,229,0.12)', 'rgba(90,205,255,0.12)'][idx % 4];
 };
 
+const mapLiveContestant = (contestant: LiveContestant, index: number): CastMember => ({
+  name: contestant.nickname || contestant.name,
+  handle: (contestant.nickname || contestant.name).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''),
+  city: contestant.state || 'Nigeria',
+  age: contestant.age || 0,
+  color: ['#FF4E2B', '#6B3FE5', '#F2B544', '#1FD17A', '#5ACDFF', '#FF1F3D'][index % 6],
+  odds: Math.round((2 + index * 0.55) * 10) / 10,
+  status: contestant.isHoH ? 'Head of House' : contestant.isNominated ? 'Nominated' : 'In house',
+  palette: ['coral', 'violet', 'gold', 'mint', 'sky', 'rose'][index % 6],
+});
+
 const PRODUCT_STACK = [
-  { kicker: 'Watch', title: 'Switch any room. Never lose stage.', copy: 'Mansion, Pool, Kitchen, Diary — all live, one tap.', stat: '8 cams', color: '#FF4E2B' },
+  { kicker: 'Watch', title: 'Switch any room. Never lose stage.', copy: 'Mansion, Pool, Kitchen, Diary — all live, one tap.', stat: 'Live', color: '#FF4E2B' },
   { kicker: 'Predict', title: 'Back the moment. Stay in stream.', copy: 'Markets ride the side rail. No tabs.', stat: '₦902K', color: '#1FD17A' },
   { kicker: 'Vote', title: 'Save your fav. Watch the pool move.', copy: 'Weekly eviction. Fan stakes show real-time.', stat: 'Weekly', color: '#FF1F3D' },
   { kicker: 'Earn', title: 'Cash out without leaving.', copy: 'Stake, clout, and cash-out one tap from chat.', stat: '+12K', color: '#F2B544' },
@@ -488,58 +644,66 @@ const DirectorTile: React.FC<{
   index: number;
   active: boolean;
   onSelect: () => void;
-}> = ({ cam, index, active, onSelect }) => (
-  <button
-    onClick={onSelect}
-    className={`sf-tile ${active ? 'active' : ''}`}
-    style={{
-      aspectRatio: '16/10',
-      padding: 0,
-      background: 'var(--sf-stage)',
-      borderColor: active ? 'var(--sf-coral)' : 'var(--sf-line)',
-      minHeight: 128,
-    }}
-  >
-    <div style={{ position: 'absolute', inset: 0 }}>
-      <ClientOnly>
-        <LivepeerPlayer playbackId={cam.playbackId} autoPlay={true} showControls={false} showStatus={false} className="w-full h-full" />
-      </ClientOnly>
-    </div>
-    <div style={{
-      position: 'absolute', inset: 0,
-      background: 'linear-gradient(180deg, rgba(10,8,20,0.02) 35%, rgba(10,8,20,0.82) 100%)',
-      pointerEvents: 'none',
-    }} />
-    <div style={{ position: 'absolute', top: 8, left: 8, display: 'flex', gap: 6, alignItems: 'center' }}>
-      <span style={{
-        padding: '3px 7px',
-        borderRadius: 5,
-        background: cam.isActive ? 'var(--sf-live)' : 'rgba(255,255,255,0.15)',
-        color: '#fff',
-        fontSize: 9,
-        fontWeight: 900,
-        letterSpacing: '0.12em',
-      }}>{cam.isActive ? 'LIVE' : 'IDLE'}</span>
-      {active && (
+}> = ({ cam, index, active, onSelect }) => {
+  const shouldRenderStream = Boolean(cam.isLive) || !isDirectorCameraName(cam.name);
+
+  return (
+    <button
+      onClick={onSelect}
+      className={`sf-tile ${active ? 'active' : ''}`}
+      style={{
+        aspectRatio: '16/10',
+        padding: 0,
+        background: 'var(--sf-stage)',
+        borderColor: active ? 'var(--sf-coral)' : 'var(--sf-line)',
+        minHeight: 128,
+      }}
+    >
+      <div style={{ position: 'absolute', inset: 0 }}>
+        {shouldRenderStream ? (
+          <ClientOnly>
+            <LivepeerPlayer playbackId={cam.playbackId} autoPlay={true} showControls={false} showStatus={false} className="w-full h-full" />
+          </ClientOnly>
+        ) : (
+          <PaletteFill palette={paletteForIdx(index)} style={{ height: '100%' }} />
+        )}
+      </div>
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'linear-gradient(180deg, rgba(10,8,20,0.02) 35%, rgba(10,8,20,0.82) 100%)',
+        pointerEvents: 'none',
+      }} />
+      <div style={{ position: 'absolute', top: 8, left: 8, display: 'flex', gap: 6, alignItems: 'center' }}>
         <span style={{
           padding: '3px 7px',
           borderRadius: 5,
-          background: 'var(--sf-paper)',
-          color: 'var(--sf-stage)',
+          background: cam.isLive ? 'var(--sf-live)' : 'rgba(255,255,255,0.15)',
+          color: '#fff',
           fontSize: 9,
           fontWeight: 900,
           letterSpacing: '0.12em',
-        }}>MAIN</span>
-      )}
-    </div>
-    <div style={{ position: 'absolute', left: 10, right: 10, bottom: 10, textAlign: 'left' }}>
-      <div className="sf-display" style={{ color: '#fff', fontSize: 18, marginBottom: 3 }}>{cam.name}</div>
-      <div className="sf-mono" style={{ color: 'rgba(255,255,255,0.74)', fontSize: 10, fontWeight: 800 }}>
-        CAM {String(index + 1).padStart(2, '0')} · {((index + 1) * 4321).toLocaleString()} watching
+        }}>{cam.isLive ? 'LIVE' : 'IDLE'}</span>
+        {active && (
+          <span style={{
+            padding: '3px 7px',
+            borderRadius: 5,
+            background: 'var(--sf-paper)',
+            color: 'var(--sf-stage)',
+            fontSize: 9,
+            fontWeight: 900,
+            letterSpacing: '0.12em',
+          }}>MAIN</span>
+        )}
       </div>
-    </div>
-  </button>
-);
+      <div style={{ position: 'absolute', left: 10, right: 10, bottom: 10, textAlign: 'left' }}>
+        <div className="sf-display" style={{ color: '#fff', fontSize: 18, marginBottom: 3 }}>{cam.name}</div>
+        <div className="sf-mono" style={{ color: 'rgba(255,255,255,0.74)', fontSize: 10, fontWeight: 800 }}>
+          CAM {String(index + 1).padStart(2, '0')} · {((index + 1) * 4321).toLocaleString()} watching
+        </div>
+      </div>
+    </button>
+  );
+};
 
 const DirectorGrid: React.FC<{
   cameras: Camera[];
@@ -605,13 +769,25 @@ const DirectorGrid: React.FC<{
           border: '1.5px solid rgba(245,239,230,0.8)',
           background: '#000',
         }}>
-          {mainCam ? (
-            <LivepeerPlayer playbackId={mainCam.playbackId} isMainPlayer={true} autoPlay={true} showControls={true} showStatus={false} className="w-full h-full" />
+          {mainCam && (mainCam.isLive || !isDirectorCameraName(mainCam.name)) ? (
+            <LivepeerPlayer playbackId={mainCam.playbackId} isMainPlayer={true} autoPlay={true} showControls={false} showStatus={false} className="w-full h-full" />
           ) : (
             <PaletteFill palette="coral" />
           )}
           <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
-            <LiveDot label="MAIN LIVE" />
+            {mainCam?.isLive ? (
+              <LiveDot label="MAIN LIVE" />
+            ) : (
+              <span style={{
+                padding: '5px 10px',
+                borderRadius: 999,
+                background: 'rgba(0,0,0,0.58)',
+                color: 'rgba(255,255,255,0.76)',
+                fontSize: 10,
+                fontWeight: 900,
+                letterSpacing: '0.12em',
+              }}>MAIN IDLE</span>
+            )}
             <span style={{
               padding: '5px 10px',
               borderRadius: 999,
@@ -733,11 +909,17 @@ const HouseHeatMap: React.FC<{
   onSelectCam: (camIdx: number) => void;
   onFollowCast: (name: string | null) => void;
   isIdle: boolean;
-}> = ({ cameras, activeChannel, followCast, onSelectCam, onFollowCast, isIdle }) => {
+  isDemoMode: boolean;
+}> = ({ cameras, activeChannel, followCast, onSelectCam, onFollowCast, isIdle, isDemoMode }) => {
   const [hoverRoom, setHoverRoom] = useState<string | null>(null);
   const liveRooms = HOUSE_ROOMS.filter(r => r.tag !== 'IDLE').length;
   const idleRooms = HOUSE_ROOMS.length - liveRooms;
   const totalWatchers = HOUSE_ROOMS.reduce((a, r) => a + r.watchers, 0);
+  const showCast = !isIdle;
+  const animateCast = isDemoMode && showCast;
+  const movementPaths = useMemo(() => (
+    CAST_POSITIONS.map((cast, index) => buildMovementPath(cast, index))
+  ), []);
 
   return (
     <section style={{ marginTop: 32 }}>
@@ -745,7 +927,7 @@ const HouseHeatMap: React.FC<{
         <div>
           <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 4 }}>HOUSE MAP · DIRECTOR&apos;S BOOTH</div>
           <h2 className="sf-display" style={{ fontSize: 26, color: '#fff' }}>
-            Tap a room. Jump the cam.
+            The house, at a glance.
           </h2>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 11, color: 'var(--sf-fg-3)' }}>
@@ -759,83 +941,134 @@ const HouseHeatMap: React.FC<{
 
       <div style={{
         position: 'relative',
-        background: 'var(--sf-stage-2)',
+        background: 'linear-gradient(180deg, rgba(20,16,34,0.96), rgba(9,7,18,0.98))',
         border: '1px solid var(--sf-line)',
         borderRadius: 18,
         padding: 18,
         overflow: 'hidden',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 24px 80px -34px rgba(0,0,0,0.85)',
       }}>
-        {/* Heat backdrop glow */}
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'radial-gradient(120% 90% at 30% 30%, rgba(255,78,43,0.08), transparent 60%), radial-gradient(60% 60% at 75% 70%, rgba(31,209,122,0.06), transparent 70%)',
+          background: 'radial-gradient(120% 90% at 24% 24%, rgba(255,78,43,0.11), transparent 58%), radial-gradient(70% 70% at 75% 72%, rgba(31,209,122,0.09), transparent 68%)',
           pointerEvents: 'none',
         }} />
 
         <svg viewBox="0 0 800 280" style={{ width: '100%', height: 'auto', display: 'block', position: 'relative' }}>
-          {/* House outline */}
+          <defs>
+            <filter id="sf-map-chip-shadow" x="-40%" y="-40%" width="180%" height="180%">
+              <feDropShadow dx="0" dy="6" stdDeviation="5" floodColor="#000000" floodOpacity="0.38" />
+            </filter>
+            <linearGradient id="sf-map-room-fill" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.08)" />
+              <stop offset="100%" stopColor="rgba(255,255,255,0.02)" />
+            </linearGradient>
+            <pattern id="sf-map-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.035)" strokeWidth="1" />
+            </pattern>
+          </defs>
+
           <rect x="20" y="20" width="760" height="240" rx="10"
             fill="rgba(255,255,255,0.02)"
             stroke="var(--sf-line-strong)" strokeWidth="1" strokeDasharray="2 4"/>
+          <rect x="20" y="20" width="760" height="240" rx="10" fill="url(#sf-map-grid)" opacity="0.9" />
 
-          {/* Rooms */}
           {HOUSE_ROOMS.map(r => {
-            const cam = cameras[r.camIdx];
+            const camIdx = getRoomCameraIndex(r, cameras);
+            const cam = camIdx >= 0 ? cameras[camIdx] : null;
             const heat = isIdle ? 0 : Math.min(1, r.watchers / 20000);
-            const isPrimary = r.camIdx === activeChannel;
+            const isPrimary = camIdx === activeChannel;
             const isHovered = hoverRoom === r.label;
             const tagFill = TAG_COLOR[r.tag];
+            const roomFill = isPrimary
+              ? 'rgba(255,78,43,0.22)'
+              : `rgba(255,78,43,${0.04 + heat * 0.2})`;
             return (
               <g key={r.label}
                 style={{ cursor: 'pointer' }}
                 onMouseEnter={() => setHoverRoom(r.label)}
                 onMouseLeave={() => setHoverRoom(null)}
-                onClick={() => cam && onSelectCam(r.camIdx)}>
+                onClick={() => cam && onSelectCam(camIdx)}>
+                <rect x={r.x + 3} y={r.y + 4} width={r.w - 6} height={r.h - 8} rx="9"
+                  fill="rgba(0,0,0,0.18)" />
                 <rect x={r.x} y={r.y} width={r.w} height={r.h} rx="8"
-                  fill={isPrimary ? `var(--sf-coral)` : `rgba(255,78,43,${heat * 0.32})`}
-                  fillOpacity={isPrimary ? 0.32 : 1}
-                  stroke={isPrimary ? 'var(--sf-coral)' : isHovered ? 'rgba(255,255,255,0.45)' : 'var(--sf-line-strong)'}
-                  strokeWidth={isPrimary ? 2 : 1}/>
-                {/* Camera dot */}
-                <circle cx={r.x + 12} cy={r.y + 12} r="5"
-                  fill={r.tag === 'IDLE' || isIdle ? 'rgba(255,255,255,0.22)' : tagFill}/>
+                  fill={roomFill}
+                  stroke={isPrimary ? 'var(--sf-coral)' : isHovered ? 'rgba(255,255,255,0.48)' : 'rgba(255,255,255,0.14)'}
+                  strokeWidth={isPrimary ? 2 : 1.1}/>
+                <rect x={r.x + 6} y={r.y + 6} width={r.w - 12} height={r.h - 12} rx="6"
+                  fill="url(#sf-map-room-fill)" opacity={isHovered || isPrimary ? 1 : 0.72} />
+                <circle cx={r.x + 14} cy={r.y + 14} r="5.5"
+                  fill={r.tag === 'IDLE' || isIdle ? 'rgba(255,255,255,0.22)' : tagFill}
+                  stroke="rgba(10,8,20,0.92)" strokeWidth="2"/>
                 {r.hot && !isIdle && (
-                  <circle cx={r.x + 12} cy={r.y + 12} r="9" fill="none"
-                    stroke={tagFill} strokeWidth="1" opacity="0.65">
+                  <circle cx={r.x + 14} cy={r.y + 14} r="9" fill="none"
+                    stroke={tagFill} strokeWidth="1.2" opacity="0.65">
                     <animate attributeName="r" values="5;14;5" dur="1.6s" repeatCount="indefinite"/>
                     <animate attributeName="opacity" values="0.65;0;0.65" dur="1.6s" repeatCount="indefinite"/>
                   </circle>
                 )}
-                <text x={r.x + 8} y={r.y + r.h - 10} fill="#fff"
-                  fontSize="11" fontWeight="800"
+                <text x={r.x + 12} y={r.y + r.h - 13} fill="#fff"
+                  fontSize="11" fontWeight="900"
                   fontFamily="Inter Display, Inter, sans-serif">{r.label}</text>
                 <text x={r.x + r.w - 8} y={r.y + r.h - 10}
                   fill="rgba(255,255,255,0.55)" fontSize="9" fontWeight="700"
                   textAnchor="end" fontFamily="ui-monospace, monospace">
                   {isIdle ? '—' : fmt(r.watchers)}
                 </text>
-                <text x={r.x + r.w - 8} y={r.y + 16}
+                <text x={r.x + r.w - 10} y={r.y + 18}
                   fill="rgba(255,255,255,0.7)" fontSize="9" fontWeight="800"
                   textAnchor="end" fontFamily="ui-monospace, monospace" letterSpacing="0.1em">
-                  CAM {String(r.camIdx + 1).padStart(2, '0')}
+                  CAM {camIdx >= 0 ? String(camIdx + 1).padStart(2, '0') : '--'}
                 </text>
               </g>
             );
           })}
 
-          {/* Cast position dots — followable */}
-          {!isIdle && CAST_POSITIONS.map(p => {
+          {animateCast && CAST_POSITIONS.slice(0, 10).map((p, index) => (
+            <path key={`${p.name}-trail`} d={movementPaths[index]}
+              fill="none" stroke={p.color} strokeWidth="1.3"
+              strokeDasharray="2 8" strokeLinecap="round" opacity="0.17" />
+          ))}
+
+          {showCast && CAST_POSITIONS.map((p, index) => {
             const followed = followCast === p.name;
+            const labelWidth = Math.max(36, p.name.length * 6 + 18);
+            const isAnimated = animateCast;
             return (
-              <g key={p.name} style={{ cursor: 'pointer' }} onClick={() => onFollowCast(followed ? null : p.name)}>
+              <g
+                key={p.name}
+                transform={isAnimated ? undefined : `translate(${p.x} ${p.y})`}
+                style={{ cursor: 'pointer' }}
+                onClick={() => onFollowCast(followed ? null : p.name)}
+                filter="url(#sf-map-chip-shadow)"
+              >
+                {isAnimated && (
+                  <animateMotion
+                    dur={`${castMovementDuration(index)}s`}
+                    begin={`${castMovementDelay(index)}s`}
+                    repeatCount="indefinite"
+                    path={movementPaths[index]}
+                    calcMode="linear"
+                    keyTimes={CAST_MOVEMENT_KEY_TIMES}
+                    keyPoints={CAST_MOVEMENT_KEY_POINTS}
+                    rotate="0"
+                  />
+                )}
                 {followed && (
-                  <circle cx={p.x} cy={p.y} r="14" fill="none"
+                  <circle cx="0" cy="0" r="16" fill="none"
                     stroke="var(--sf-amber)" strokeWidth="1.5" strokeDasharray="2 3"/>
                 )}
-                <circle cx={p.x} cy={p.y} r="7" fill={p.color}
-                  stroke="var(--sf-stage)" strokeWidth="2"/>
-                <text x={p.x} y={p.y + 22} fill="#fff" fontSize="9" fontWeight="800"
-                  textAnchor="middle" fontFamily="Inter Display, Inter, sans-serif">{p.name}</text>
+                <circle cx="0" cy="0" r="12" fill="rgba(10,8,20,0.92)" stroke="rgba(255,255,255,0.2)" strokeWidth="1.2" />
+                <circle cx="0" cy="0" r="8" fill={p.color} opacity="0.92" />
+                <text x="0" y="3.2" fill="#0A0814" fontSize="7" fontWeight="950"
+                  textAnchor="middle" fontFamily="Inter Display, Inter, sans-serif">{p.name.slice(0, 1)}</text>
+                <g transform="translate(0 22)">
+                  <rect x={-labelWidth / 2} y="-9" width={labelWidth} height="18" rx="9"
+                    fill={followed ? 'var(--sf-amber)' : 'rgba(10,8,20,0.82)'}
+                    stroke={followed ? 'rgba(255,176,32,0.45)' : 'rgba(255,255,255,0.12)'} />
+                  <text x="0" y="3.5" fill={followed ? '#1A0F00' : '#fff'} fontSize="8.5" fontWeight="900"
+                    textAnchor="middle" fontFamily="Inter Display, Inter, sans-serif">{p.name}</text>
+                </g>
               </g>
             );
           })}
@@ -885,7 +1118,9 @@ const HouseHeatMap: React.FC<{
           <span style={{ fontSize: 11, color: 'var(--sf-fg-2)' }}>
             {isIdle
               ? 'The house is dark. Heat shows where the room is hottest. Right now: nowhere.'
-              : 'Tap a room → primary cam · Tap a name → follow'}
+              : animateCast
+                ? 'Demo movement shows housemates slowly drifting between rooms. Tap a room to jump cams.'
+                : 'Tap a room -> primary cam · Tap a name -> follow'}
           </span>
         </div>
       </div>
@@ -899,12 +1134,24 @@ const WatchPage: React.FC = () => {
   const day = useDaylight({ mode: 'auto' });
 
   // Auth + stores
-  const { authenticated, user, logout: privyLogout, login: privyLogin } = usePrivy();
+  const { authenticated, user, logout: privyLogout, login: privyLogin, getAccessToken } = usePrivy();
+  const { wallets, ready: walletsReady } = useWallets();
   const { setUser: setStoreUser, updateBalance, logout: storeLogout, balance, deductStakes } = useUserStore();
-  const { markets, userBets, addMarket, placeBet, initializeDemoData } = usePredictionStore();
+  const {
+    markets,
+    userBets,
+    setMarkets,
+    setUserBets,
+    upsertMarket,
+    addUserBet,
+    addMarket,
+    placeBet,
+    initializeDemoData,
+  } = usePredictionStore();
 
   // Page state
   const [cameras, setCameras] = useState<Camera[]>([]);
+  const [liveCast, setLiveCast] = useState<CastMember[]>([]);
   const [activeChannel, setActiveChannel] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -932,7 +1179,7 @@ const WatchPage: React.FC = () => {
   const [stake, setStake] = useState(500);
 
   // Chat
-  const [chatMessages, setChatMessages] = useState<ChatLineData[]>(SEED_CHAT);
+  const [chatMessages, setChatMessages] = useState<ChatLineData[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [showPredictModal, setShowPredictModal] = useState(false);
   const [predictQuestion, setPredictQuestion] = useState('');
@@ -942,16 +1189,22 @@ const WatchPage: React.FC = () => {
 
   const profileRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<LivepeerPlayerHandle>(null);
+  const [playerState, setPlayerState] = useState<LivepeerPlayerState>(DEFAULT_PLAYER_STATE);
+
+  const embeddedWallet = useMemo(() => getEmbeddedConnectedWallet(wallets), [wallets]);
+  const linkedWalletAddress = useMemo(() => getLinkedWalletAddress(user?.linkedAccounts), [user?.linkedAccounts]);
+  const appWalletAddress = embeddedWallet?.address || user?.wallet?.address || linkedWalletAddress;
+  const accountName = user?.email?.address?.split('@')[0] || (appWalletAddress ? `user_${appWalletAddress.slice(2, 8)}` : 'Viewer');
 
   // ── Mount / mobile detection / demo data ──
   useEffect(() => {
     setIsMounted(true);
-    initializeDemoData();
     const checkMobile = () => setIsMobile(window.innerWidth < 900);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
-  }, [initializeDemoData]);
+  }, []);
 
   useEffect(() => {
     if (cameras.length > 0 && activeChannel >= cameras.length) {
@@ -964,48 +1217,139 @@ const WatchPage: React.FC = () => {
     const verify = async () => {
       if (!user) return;
       try {
+        const accessToken = await getAccessToken();
         const res = await fetch('/api/auth/verify', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
           body: JSON.stringify({
             privyId: user.id,
-            walletAddress: user.wallet?.address,
+            walletAddress: appWalletAddress,
             email: user.email?.address,
           }),
         });
-        const data = await res.json();
+        const data = await parseApiJson<ApiResponseData & { user?: Parameters<typeof setStoreUser>[0] }>(res, 'Verify user');
         if (data.success && data.user) {
           setDbUserId(data.user.id);
           setStoreUser(data.user);
           updateBalance({ clout: data.user.cloutBalance, stakes: data.user.stakesBalance });
         }
       } catch (e) {
-        console.error('verify failed', e);
+        console.warn('verify failed', e);
       }
     };
-    if (authenticated && user) verify();
-  }, [authenticated, user, setStoreUser, updateBalance]);
+    if (authenticated && user && (walletsReady || user.wallet?.address)) verify();
+  }, [appWalletAddress, authenticated, getAccessToken, setStoreUser, updateBalance, user, walletsReady]);
 
   // ── Cameras fetch ──
   useEffect(() => {
+    if (!isMounted) return;
+
+    let cancelled = false;
+
     const load = async () => {
       try {
-        const res = await fetch('/api/cameras');
-        const data = await res.json();
+        const res = await fetch('/api/cameras', { cache: 'no-store' });
+        const data = await parseApiJson<ApiResponseData & { cameras?: Camera[] }>(res, 'Load cameras');
+        if (cancelled) return;
         if (data.success) {
-          setCameras(data.cameras);
+          setCameras(data.cameras || []);
         } else {
           setError('Failed to load cameras');
         }
       } catch (e) {
-        console.error('cameras', e);
-        setError('Failed to load cameras');
+        console.warn('cameras', e);
+        if (!cancelled) setError('Failed to load cameras');
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
-    if (isMounted) load();
+
+    load();
+    const interval = window.setInterval(load, 5000);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') load();
+    };
+    window.addEventListener('focus', load);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      window.removeEventListener('focus', load);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
   }, [isMounted]);
+
+  // ── Watch data: demo is local showcase, live is Neon-backed ──
+  useEffect(() => {
+    if (!isMounted) return;
+
+    if (dataMode === 'demo') {
+      initializeDemoData();
+      setUserBets([]);
+      setChatMessages(SEED_CHAT);
+      setLiveCast(CAST);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadLiveWatchData = async () => {
+      try {
+        const marketParams = new URLSearchParams({ format: 'watch', status: 'OPEN' });
+        if (dbUserId) marketParams.set('userId', dbUserId);
+
+        const [marketsRes, chatRes, contestantsRes] = await Promise.all([
+          fetch(`/api/markets?${marketParams.toString()}`),
+          fetch('/api/chat?limit=60'),
+          fetch('/api/contestants?status=ACTIVE'),
+        ]);
+
+        const [marketsData, chatData, contestantsData] = await Promise.all([
+          parseApiJson<ApiResponseData & {
+            markets?: Parameters<typeof setMarkets>[0];
+            userBets?: Parameters<typeof setUserBets>[0];
+          }>(marketsRes, 'Load markets'),
+          parseApiJson<ApiResponseData & { messages?: ChatLineData[] }>(chatRes, 'Load chat'),
+          parseApiJson<ApiResponseData & { contestants?: LiveContestant[] }>(contestantsRes, 'Load contestants'),
+        ]);
+
+        if (cancelled) return;
+
+        if (marketsData.success) {
+          setMarkets(marketsData.markets || []);
+          setUserBets(marketsData.userBets || []);
+        } else {
+          setMarkets([]);
+          setUserBets([]);
+        }
+
+        setChatMessages(chatData.success ? (chatData.messages || []) : []);
+        setLiveCast(
+          contestantsData.success
+            ? (contestantsData.contestants || []).map(mapLiveContestant)
+            : []
+        );
+      } catch (e) {
+        console.warn('live watch data', e);
+        if (!cancelled) {
+          setMarkets([]);
+          setUserBets([]);
+          setChatMessages([]);
+          setLiveCast([]);
+        }
+      }
+    };
+
+    loadLiveWatchData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dataMode, dbUserId, initializeDemoData, isMounted, setMarkets, setUserBets]);
 
   // ── Profile dropdown outside-click ──
   useEffect(() => {
@@ -1046,25 +1390,35 @@ const WatchPage: React.FC = () => {
   // Active camera (single mode)
   const activeCam = cameras[activeChannel] || null;
 
-  // Real mode = idle. No live show running yet; suppress all demo activity.
-  // Demo mode = full populated experience.
-  const isIdle = dataMode === 'real';
-
-  // Demo-only data sources. In real-idle every demo seed is suppressed and
-  // the UI surfaces communicate "what goes here" rather than fake activity.
-  const effectiveMarkets = isIdle ? [] : markets;
+  // Demo mode stays a polished local showcase. Live mode reads from Neon and
+  // only falls back to the pre-live shell when no backend stream/data exists.
+  const isDemoMode = dataMode === 'demo';
+  const isDirectorCamera = isDirectorCameraName(activeCam?.name);
+  const shouldPlayCameraSignal = Boolean(activeCam?.isLive) || (isDemoMode && !isDirectorCamera);
+  const isCameraIdle = !isDemoMode && !activeCam?.isLive;
+  const liveHasStream = cameras.some(camera => camera.isLive);
+  const effectiveMarkets = markets;
   const activeMarkets = effectiveMarkets.filter(m => m.status === 'active');
   const featuredMarket = activeMarkets[0] || null;
-  const displayChat = isIdle
-    ? chatMessages.filter(m => !SEED_CHAT.find(s => s.id === m.id))
-    : chatMessages;
-  const displayLeaderboard = isIdle ? [] : LEADERBOARD;
-  const displayCast = isIdle ? [] : CAST;
-  const displaySchedule = isIdle ? [] : SCHEDULE;
-  const displayHotStrip = isIdle ? [] : HOT_STRIP;
-  const displayTicker = isIdle
-    ? ['👋 Stream goes live · 19:00 WAT · markets open with the show']
-    : TICKER_MESSAGES;
+  const displayChat = chatMessages;
+  const isIdle = !isDemoMode && !liveHasStream && activeMarkets.length === 0 && displayChat.length === 0;
+  const displayLeaderboard = isDemoMode ? LEADERBOARD : [];
+  const displayCast = isDemoMode ? CAST : liveCast;
+  const displaySchedule = isDemoMode ? SCHEDULE : [];
+  const displayHotStrip = isDemoMode ? HOT_STRIP : activeMarkets.slice(0, 4).map((market) => ({
+    tag: 'LIVE',
+    color: '#1FD17A',
+    label: market.question,
+  }));
+  const displayTicker = isDemoMode
+    ? TICKER_MESSAGES
+    : [
+        featuredMarket
+          ? `💰 ${featuredMarket.question} · ${featuredMarket.totalPool.toLocaleString()} stakes pool`
+          : liveHasStream
+            ? `🔴 ${activeCam?.name || 'Starfactor'} is live · markets open as moments happen`
+            : '👋 Stream goes live · markets open with the show',
+      ];
 
   // ── Bet placement ──
   const handlePickOption = (marketId: string, optionId: string) => {
@@ -1074,60 +1428,186 @@ const WatchPage: React.FC = () => {
     }
     setPickedBet({ marketId, optionId });
   };
-  const handlePlaceBet = () => {
-    if (!pickedBet) return;
+  const handlePlaceBet = async (
+    marketId = pickedBet?.marketId,
+    optionId = pickedBet?.optionId,
+    amount = stake
+  ) => {
+    if (!marketId || !optionId) return false;
     if (!authenticated) {
       requireLogin('place a bet');
-      return;
+      return false;
     }
-    if (deductStakes(stake)) {
-      placeBet(pickedBet.marketId, pickedBet.optionId, stake, user?.email?.address?.split('@')[0] || 'You');
+
+    if (dataMode === 'demo') {
+      if (!deductStakes(amount)) return false;
+      placeBet(marketId, optionId, amount, user?.email?.address?.split('@')[0] || 'You');
       setPickedBet(null);
+      return true;
+    }
+
+    if (!dbUserId) {
+      requireLogin('sync your app wallet');
+      return false;
+    }
+
+    try {
+      const accessToken = await getAccessToken();
+      const res = await fetch(`/api/markets/${marketId}/bet`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        body: JSON.stringify({
+          userId: dbUserId,
+          optionId,
+          amount,
+        }),
+      });
+      const data = await parseApiJson<ApiResponseData & {
+        market?: Parameters<typeof upsertMarket>[0];
+        bet?: Parameters<typeof addUserBet>[0];
+        balance?: Parameters<typeof updateBalance>[0];
+      }>(res, 'Place bet');
+      if (!data.success) {
+        setError(data.error || 'Failed to place bet');
+        return false;
+      }
+
+      if (data.market) upsertMarket(data.market);
+      if (data.bet) addUserBet(data.bet);
+      if (data.balance) updateBalance(data.balance);
+      setPickedBet(null);
+      return true;
+    } catch (e) {
+      console.error('place bet', e);
+      setError('Failed to place bet');
+      return false;
     }
   };
 
   // ── Chat ──
-  const handleSendChat = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chatInput.trim()) return;
+  const sendChatMessage = async (text: string): Promise<ChatLineData | null> => {
     if (!authenticated) {
       requireLogin('send messages');
-      return;
+      return null;
     }
+
+    if (dataMode === 'demo') {
+      const message = {
+        id: `m_${Date.now()}`,
+        name: user?.email?.address?.split('@')[0] || 'You',
+        color: '#FF4E2B',
+        msg: text,
+        time: 'now',
+      };
+      setChatMessages(prev => [...prev, message]);
+      return message;
+    }
+
+    if (!dbUserId) {
+      requireLogin('sync your app wallet');
+      return null;
+    }
+
+    try {
+      const accessToken = await getAccessToken();
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        body: JSON.stringify({ userId: dbUserId, content: text }),
+      });
+      const data = await parseApiJson<ApiResponseData & {
+        message?: ChatLineData;
+        balance?: Parameters<typeof updateBalance>[0];
+      }>(res, 'Send chat message');
+      if (!data.success) {
+        setError(data.error || 'Failed to send chat message');
+        return null;
+      }
+      if (data.balance) updateBalance(data.balance);
+      const sentMessage = data.message;
+      if (sentMessage) {
+        setChatMessages(prev => [...prev, sentMessage]);
+        return sentMessage;
+      }
+    } catch (e) {
+      console.error('send chat', e);
+      setError('Failed to send chat message');
+    }
+    return null;
+  };
+
+  const handleSendChat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
     const text = chatInput.trim();
     if (text.toLowerCase().startsWith('/predict')) {
       setShowPredictModal(true);
       setChatInput('');
       return;
     }
-    setChatMessages(prev => [...prev, {
-      id: `m_${Date.now()}`,
-      name: user?.email?.address?.split('@')[0] || 'You',
-      color: '#FF4E2B',
-      msg: text,
-      time: 'now',
-    }]);
+    await sendChatMessage(text);
     setChatInput('');
   };
 
-  const handleCreateMarket = () => {
+  const handleCreateMarket = async (dataOverride?: MarketCreationData) => {
     const opts = predictOptions.filter(o => o.trim());
-    if (!predictQuestion.trim() || opts.length < 2) return;
-    const data: MarketCreationData = {
+    const data = dataOverride || {
       question: predictQuestion.trim(),
       options: opts,
       duration: predictDuration,
       category: predictCategory,
     };
-    addMarket(data, user?.email?.address?.split('@')[0] || 'Anonymous');
-    setChatMessages(prev => [...prev, {
+
+    if (!data.question.trim() || data.options.filter(o => o.trim()).length < 2) return;
+
+    if (dataMode === 'demo') {
+      addMarket(data, user?.email?.address?.split('@')[0] || 'Anonymous');
+    } else if (dbUserId) {
+      try {
+        const accessToken = await getAccessToken();
+        const res = await fetch('/api/markets', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
+          body: JSON.stringify({
+            ...data,
+            creatorId: dbUserId,
+            format: 'watch',
+          }),
+        });
+        const created = await parseApiJson<ApiResponseData & { market?: Parameters<typeof upsertMarket>[0] }>(res, 'Create market');
+        if (!created.success) {
+          setError(created.error || 'Failed to create market');
+          return;
+        }
+        if (created.market) upsertMarket(created.market);
+      } catch (e) {
+        console.error('create market', e);
+        setError('Failed to create market');
+        return;
+      }
+    } else {
+      requireLogin('sync your app wallet');
+      return;
+    }
+
+    const systemMessage: ChatLineData = {
       id: `m_${Date.now()}`,
       name: user?.email?.address?.split('@')[0] || 'You',
       color: '#1FD17A',
       msg: `Created prediction: "${data.question}"`,
       time: 'now',
       tier: 'system',
-    }]);
+    };
+    setChatMessages(prev => [...prev, systemMessage]);
     setShowPredictModal(false);
     setPredictQuestion('');
     setPredictOptions(['', '']);
@@ -1174,7 +1654,14 @@ const WatchPage: React.FC = () => {
           onRequireLogin={() => requireLogin('interact with the platform')}
           isAuthenticated={authenticated}
           userEmail={user?.email?.address}
-          onCreateMarket={(d: MarketCreationData) => addMarket(d, user?.email?.address?.split('@')[0] || 'Anonymous')}
+          userName={accountName}
+          walletAddress={appWalletAddress}
+          userId={dbUserId}
+          onLogout={handleLogout}
+          chatMessages={chatMessages}
+          onSendChat={sendChatMessage}
+          onPlaceBet={handlePlaceBet}
+          onCreateMarket={handleCreateMarket}
           dataMode={dataMode}
           onDataModeChange={setDataMode}
         />
@@ -1328,7 +1815,6 @@ const WatchPage: React.FC = () => {
                 </div>
               </ClientOnly>
             )}
-            <button className="sf-btn sf-btn-stage">CASH OUT</button>
             <div ref={profileRef} style={{ position: 'relative' }}>
               <button
                 onClick={() => setShowProfile(s => !s)}
@@ -1341,25 +1827,65 @@ const WatchPage: React.FC = () => {
                 }}
                 aria-label="Profile"
               >
-                {(user.email?.address || 'U').charAt(0).toUpperCase()}
+                {accountName.charAt(0).toUpperCase()}
               </button>
               {showProfile && (
                 <div className="sf-fade-in" style={{
                   position: 'absolute', top: 48, right: 0,
-                  width: 240, padding: 8,
+                  width: 320, padding: 10,
                   background: 'var(--sf-stage-2)', color: '#fff',
                   border: '1px solid var(--sf-line-strong)',
-                  borderRadius: 14,
+                  borderRadius: 18,
                   boxShadow: '0 30px 80px -20px rgba(0,0,0,0.6)',
                   zIndex: 50,
                 }}>
-                  <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--sf-line)', marginBottom: 4 }}>
-                    <div style={{ fontSize: 12, fontWeight: 800 }}>{user.email?.address || 'Viewer'}</div>
-                    <div style={{ fontSize: 10, color: 'var(--sf-fg-3)', marginTop: 2 }}>
-                      {user.wallet?.address ? `${user.wallet.address.slice(0, 6)}…${user.wallet.address.slice(-4)}` : 'Email login'}
+                  <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--sf-line)', marginBottom: 10, display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <div style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 999,
+                      background: 'linear-gradient(135deg,#FFB020,#FF4E2B)',
+                      color: '#1A0F00',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 900,
+                      flexShrink: 0,
+                    }}>{accountName.charAt(0).toUpperCase()}</div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{accountName}</div>
+                      <div style={{ fontSize: 10, color: 'var(--sf-fg-3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {user.email?.address || 'Signed in viewer'}
+                      </div>
                     </div>
                   </div>
-                  <button onClick={handleLogout} className="sf-btn sf-btn-ghost" style={{ width: '100%', height: 34, fontSize: 11 }}>SIGN OUT</button>
+                  <div style={{
+                    padding: 12,
+                    borderRadius: 14,
+                    background: 'linear-gradient(135deg, rgba(255,176,32,0.11), rgba(255,78,43,0.08))',
+                    border: '1px solid rgba(255,176,32,0.22)',
+                    marginBottom: 10,
+                  }}>
+                    <div className="sf-eyebrow" style={{ color: 'var(--sf-amber)', marginBottom: 8 }}>APP WALLET</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                      <div>
+                        <div style={{ fontSize: 9, color: 'var(--sf-fg-3)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em' }}>Stakes</div>
+                        <div style={{ fontSize: 22, fontWeight: 900, marginTop: 2 }}>{balance.stakes.toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 9, color: 'var(--sf-fg-3)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em' }}>Clout</div>
+                        <div style={{ fontSize: 22, fontWeight: 900, marginTop: 2, color: 'var(--sf-mint)' }}>{balance.clout.toLocaleString()}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, fontSize: 11 }}>
+                      <span style={{ color: 'var(--sf-fg-3)', fontWeight: 800 }}>Privy wallet</span>
+                      <span style={{ fontWeight: 900 }}>{shortAddress(appWalletAddress)}</span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <button onClick={() => requireLogin('cash out')} className="sf-btn sf-btn-coral" style={{ height: 34, fontSize: 10 }}>CASH OUT</button>
+                    <button onClick={handleLogout} className="sf-btn sf-btn-ghost" style={{ height: 34, fontSize: 10 }}>SIGN OUT</button>
+                  </div>
                 </div>
               )}
             </div>
@@ -1466,11 +1992,18 @@ const WatchPage: React.FC = () => {
                   boxShadow: `0 0 0 1px rgba(255,78,43,0.55), 0 30px 90px -20px rgba(255,78,43,0.44)`,
                   background: '#000',
                 }}>
-                  {activeCam && !isIdle ? (
-                    <LivepeerPlayer playbackId={activeCam.playbackId} isMainPlayer={true} showStatus={false} className="w-full h-full" />
+                  {activeCam && shouldPlayCameraSignal ? (
+                    <LivepeerPlayer
+                      ref={playerRef}
+                      playbackId={activeCam.playbackId}
+                      isMainPlayer={true}
+                      showStatus={false}
+                      className="w-full h-full"
+                      onStateChange={setPlayerState}
+                    />
                   ) : (
                     <PaletteFill palette="coral">
-                      {isIdle && (
+                      {isCameraIdle && (
                         <div style={{
                           position: 'absolute', inset: 0,
                           background: 'rgba(10,8,20,0.65)',
@@ -1505,8 +2038,8 @@ const WatchPage: React.FC = () => {
 
                   {/* Top overlays */}
                   <div style={{ position: 'absolute', top: 16, left: 16, display: 'flex', gap: 8, pointerEvents: 'none' }}>
-                    {!isIdle && <LiveDot label="LIVE NOW" />}
-                    {!isIdle && <span style={{
+                    {!isCameraIdle && <LiveDot label="LIVE NOW" />}
+                    {!isCameraIdle && <span style={{
                       background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)',
                       padding: '5px 11px', borderRadius: 999,
                       fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', color: '#fff',
@@ -1562,61 +2095,50 @@ const WatchPage: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Bottom controls — icon CTAs w/ hover tooltips */}
-                  <div style={{ position: 'absolute', bottom: 12, left: 12, right: 12, display: 'flex', gap: 8, alignItems: 'center', zIndex: 30 }}>
-                    <button title="Pause stream" aria-label="Pause stream" className="sf-btn-icon" style={{ background: 'rgba(0,0,0,0.55)', borderColor: 'rgba(255,255,255,0.1)' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
-                    </button>
-                    <button title="Mute audio" aria-label="Mute audio" className="sf-btn-icon" style={{ background: 'rgba(0,0,0,0.55)', borderColor: 'rgba(255,255,255,0.1)' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
-                    </button>
-                    <button title="Pin this cam" aria-label="Pin this cam"
-                      onClick={() => setPinnedCamIdx(pinnedCamIdx === activeChannel ? null : activeChannel)}
-                      className="sf-btn-icon" style={{
-                        background: pinnedCamIdx === activeChannel ? 'var(--sf-coral)' : 'rgba(0,0,0,0.55)',
-                        borderColor: 'rgba(255,255,255,0.1)', color: '#fff',
-                      }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M12 17v5M5 11h14l-2-7H7zM12 11v6"/>
-                      </svg>
-                    </button>
-                    <button title="Clip last 30s" aria-label="Clip last 30s" onClick={() => requireLogin('clip')} className="sf-btn-icon" style={{ background: 'rgba(0,0,0,0.55)', borderColor: 'rgba(255,255,255,0.1)' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/>
-                      </svg>
-                    </button>
-                    <button title="Share clip" aria-label="Share clip" onClick={() => requireLogin('share')} className="sf-btn-icon" style={{ background: 'rgba(0,0,0,0.55)', borderColor: 'rgba(255,255,255,0.1)' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>
-                      </svg>
-                    </button>
-                    <span style={{ flex: 1 }}></span>
-                    <button onClick={() => setStageMode('multicam')} title="Watch every room at once" className="sf-btn sf-btn-paper" style={{ height: 30, fontSize: 10 }}>
-                      WATCH ALL ROOMS · {cameras.length}
-                    </button>
-                    <button onClick={enterFocusMode} title="Hide widgets, full focus" className="sf-btn sf-btn-stage" style={{ height: 30, fontSize: 10 }}>
-                      FOCUS
-                    </button>
-                    <button title="Fullscreen" aria-label="Fullscreen" className="sf-btn-icon" style={{ background: 'rgba(0,0,0,0.55)', borderColor: 'rgba(255,255,255,0.1)' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
-                    </button>
-                  </div>
+                  <StreamControlBar
+                    state={playerState}
+                    cameraCount={cameras.length}
+                    isPinned={pinnedCamIdx === activeChannel}
+                    onTogglePlay={() => { playerRef.current?.togglePlay().catch(console.error); }}
+                    onToggleMuted={() => playerRef.current?.toggleMuted()}
+                    onVolumeChange={(volume) => playerRef.current?.setVolume(volume)}
+                    onSyncLive={() => { playerRef.current?.syncToLive().catch(console.error); }}
+                    onTogglePictureInPicture={() => { playerRef.current?.togglePictureInPicture().catch(console.error); }}
+                    onFullscreen={() => { playerRef.current?.fullscreen().catch(console.error); }}
+                    onTogglePin={() => setPinnedCamIdx(pinnedCamIdx === activeChannel ? null : activeChannel)}
+                    onClip={() => requireLogin('clip')}
+                    onShare={() => requireLogin('share')}
+                    onWatchAll={() => setStageMode('multicam')}
+                    onFocus={enterFocusMode}
+                  />
                 </div>
               )}
 
               {/* CAMERA RAIL — live tiles in demo, neutral placeholders in idle */}
-              {isIdle ? (
+              {isCameraIdle ? (
                 <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'repeat(8, minmax(0, 1fr))', gap: 8 }}>
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <div key={i} style={{
+                  {(cameras.length > 0 ? cameras : Array.from({ length: 8 }).map((_, i) => ({
+                    id: `cam-${i}`,
+                    name: `CAM ${String(i + 1).padStart(2, '0')}`,
+                  }))).map((cam, i) => (
+                    <button
+                      key={cam.id}
+                      onClick={() => cameras.length > 0 && setActiveChannel(i)}
+                      style={{
                       aspectRatio: '16/9',
                       borderRadius: 10,
                       border: '1px dashed var(--sf-line-strong)',
                       background: 'rgba(255,255,255,0.02)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: 'var(--sf-fg-3)',
-                      fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
-                    }}>CAM {String(i + 1).padStart(2, '0')}</div>
+                      color: isDirectorCameraName(cam.name) ? 'var(--sf-amber)' : 'var(--sf-fg-3)',
+                      fontSize: 9,
+                      fontWeight: 900,
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      cursor: cameras.length > 0 ? 'pointer' : 'default',
+                    }}
+                    >
+                      {cam.name}
+                    </button>
                   ))}
                 </div>
               ) : (
@@ -1635,7 +2157,7 @@ const WatchPage: React.FC = () => {
                             background: 'rgba(0,0,0,0.7)', color: '#fff',
                             fontSize: 8, fontWeight: 900, padding: '2px 5px',
                             borderRadius: 3, letterSpacing: '0.14em',
-                          }}>{cam.isActive ? '● LIVE' : '○ IDLE'}</span>
+                          }}>{cam.isLive ? '● LIVE' : '○ IDLE'}</span>
                         </div>
                         <div style={{
                           position: 'absolute', bottom: 4, left: 4, right: 4,
@@ -1658,12 +2180,12 @@ const WatchPage: React.FC = () => {
                   STARFACTOR · S01 · DAY 47 · {(activeCam?.name || 'MAIN').toUpperCase()}
                 </div>
                 <h1 className="sf-display" style={{ fontSize: 36, color: '#fff', marginBottom: 12, maxWidth: 720 }}>
-                  {isIdle
+                  {isCameraIdle
                     ? 'House wakes at lights-on. Stay in the room.'
                     : activeCam?.description || 'Pick a room. Read the crowd. Back the moment.'}
                 </h1>
                 <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
-                  {isIdle ? (
+                  {isCameraIdle ? (
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderRadius: 999, border: '1px dashed var(--sf-line-strong)', color: 'var(--sf-fg-2)', fontSize: 12 }}>
                       <span style={{ width: 8, height: 8, borderRadius: 999, background: 'var(--sf-fg-3)' }} />
                       Cast revealed at lights-on
@@ -1683,7 +2205,7 @@ const WatchPage: React.FC = () => {
                     </div>
                   )}
                   <div style={{ width: 1, height: 24, background: 'var(--sf-line)' }}></div>
-                  <span style={{ fontSize: 12, color: 'var(--sf-fg-2)' }}>{isIdle ? 'Goes live · ' : 'Started 23 min ago · '}<span className="sf-mono" style={{ color: '#fff' }}>{isIdle ? '19:00 WAT' : '02:14:08'}</span></span>
+                  <span style={{ fontSize: 12, color: 'var(--sf-fg-2)' }}>{isCameraIdle ? 'Goes live · ' : 'Started 23 min ago · '}<span className="sf-mono" style={{ color: '#fff' }}>{isCameraIdle ? '19:00 WAT' : '02:14:08'}</span></span>
                   {/* Quick-action icon row w/ tooltips */}
                   <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
                     <button title="Follow show — alerts before live" aria-label="Follow show"
@@ -1709,7 +2231,7 @@ const WatchPage: React.FC = () => {
                   </div>
                 </div>
 
-                {showStageWidgets && !isIdle && (
+                {showStageWidgets && !isCameraIdle && (
                   <div className="sf-fade-in" style={{
                     padding: '10px 14px', borderRadius: 999,
                     background: 'var(--sf-stage-2)',
@@ -1733,7 +2255,7 @@ const WatchPage: React.FC = () => {
                     </span>
                   </div>
                 )}
-                {showStageWidgets && isIdle && (
+                {showStageWidgets && isCameraIdle && (
                   <div className="sf-fade-in" style={{
                     padding: '10px 14px', borderRadius: 999,
                     background: 'var(--sf-stage-2)',
@@ -1754,11 +2276,11 @@ const WatchPage: React.FC = () => {
           <section style={{ marginTop: 40 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 16 }}>
               <h2 className="sf-display" style={{ fontSize: 28, color: '#fff' }}>
-                The Cast <span style={{ color: 'var(--sf-fg-3)', fontSize: 16, fontWeight: 600 }}>{isIdle ? '· Roster locked until launch' : '· Day 47 · 8 standing'}</span>
+                The Cast <span style={{ color: 'var(--sf-fg-3)', fontSize: 16, fontWeight: 600 }}>{isCameraIdle ? '· Roster locked until launch' : '· Day 47 · 8 standing'}</span>
               </h2>
               <a className="sf-eyebrow" style={{ color: 'var(--sf-fg-3)', cursor: 'pointer' }}>FULL ROSTER →</a>
             </div>
-            {isIdle ? (
+            {isCameraIdle ? (
               <div style={{
                 padding: 28,
                 borderRadius: 18,
@@ -1892,7 +2414,8 @@ const WatchPage: React.FC = () => {
             followCast={followCast}
             onSelectCam={(idx) => { setActiveChannel(idx); setStageMode('single'); }}
             onFollowCast={(name) => setFollowCast(name)}
-            isIdle={isIdle}
+            isIdle={isCameraIdle}
+            isDemoMode={isDemoMode}
           />
 
           {/* PREDICT GRID — full-version horizontal markets */}
@@ -2520,7 +3043,7 @@ const WatchPage: React.FC = () => {
                   ))}
                 </div>
                 <button
-                  onClick={handlePlaceBet}
+                  onClick={() => handlePlaceBet()}
                   disabled={insufficient}
                   className={`sf-btn ${insufficient ? 'sf-btn-ghost' : 'sf-btn-coral'}`}
                   style={{ height: 44, width: '100%', fontSize: 13, opacity: insufficient ? 0.5 : 1, cursor: insufficient ? 'not-allowed' : 'pointer' }}
@@ -2654,7 +3177,7 @@ const WatchPage: React.FC = () => {
                 </div>
               </div>
               <button
-                onClick={handleCreateMarket}
+                onClick={() => handleCreateMarket()}
                 disabled={!predictQuestion.trim() || predictOptions.filter(o => o.trim()).length < 2}
                 className="sf-btn sf-btn-coral"
                 style={{ height: 46, fontSize: 13, marginTop: 6, opacity: (!predictQuestion.trim() || predictOptions.filter(o => o.trim()).length < 2) ? 0.5 : 1 }}

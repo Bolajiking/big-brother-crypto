@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import LivepeerPlayer from './LivepeerPlayer';
+import LivepeerPlayer, { type LivepeerPlayerHandle, type LivepeerPlayerState } from './LivepeerPlayer';
 import ClientOnly from './ClientOnly';
 import SunArcIndicator from './SunArcIndicator';
+import StreamControlBar from './StreamControlBar';
 import { useDaylight } from '@/lib/daylight';
 import { usePredictionStore } from '@/stores/predictionStore';
 import { useUserStore } from '@/stores/userStore';
@@ -16,7 +17,19 @@ interface Camera {
   playbackId: string;
   streamId: string;
   isActive: boolean;
+  isLive?: boolean;
+  viewerCount?: number;
   description: string;
+}
+
+interface MobileChatLine {
+  id: string;
+  name: string;
+  color: string;
+  msg: string;
+  time: string;
+  tier?: 'hot' | 'system' | 'normal';
+  coin?: number;
 }
 
 interface MobileLayoutProps {
@@ -26,7 +39,14 @@ interface MobileLayoutProps {
   onRequireLogin?: () => void;
   isAuthenticated?: boolean;
   userEmail?: string;
-  onCreateMarket?: (data: MarketCreationData) => void;
+  userName?: string;
+  walletAddress?: string | null;
+  userId?: string | null;
+  onLogout?: () => void | Promise<void>;
+  chatMessages?: MobileChatLine[];
+  onSendChat?: (message: string) => Promise<MobileChatLine | null> | MobileChatLine | null;
+  onPlaceBet?: (marketId: string, optionId: string, amount: number) => Promise<boolean> | boolean;
+  onCreateMarket?: (data: MarketCreationData) => void | Promise<void>;
   dataMode?: 'demo' | 'real';
   onDataModeChange?: (mode: 'demo' | 'real') => void;
 }
@@ -64,6 +84,22 @@ const fmt = (n: number) => {
   return n.toString();
 };
 const ngn = (n: number) => '₦' + fmt(n);
+const shortAddress = (address?: string | null) => (
+  address ? `${address.slice(0, 6)}…${address.slice(-4)}` : 'Provisioning wallet'
+);
+const DIRECTOR_CAMERA_NAME = "director's view";
+const isDirectorCameraName = (name?: string | null) => (
+  name?.trim().toLowerCase() === DIRECTOR_CAMERA_NAME
+);
+const DEFAULT_PLAYER_STATE: LivepeerPlayerState = {
+  isPaused: true,
+  isMuted: true,
+  isLive: false,
+  isBuffering: false,
+  hasVideoFrame: false,
+  isPictureInPicture: false,
+  volume: 1,
+};
 const optionDot = (idx: number) => ['var(--sf-mint)', 'var(--sf-coral)', 'var(--sf-violet)', 'var(--sf-cyan-warm)'][idx % 4];
 const optionFill = (idx: number, picked = false) => {
   if (picked) return 'rgba(255,78,43,0.18)';
@@ -85,6 +121,13 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
   onRequireLogin,
   isAuthenticated = false,
   userEmail,
+  userName,
+  walletAddress,
+  userId,
+  onLogout,
+  chatMessages: externalChatMessages,
+  onSendChat,
+  onPlaceBet,
   onCreateMarket,
   dataMode = 'demo',
   onDataModeChange,
@@ -97,6 +140,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
   const [showMobileWidgets, setShowMobileWidgets] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
   const [showChannelDrawer, setShowChannelDrawer] = useState(false);
+  const [showProfileSheet, setShowProfileSheet] = useState(false);
 
   // Drag handle
   const [isDragging, setIsDragging] = useState(false);
@@ -109,9 +153,11 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
   const [pickedBet, setPickedBet] = useState<{ marketId: string; optionId: string } | null>(null);
   const [stake, setStake] = useState(500);
 
-  const [chatMessages, setChatMessages] = useState(SEED_CHAT);
+  const [chatMessages, setChatMessages] = useState<MobileChatLine[]>([]);
   const [chatInput, setChatInput] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<LivepeerPlayerHandle>(null);
+  const [playerState, setPlayerState] = useState<LivepeerPlayerState>(DEFAULT_PLAYER_STATE);
 
   const [showMarketComposer, setShowMarketComposer] = useState(false);
   const [predictQuestion, setPredictQuestion] = useState('');
@@ -121,14 +167,26 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
 
   const [winH, setWinH] = useState(800);
 
+  const profileName = userName || userEmail?.split('@')[0] || 'Viewer';
+  const profileInitial = profileName.charAt(0).toUpperCase();
+
   useEffect(() => {
     setIsMounted(true);
-    initializeDemoData();
     const update = () => setWinH(window.innerHeight);
     update();
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
-  }, [initializeDemoData]);
+  }, []);
+
+  useEffect(() => {
+    if (dataMode === 'demo') {
+      initializeDemoData();
+      setChatMessages(SEED_CHAT);
+      return;
+    }
+
+    setChatMessages(externalChatMessages || []);
+  }, [dataMode, externalChatMessages, initializeDemoData]);
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages]);
 
@@ -184,28 +242,37 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
 
   const activeCam = cameras[activeChannel];
   const otherCameras = cameras.map((cam, idx) => ({ cam, idx })).filter(({ idx }) => idx !== activeChannel);
-  const isIdle = dataMode === 'real';
-  const effectiveMarkets = isIdle ? [] : markets;
+  const isDemoMode = dataMode === 'demo';
+  const isDirectorCamera = isDirectorCameraName(activeCam?.name);
+  const shouldPlayCameraSignal = Boolean(activeCam?.isLive) || (isDemoMode && !isDirectorCamera);
+  const isCameraIdle = !isDemoMode && !activeCam?.isLive;
+  const liveHasStream = cameras.some(camera => camera.isLive);
+  const effectiveMarkets = markets;
   const activeMarkets = effectiveMarkets.filter(m => m.status === 'active');
   const activeMarket = activeMarkets[0] || null;
-  const displayChat = isIdle
-    ? chatMessages.filter(m => !SEED_CHAT.find(s => s.id === m.id))
-    : chatMessages;
+  const displayChat = chatMessages;
+  const isIdle = !isDemoMode && !liveHasStream && activeMarkets.length === 0 && displayChat.length === 0;
 
   const handlePickOption = (marketId: string, optionId: string) => {
     if (!isAuthenticated) { onRequireLogin?.(); return; }
     setPickedBet({ marketId, optionId });
     setSheetState('full');
   };
-  const handlePlaceBet = () => {
+  const handlePlaceBet = async () => {
     if (!pickedBet) return;
+    if (onPlaceBet) {
+      const placed = await onPlaceBet(pickedBet.marketId, pickedBet.optionId, stake);
+      if (placed) setPickedBet(null);
+      return;
+    }
+
     if (deductStakes(stake)) {
       placeBet(pickedBet.marketId, pickedBet.optionId, stake, userEmail?.split('@')[0] || 'You');
       setPickedBet(null);
     }
   };
 
-  const handleSendChat = (e: React.FormEvent) => {
+  const handleSendChat = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
     if (!isAuthenticated) { onRequireLogin?.(); return; }
@@ -217,17 +284,22 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
       setChatInput('');
       return;
     }
-    setChatMessages(prev => [...prev, {
-      id: `m_${Date.now()}`,
-      name: userEmail?.split('@')[0] || 'You',
-      color: '#FF4E2B',
-      msg: text,
-      time: 'now',
-    }]);
+    if (onSendChat) {
+      const sentMessage = await onSendChat(text);
+      if (sentMessage) setChatMessages(prev => [...prev, sentMessage]);
+    } else {
+      setChatMessages(prev => [...prev, {
+        id: `m_${Date.now()}`,
+        name: userEmail?.split('@')[0] || 'You',
+        color: '#FF4E2B',
+        msg: text,
+        time: 'now',
+      }]);
+    }
     setChatInput('');
   };
 
-  const handleCreateMarket = () => {
+  const handleCreateMarket = async () => {
     const opts = predictOptions.filter(o => o.trim());
     if (!predictQuestion.trim() || opts.length < 2) return;
     const data: MarketCreationData = {
@@ -237,7 +309,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
       category: predictCategory,
     };
     if (onCreateMarket) {
-      onCreateMarket(data);
+      await onCreateMarket(data);
     } else {
       addMarket(data, userEmail?.split('@')[0] || 'Anonymous');
     }
@@ -279,81 +351,338 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
       {/* HEADER — paper */}
       <header style={{
         position: 'sticky', top: 0, zIndex: 40,
-        height: 56, padding: '0 14px',
-        display: 'flex', alignItems: 'center', gap: 10,
+        minHeight: 64, padding: '8px 10px',
+        display: 'flex', alignItems: 'center', gap: 8,
         background: 'var(--sf-paper)',
         color: 'var(--sf-stage)',
         borderBottom: '2px solid var(--sf-stage)',
+        overflow: 'visible',
       }}>
         <button onClick={() => setShowChannelDrawer(true)} style={{
           width: 38, height: 38, borderRadius: 999,
           background: 'var(--sf-stage)', color: '#fff',
           border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexShrink: 0,
         }} aria-label="Cameras">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span className="sf-display" style={{ fontSize: 18, fontWeight: 900, color: 'var(--sf-stage)', fontStyle: 'italic', letterSpacing: '-0.04em' }}>
-            starfactor<span style={{ color: 'var(--sf-coral)' }}>.</span>
-          </span>
-        </Link>
-        <span className="sf-display-italic" style={{ fontSize: 18, marginLeft: 8 }}>
-          DAY <span style={{ color: 'var(--sf-coral)' }}>47</span>
-        </span>
-        {/* Subtle demo / live toggle */}
-        {onDataModeChange && (
-          <button
-            onClick={() => onDataModeChange(dataMode === 'demo' ? 'real' : 'demo')}
-            title={dataMode === 'demo' ? 'Showing demo · tap for live' : 'Showing live · tap for demo'}
-            style={{
-              marginLeft: 6,
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              padding: '4px 8px', borderRadius: 999,
-              background: dataMode === 'demo' ? 'rgba(255,78,43,0.14)' : 'rgba(31,209,122,0.14)',
-              border: `1px solid ${dataMode === 'demo' ? 'rgba(255,78,43,0.4)' : 'rgba(31,209,122,0.4)'}`,
-              color: dataMode === 'demo' ? 'var(--sf-coral)' : '#1FD17A',
-              fontSize: 9, fontWeight: 900, letterSpacing: '0.14em',
-              textTransform: 'uppercase', cursor: 'pointer',
-            }}
-          >
-            <span style={{
-              width: 5, height: 5, borderRadius: 999,
-              background: dataMode === 'demo' ? 'var(--sf-coral)' : '#1FD17A',
-            }} />
-            {dataMode === 'demo' ? 'Demo' : 'Live'}
-          </button>
-        )}
-        <div style={{ flex: 1 }} />
-        <div style={{ marginRight: 8 }}>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, maxWidth: '100%' }}>
+            <span className="sf-display" style={{
+              fontSize: 18,
+              fontWeight: 900,
+              color: 'var(--sf-stage)',
+              fontStyle: 'italic',
+              letterSpacing: '-0.04em',
+              whiteSpace: 'nowrap',
+            }}>
+              starfactor<span style={{ color: 'var(--sf-coral)' }}>.</span>
+            </span>
+          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 1, minWidth: 0 }}>
+            <span className="sf-eyebrow" style={{ color: 'rgba(10,8,20,0.56)', fontSize: 8, whiteSpace: 'nowrap' }}>
+              DAY <span style={{ color: 'var(--sf-coral)' }}>47</span>
+            </span>
+            {onDataModeChange && (
+              <button
+                onClick={() => onDataModeChange(dataMode === 'demo' ? 'real' : 'demo')}
+                title={dataMode === 'demo' ? 'Showing demo · tap for live' : 'Showing live · tap for demo'}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  minHeight: 19,
+                  padding: '2px 7px',
+                  borderRadius: 999,
+                  background: dataMode === 'demo' ? 'rgba(255,78,43,0.12)' : 'rgba(31,209,122,0.14)',
+                  border: `1px solid ${dataMode === 'demo' ? 'rgba(255,78,43,0.32)' : 'rgba(31,209,122,0.35)'}`,
+                  color: dataMode === 'demo' ? 'var(--sf-coral)' : '#138D52',
+                  fontSize: 8,
+                  fontWeight: 900,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <span style={{
+                  width: 5, height: 5, borderRadius: 999,
+                  background: dataMode === 'demo' ? 'var(--sf-coral)' : '#1FD17A',
+                }} />
+                {dataMode === 'demo' ? 'Demo' : 'Live'}
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div style={{ marginRight: 2, flexShrink: 0 }}>
           <SunArcIndicator state={day} dark={false} compact />
         </div>
-        <ClientOnly>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '5px 10px 5px 5px',
-            background: 'var(--sf-stage)', color: '#fff', borderRadius: 999,
-          }}>
-            <span style={{
-              width: 22, height: 22, borderRadius: 999,
-              background: 'linear-gradient(135deg,#FFB020,#FF4E2B)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#1A0F00', fontWeight: 900, fontSize: 11,
-            }}>★</span>
-            <span style={{ fontSize: 11, fontWeight: 800 }}>{balance.stakes.toLocaleString()}</span>
-          </div>
-        </ClientOnly>
+
+        <button
+          onClick={() => {
+            if (!isAuthenticated) { onRequireLogin?.(); return; }
+            setShowProfileSheet(true);
+          }}
+          aria-label={isAuthenticated ? 'Open profile wallet' : 'Sign in'}
+          style={{
+            flexShrink: 0,
+            minWidth: isAuthenticated ? 112 : 74,
+            maxWidth: 128,
+            height: 42,
+            borderRadius: 999,
+            border: '1px solid rgba(10,8,20,0.12)',
+            background: 'var(--sf-stage)',
+            color: '#fff',
+            padding: isAuthenticated ? '5px 9px 5px 5px' : '0 12px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            cursor: 'pointer',
+            boxShadow: '0 14px 34px -20px rgba(10,8,20,0.75)',
+          }}
+        >
+          {isAuthenticated ? (
+            <ClientOnly fallback={
+              <>
+                <span style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 999,
+                  background: 'rgba(255,255,255,0.12)',
+                  flexShrink: 0,
+                }} />
+                <span style={{ fontSize: 11, fontWeight: 900 }}>...</span>
+              </>
+            }>
+              <span style={{
+                width: 28,
+                height: 28,
+                borderRadius: 999,
+                background: 'linear-gradient(135deg,#FFB020,#FF4E2B)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#1A0F00',
+                fontWeight: 900,
+                fontSize: 11,
+                flexShrink: 0,
+              }}>{profileInitial}</span>
+              <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0, lineHeight: 1.05, textAlign: 'left' }}>
+                <span style={{ fontSize: 11, fontWeight: 900, whiteSpace: 'nowrap' }}>{fmt(balance.stakes)} STK</span>
+                <span style={{ fontSize: 8, fontWeight: 800, color: 'var(--sf-mint)', whiteSpace: 'nowrap' }}>{fmt(balance.clout)} CL</span>
+              </span>
+            </ClientOnly>
+          ) : (
+            <span className="sf-eyebrow" style={{ color: '#fff', fontSize: 9 }}>SIGN IN</span>
+          )}
+        </button>
       </header>
+
+      {showProfileSheet && (
+        <div className="fixed inset-0 z-[72] sf-fade-in">
+          <div
+            onClick={() => setShowProfileSheet(false)}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(10,8,20,0.66)',
+              backdropFilter: 'blur(10px)',
+            }}
+          />
+          <section className="sf-slide-up" style={{
+            position: 'absolute',
+            left: 12,
+            right: 12,
+            bottom: 12,
+            maxWidth: 520,
+            margin: '0 auto',
+            maxHeight: 'min(74vh, 560px)',
+            overflow: 'auto',
+            background: 'var(--sf-stage-2)',
+            color: '#fff',
+            border: '1.5px solid var(--sf-line-strong)',
+            borderRadius: 20,
+            boxShadow: '0 26px 76px -22px rgba(0,0,0,0.82)',
+          }}>
+            <div style={{
+              padding: '11px 12px',
+              borderBottom: '1px solid var(--sf-line)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+            }}>
+              <div style={{
+                width: 38,
+                height: 38,
+                borderRadius: 999,
+                background: 'linear-gradient(135deg,#FFB020,#FF4E2B)',
+                color: '#1A0F00',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 900,
+                fontSize: 14,
+                boxShadow: '0 14px 34px -18px rgba(255,78,43,0.8)',
+                flexShrink: 0,
+              }}>{profileInitial}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="sf-eyebrow" style={{ color: 'var(--sf-coral)', marginBottom: 2, fontSize: 8 }}>PROFILE</div>
+                <div style={{ fontSize: 14, fontWeight: 900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {profileName}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--sf-fg-3)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {userEmail || 'Signed in viewer'}
+                </div>
+              </div>
+              <button
+                onClick={() => setShowProfileSheet(false)}
+                className="sf-btn-icon"
+                aria-label="Close profile"
+                style={{ width: 30, height: 30, background: 'rgba(255,255,255,0.05)', borderColor: 'var(--sf-line)' }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ padding: 12, display: 'grid', gap: 8 }}>
+              <div style={{
+                padding: 11,
+                borderRadius: 16,
+                background: 'linear-gradient(135deg, rgba(255,176,32,0.13), rgba(255,78,43,0.10))',
+                border: '1px solid rgba(255,176,32,0.26)',
+              }}>
+                <div className="sf-eyebrow" style={{ color: 'var(--sf-amber)', marginBottom: 8, fontSize: 8 }}>APP WALLET</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7 }}>
+                  <div style={{
+                    padding: 10,
+                    borderRadius: 13,
+                    background: 'rgba(10,8,20,0.36)',
+                    border: '1px solid rgba(255,255,255,0.07)',
+                  }}>
+                    <div style={{ fontSize: 8, color: 'var(--sf-fg-3)', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Stakes</div>
+                    <div style={{ fontSize: 20, lineHeight: 1, fontWeight: 900, marginTop: 5 }}>{balance.stakes.toLocaleString()}</div>
+                    <div style={{ fontSize: 9, color: 'var(--sf-amber)', marginTop: 3 }}>{ngn(Math.floor(balance.stakes / 10))}</div>
+                  </div>
+                  <div style={{
+                    padding: 10,
+                    borderRadius: 13,
+                    background: 'rgba(10,8,20,0.36)',
+                    border: '1px solid rgba(255,255,255,0.07)',
+                  }}>
+                    <div style={{ fontSize: 8, color: 'var(--sf-fg-3)', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Clout</div>
+                    <div style={{ fontSize: 20, lineHeight: 1, fontWeight: 900, marginTop: 5 }}>{balance.clout.toLocaleString()}</div>
+                    <div style={{ fontSize: 9, color: 'var(--sf-mint)', marginTop: 3 }}>daily rewards</div>
+                  </div>
+                </div>
+                <div style={{
+                  marginTop: 8,
+                  padding: '8px 10px',
+                  borderRadius: 13,
+                  background: 'rgba(255,255,255,0.05)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 10,
+                }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 8, color: 'var(--sf-fg-3)', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Privy wallet</div>
+                    <div style={{ fontSize: 11, fontWeight: 900, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {shortAddress(walletAddress)}
+                    </div>
+                  </div>
+                  <span style={{
+                    padding: '4px 7px',
+                    borderRadius: 999,
+                    background: walletAddress ? 'rgba(31,209,122,0.13)' : 'rgba(242,181,68,0.13)',
+                    color: walletAddress ? 'var(--sf-mint)' : 'var(--sf-amber)',
+                    fontSize: 8,
+                    fontWeight: 900,
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {walletAddress ? 'Ready' : 'Creating'}
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <button onClick={() => onRequireLogin?.()} className="sf-btn sf-btn-coral" style={{ height: 34, fontSize: 10 }}>TOP UP</button>
+                <button onClick={() => onRequireLogin?.()} className="sf-btn sf-btn-ghost" style={{ height: 34, fontSize: 10 }}>CASH OUT</button>
+              </div>
+
+              <div style={{
+                border: '1px solid var(--sf-line)',
+                borderRadius: 14,
+                overflow: 'hidden',
+                background: 'rgba(255,255,255,0.03)',
+              }}>
+                {[
+                  ['Tier', 'FREE'],
+                  ['Viewer ID', userId ? userId.slice(0, 8) : 'syncing'],
+                  ['Experience', dataMode === 'demo' ? 'Demo preview' : 'Live state'],
+                ].map(([label, value]) => (
+                  <div key={label} style={{
+                    minHeight: 35,
+                    padding: '8px 10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    borderBottom: label === 'Experience' ? 'none' : '1px solid var(--sf-line)',
+                  }}>
+                    <span style={{ fontSize: 10, color: 'var(--sf-fg-3)', fontWeight: 800 }}>{label}</span>
+                    <span style={{ fontSize: 11, fontWeight: 900, textAlign: 'right' }}>{value}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: onDataModeChange ? '1fr 1fr' : '1fr', gap: 8 }}>
+                {onDataModeChange && (
+                  <button
+                    onClick={() => onDataModeChange(dataMode === 'demo' ? 'real' : 'demo')}
+                    className="sf-btn sf-btn-stage"
+                    style={{ height: 33, fontSize: 9 }}
+                  >
+                    {dataMode === 'demo' ? 'SHOW LIVE STATE' : 'PREVIEW DEMO'}
+                  </button>
+                )}
+                <button
+                  onClick={async () => {
+                    await onLogout?.();
+                    setShowProfileSheet(false);
+                  }}
+                  className="sf-btn sf-btn-ghost"
+                  style={{ height: 33, fontSize: 9 }}
+                >
+                  SIGN OUT
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
 
       {/* PLAYER */}
       <div style={{ position: 'relative', aspectRatio: '16/9', background: '#000' }}>
-        {activeCam && !isIdle ? (
-          <LivepeerPlayer playbackId={activeCam.playbackId} isMainPlayer={true} showStatus={false} className="w-full h-full" />
+        {activeCam && shouldPlayCameraSignal ? (
+          <LivepeerPlayer
+            ref={playerRef}
+            playbackId={activeCam.playbackId}
+            isMainPlayer={true}
+            showControls={false}
+            showStatus={false}
+            className="w-full h-full"
+            onStateChange={setPlayerState}
+          />
         ) : (
           <PaletteFill palette="coral">
-            {isIdle && (
+            {isCameraIdle && (
               <div style={{
                 position: 'absolute', inset: 0,
                 background: 'rgba(10,8,20,0.7)',
@@ -378,7 +707,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
           </PaletteFill>
         )}
         <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 6 }}>
-          {!isIdle && (
+          {!isCameraIdle && (
             <span style={{
               display: 'inline-flex', alignItems: 'center', gap: 5,
               padding: '3px 9px', borderRadius: 999,
@@ -389,7 +718,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
               LIVE
             </span>
           )}
-          {showMobileWidgets && !isIdle && (
+          {showMobileWidgets && !isCameraIdle && (
             <span style={{
               background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)',
               padding: '4px 9px', borderRadius: 999,
@@ -431,9 +760,21 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
             }}
           >FOCUS</button>
         </div>
+        {activeCam && shouldPlayCameraSignal && (
+          <StreamControlBar
+            variant="mobile"
+            state={playerState}
+            onTogglePlay={() => { playerRef.current?.togglePlay().catch(console.error); }}
+            onToggleMuted={() => playerRef.current?.toggleMuted()}
+            onVolumeChange={(volume) => playerRef.current?.setVolume(volume)}
+            onSyncLive={() => { playerRef.current?.syncToLive().catch(console.error); }}
+            onTogglePictureInPicture={() => { playerRef.current?.togglePictureInPicture().catch(console.error); }}
+            onFullscreen={() => { playerRef.current?.fullscreen().catch(console.error); }}
+          />
+        )}
         {showMobileWidgets && activeMarket && (
           <div style={{
-            position: 'absolute', bottom: 12, left: 8, right: 8,
+            position: 'absolute', bottom: activeCam && shouldPlayCameraSignal ? 58 : 12, left: 8, right: 8,
             background: 'linear-gradient(90deg, rgba(255,78,43,0.92), rgba(255,176,32,0.92))',
             borderRadius: 10, padding: '8px 10px',
             display: 'flex', alignItems: 'center', gap: 8,
@@ -481,16 +822,30 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
             </button>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
-            {isIdle && Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} style={{
+            {isCameraIdle && (cameras.length > 0 ? cameras.slice(0, 6) : Array.from({ length: 6 }).map((_, i) => ({
+              id: `cam-${i}`,
+              name: `CAM ${String(i + 1).padStart(2, '0')}`,
+            }))).map((cam, i) => (
+              <button
+                key={cam.id}
+                onClick={() => cameras.length > 0 && setActiveChannel(i)}
+                style={{
                 aspectRatio: '4/3', borderRadius: 10,
                 border: '1px dashed var(--sf-line-strong)',
                 background: 'rgba(255,255,255,0.02)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'var(--sf-fg-3)', fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
-              }}>CAM {String(i + 1).padStart(2, '0')}</div>
+                color: isDirectorCameraName(cam.name) ? 'var(--sf-amber)' : 'var(--sf-fg-3)',
+                fontSize: 9,
+                fontWeight: 900,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                cursor: cameras.length > 0 ? 'pointer' : 'default',
+              }}
+              >
+                {cam.name}
+              </button>
             ))}
-            {!isIdle && otherCameras.map(({ cam, idx }) => (
+            {!isCameraIdle && otherCameras.map(({ cam, idx }) => (
               <button
                 key={cam.id}
                 onClick={() => {
@@ -508,14 +863,14 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
                 <PaletteFill palette={PALETTES[idx % PALETTES.length]}>
                   <div style={{ position: 'absolute', top: 6, left: 6, display: 'flex', gap: 4 }}>
                     <span style={{
-                      background: cam.isActive ? 'var(--sf-live)' : 'rgba(0,0,0,0.65)',
+                      background: cam.isLive ? 'var(--sf-live)' : 'rgba(0,0,0,0.65)',
                       color: '#fff',
                       fontSize: 8,
                       fontWeight: 900,
                       padding: '2px 5px',
                       borderRadius: 4,
                       letterSpacing: '0.1em',
-                    }}>{cam.isActive ? 'LIVE' : 'IDLE'}</span>
+                    }}>{cam.isLive ? 'LIVE' : 'IDLE'}</span>
                   </div>
                   <div style={{
                     position: 'absolute',
@@ -542,7 +897,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
           STARFACTOR · S01 · DAY 47 · {(activeCam?.name || 'MAIN').toUpperCase()}
         </div>
         <h1 className="sf-display" style={{ fontSize: 18, color: '#fff', marginBottom: 10, lineHeight: 1.1 }}>
-          {isIdle
+          {isCameraIdle
             ? 'Cameras wake at 19:00 WAT. Stay in the room.'
             : activeCam?.description || 'Pick a room. Read the crowd. Back the moment.'}
         </h1>
@@ -577,24 +932,38 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
       </div>
 
       {/* HORIZONTAL CHANNEL RAIL */}
-      {viewMode === 'single' && isIdle && (
+      {viewMode === 'single' && isCameraIdle && (
         <div style={{
           padding: '0 14px 16px',
           display: 'flex', gap: 8, overflowX: 'auto',
         }} className="sf-no-scrollbar">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} style={{
+          {(cameras.length > 0 ? cameras : Array.from({ length: 6 }).map((_, i) => ({
+            id: `cam-${i}`,
+            name: `CAM ${String(i + 1).padStart(2, '0')}`,
+          }))).map((cam, i) => (
+            <button
+              key={cam.id}
+              onClick={() => cameras.length > 0 && setActiveChannel(i)}
+              style={{
               flex: '0 0 140px', aspectRatio: '16/9',
               borderRadius: 10,
               border: '1px dashed var(--sf-line-strong)',
               background: 'rgba(255,255,255,0.02)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--sf-fg-3)', fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
-            }}>CAM {String(i + 1).padStart(2, '0')}</div>
+              color: isDirectorCameraName(cam.name) ? 'var(--sf-amber)' : 'var(--sf-fg-3)',
+              fontSize: 9,
+              fontWeight: 900,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              cursor: cameras.length > 0 ? 'pointer' : 'default',
+            }}
+            >
+              {cam.name}
+            </button>
           ))}
         </div>
       )}
-      {viewMode === 'single' && !isIdle && (
+      {viewMode === 'single' && !isCameraIdle && (
         <div style={{
           padding: '0 14px 16px',
           display: 'flex', gap: 8, overflowX: 'auto',
@@ -615,7 +984,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
                     background: 'rgba(0,0,0,0.7)', color: '#fff',
                     fontSize: 8, fontWeight: 900, padding: '2px 5px',
                     borderRadius: 3, letterSpacing: '0.12em',
-                  }}>{cam.isActive ? '● LIVE' : '○ IDLE'}</span>
+                  }}>{cam.isLive ? '● LIVE' : '○ IDLE'}</span>
                 </div>
                 <div style={{
                   position: 'absolute', bottom: 4, left: 4, right: 4,
@@ -688,7 +1057,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
                   padding: 12, borderRadius: 14,
                   background: 'linear-gradient(135deg, rgba(255,176,32,0.10) 0%, rgba(255,78,43,0.10) 100%)',
                   border: '1px solid rgba(255,176,32,0.25)',
-                  display: 'flex', alignItems: 'center', gap: 10,
+                  display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
                 }}>
                   <div className="sf-spin-slow" style={{
                     width: 32, height: 32, borderRadius: 999,
@@ -696,11 +1065,11 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     color: '#1A0F00', fontWeight: 900, fontSize: 13,
                   }}>★</div>
-                    <div style={{ flex: 1 }}>
+                    <div style={{ flex: '1 1 150px', minWidth: 0 }}>
                       <div style={{ fontSize: 9, color: 'var(--sf-fg-3)', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Stake balance</div>
-                    <div style={{ fontSize: 16, color: '#fff', fontWeight: 900 }}>{balance.stakes.toLocaleString()} <span style={{ color: 'var(--sf-amber)', fontSize: 10 }}>{ngn(Math.floor(balance.stakes / 10))}</span></div>
+                    <div style={{ fontSize: 16, color: '#fff', fontWeight: 900, whiteSpace: 'normal' }}>{balance.stakes.toLocaleString()} <span style={{ color: 'var(--sf-amber)', fontSize: 10 }}>{ngn(Math.floor(balance.stakes / 10))}</span></div>
                   </div>
-                  {!isAuthenticated && <button onClick={() => onRequireLogin?.()} className="sf-btn sf-btn-coral" style={{ height: 28, fontSize: 10 }}>SIGN IN</button>}
+                  {!isAuthenticated && <button onClick={() => onRequireLogin?.()} className="sf-btn sf-btn-coral" style={{ height: 28, fontSize: 10, marginLeft: 'auto' }}>SIGN IN</button>}
                 </div>
               </ClientOnly>
 
@@ -1041,7 +1410,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 12, fontWeight: 800, color: '#fff' }}>{cam.name}</div>
                     <div style={{ fontSize: 9, color: 'var(--sf-fg-3)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                      {cam.isActive ? '● LIVE' : '○ Idle'} · {((i + 1) * 4321).toLocaleString()}
+                      {cam.isLive ? '● LIVE' : '○ Idle'} · {((i + 1) * 4321).toLocaleString()}
                     </div>
                   </div>
                 </button>

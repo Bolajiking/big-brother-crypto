@@ -7,6 +7,10 @@ interface PredictionState {
   isLoading: boolean;
 
   // Actions
+  setMarkets: (markets: PredictionMarket[]) => void;
+  setUserBets: (userBets: UserBet[]) => void;
+  upsertMarket: (market: PredictionMarket) => void;
+  addUserBet: (bet: UserBet) => void;
   addMarket: (data: MarketCreationData, creatorUsername: string) => void;
   placeBet: (marketId: string, optionId: string, amount: number, username: string) => void;
   resolveMarket: (marketId: string, winningOptionId: string) => void;
@@ -110,8 +114,28 @@ export const usePredictionStore = create<PredictionState>((set, get) => ({
   userBets: [],
   isLoading: false,
 
+  setMarkets: (markets) => set({ markets }),
+
+  setUserBets: (userBets) => set({ userBets }),
+
+  upsertMarket: (market) => {
+    set((state) => ({
+      markets: state.markets.some((item) => item.id === market.id)
+        ? state.markets.map((item) => (item.id === market.id ? market : item))
+        : [market, ...state.markets],
+    }));
+  },
+
+  addUserBet: (bet) => {
+    set((state) => ({
+      userBets: state.userBets.some((item) => item.id === bet.id || item.marketId === bet.marketId)
+        ? state.userBets.map((item) => (item.id === bet.id || item.marketId === bet.marketId ? bet : item))
+        : [bet, ...state.userBets],
+    }));
+  },
+
   initializeDemoData: () => {
-    set({ markets: getDemoMarkets() });
+    set({ markets: getDemoMarkets(), userBets: [] });
   },
 
   addMarket: (data: MarketCreationData, creatorUsername: string) => {

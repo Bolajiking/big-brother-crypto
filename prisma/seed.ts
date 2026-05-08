@@ -12,6 +12,15 @@ async function main() {
   // Create cameras from existing db.json data
   const cameras = [
     {
+      id: '9c5cf7c2-71b4-4d14-904a-2c3cd9b2740c',
+      name: "director's view",
+      playbackId: '9c5cpqphdx9wemrq',
+      streamId: '9c5cf7c2-71b4-4d14-904a-2c3cd9b2740c',
+      description: 'The main show feed. We follow the action across the house.',
+      isActive: true,
+      isLive: false,
+    },
+    {
       name: 'Kitchen',
       playbackId: '32b49rq29siaxjlf',
       streamId: '32b47c8b-56c3-4a31-984f-be8d090bcb21',
@@ -71,12 +80,13 @@ async function main() {
 
   console.log('Creating cameras...');
   for (const camera of cameras) {
+    const { id, ...cameraData } = camera;
     await prisma.camera.upsert({
-      where: { id: camera.streamId },
-      update: camera,
+      where: { id: id || camera.streamId },
+      update: cameraData,
       create: {
-        id: camera.streamId,
-        ...camera,
+        id: id || camera.streamId,
+        ...cameraData,
       },
     });
   }

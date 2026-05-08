@@ -9,6 +9,15 @@
   ],
   "cameras": [
     {
+      "id": "director-view",
+      "name": "director's view",
+      "playbackId": "9c5cpqphdx9wemrq",
+      "streamId": "9c5cf7c2-71b4-4d14-904a-2c3cd9b2740c",
+      "isActive": true,
+      "isLive": false,
+      "description": "The main show feed. We follow the action across the house."
+    },
+    {
       "id": "cam1",
       "name": "Kitchen",
       "playbackId": "32b49rq29siaxjlf",

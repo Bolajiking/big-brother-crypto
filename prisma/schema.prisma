@@ -98,6 +98,7 @@ model User {
 
   // Relations
   predictions     Prediction[]
+  createdMarkets  Market[]      @relation("MarketCreator")
   votes           Vote[]
   transactions    Transaction[]
   chatMessages    ChatMessage[]
@@ -206,6 +207,9 @@ model Market {
   seasonId        String?
   season          Season?       @relation(fields: [seasonId], references: [id])
 
+  creatorId       String?
+  creator         User?         @relation("MarketCreator", fields: [creatorId], references: [id])
+
   options         MarketOption[]
   predictions     Prediction[]
 
@@ -215,6 +219,7 @@ model Market {
   @@index([status])
   @@index([type])
   @@index([closesAt])
+  @@index([creatorId])
 }
 
 model MarketOption {
@@ -267,6 +272,7 @@ model Prediction {
   @@index([userId])
   @@index([marketId])
   @@index([status])
+  @@unique([userId, marketId])
 }
 
 // ============================================
