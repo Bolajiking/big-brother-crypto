@@ -289,7 +289,7 @@ const Hero: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
             <Link href="/apply" className="sf-apply-pill" aria-label="Casting open — apply for Season 1">
               <span className="sf-pulse"></span>
-              <span className="sf-eyebrow" style={{ color: 'var(--sf-coral)', fontSize: 11 }}>REALITY TV · LAGOS · SEASON 1 · Q4 2026</span>
+              <span className="sf-eyebrow" style={{ color: 'var(--sf-coral)', fontSize: 11 }}>REALITY TV · SEASON 1 · Q4 2026</span>
               <span className="sf-apply-cta sf-eyebrow" style={{ fontSize: 11 }}>APPLY</span>
               <span className="sf-apply-arrow" aria-hidden="true">›</span>
             </Link>
@@ -316,7 +316,7 @@ const Hero: React.FC = () => {
             }}>
               Live reality TV where viewers have skin in the game. Watch the house. Predict the drama. Earn from your takes.
               <br />
-              Sixteen housemates, every room taped and live-streamed, six weeks.
+              Sixteen housemates, every room taped and live-streamed.
             </p>
             <p style={{
               marginTop: 18, marginBottom: 0,
@@ -371,7 +371,7 @@ const Ticker: React.FC = () => {
   const items = [
     '★ Season 1 waitlist · open now',
     '🎬 Casting open · Q4 2026 launch · Lagos',
-    '💰 First 10,000 sign-ups walk in with ₦500 already in the balance',
+    '💰 ₦500 sign up bonus for early users',
     '📺 Preview the show — every camera, every market',
     '🏠 Multi-camera. Every key room. No edits, no cuts.',
     '⚡ Cash out in seconds',
@@ -530,7 +530,7 @@ const Channels: React.FC = () => {
             </div>
             <div style={{ maxWidth: 360, paddingBottom: 12 }}>
               <p style={{ fontSize: 15, lineHeight: 1.55, color: 'var(--sf-fg-2)' }}>
-                Multiple HD feeds rolling in parallel from every key room — all live. Living room to diary, kitchen to garden, front door to pool deck — switch like you&apos;re flipping seats in the same room. No edit. No cut. No spin.
+                Live HD feeds rolling in parallel from every key room. Living room to diary, kitchen to garden, front door to pool deck. Switch cams like a pro. No edit. No cut. No spin.
               </p>
               <Link href="/watch" className="sf-eyebrow" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -653,12 +653,12 @@ const Channels: React.FC = () => {
               ))}
             </div>
             <div style={{ flex: 1, position: 'relative', minWidth: 280 }}>
-              <div className="sf-eyebrow" style={{ color: 'var(--sf-violet)' }}>★ DIRECTOR&apos;S BOOTH</div>
+              <div className="sf-eyebrow" style={{ color: 'var(--sf-violet)' }}>Director&apos;s cam</div>
               <div className="sf-display" style={{ fontSize: 32, color: '#fff', marginTop: 6, marginBottom: 6, letterSpacing: '-0.03em' }}>
-                Every camera, <span style={{ fontStyle: 'italic' }}>one screen.</span>
+                Follow the action
               </div>
               <div style={{ fontSize: 13, color: 'var(--sf-fg-2)', maxWidth: 520 }}>
-                Run multicam with picture-in-picture, follow a cast member across rooms, see the whole house at once. Pro tier — preview at launch.
+                Run multicam with picture-in-picture, follow the drama across rooms and see the whole house at once.
               </div>
             </div>
             <Link href="/watch" className="sf-btn sf-btn-paper" style={{ height: 44, padding: '0 22px', fontSize: 12 }}>LEARN MORE →</Link>
@@ -700,7 +700,7 @@ const HowItWorks: React.FC = () => {
               </h2>
             </div>
             <p style={{ fontSize: 16, lineHeight: 1.55, color: 'rgba(10,8,20,0.7)', maxWidth: 380, paddingBottom: 20 }}>
-              Every camera, open. Every market, open. Then we handed over the remote — and the balance. Three taps to a win.
+              Every camera, live. Every market, open. You&apos;re in control. Watch your faves, place predictions and win big.
             </p>
           </div>
         </Reveal>
@@ -821,7 +821,7 @@ const MarketsPreview: React.FC = () => {
               </h2>
             </div>
             <p style={{ fontSize: 14, color: 'var(--sf-fg-3)', lineHeight: 1.55, maxWidth: 360, paddingBottom: 18 }}>
-              Sample markets to show the format. From day one, every pool is real and every settlement clears the second it&apos;s called — settled in front of every camera, in front of every viewer.
+              From day one, every pool is real and every settlement clears the second it&apos;s called — settled in front of every camera, in front of every viewer.
             </p>
           </div>
         </Reveal>
@@ -918,7 +918,7 @@ const BuiltFor: React.FC = () => {
       headline: 'Get paid for paying attention.',
       palette: 'coral',
       accent: '#FF4E2B',
-      body: 'You already watched 100+ hours last season. You already had the right read on every eviction. Now your read is worth money. Predict from ₦100. Win, hold, or cash out — straight to your bank with clear receipts.',
+      body: 'You watch 100+ hours of reality tv every season. You make the right calls on every moment and back your favourites. Now your conviction is worth money. Predict from ₦100. Win, hold, or cash out straight to your bank.',
       bullets: [
         { k: 'Predict from ₦100', v: 'Bet small. Win in real time.' },
         { k: 'Cash out wallet-to-bank', v: 'Paystack. Instant. Naira out.' },
@@ -931,10 +931,10 @@ const BuiltFor: React.FC = () => {
       headline: 'Get paid while the cameras roll.',
       palette: 'violet',
       accent: '#6B3FE5',
-      body: "Traditional reality TV pays you in fame after the fact — and only if you make it to the end. Star Factor pays you while you're in the house. Tips, fan support, and a $30,000 grand prize. The audience picks who they're backing in real time.",
+      body: "Traditional reality TV pays you in fame after the fact — and only if you make it to the end. Star Factor pays you while you're in the house. Tips, fan support, and more ways to earn in-house + a $30k grand prize.",
       bullets: [
         { k: '$30K grand prize', v: 'Plus weekly challenge cash.' },
-        { k: 'Direct fan tips', v: '100% to you, in-show, every day.' },
+        { k: 'Direct fan tips', v: 'In-show, every day.' },
         { k: '42 days, multi-cam', v: 'Build your audience while you live.' },
       ],
       cta: { label: 'APPLY TO BE CAST', href: '/apply' },
@@ -944,7 +944,7 @@ const BuiltFor: React.FC = () => {
       headline: 'Sponsor the room. Own the moment.',
       palette: 'gold',
       accent: '#F2B544',
-      body: 'BetNaija got a 35% brand-awareness lift from a single BBNaija sponsorship. We offer the same audience — younger, mobile-first, and already transacting — at a fraction of broadcast pricing. Title sponsor, named rooms, branded challenges, prediction-market sponsors.',
+      body: "Your audience has left broadcast TV but they didn't stop watching reality TV — they're watching it on phones, betting on outcomes, and arguing in quote-tweets. Star Factor is built for that audience natively. Founding sponsorships open now: Title sponsors, Advertisements, Named rooms, branded challenges, prediction-market pools.",
       bullets: [
         { k: 'Name a room', v: 'Your brand on every camera.' },
         { k: 'Sponsor a market', v: 'Be the brand that pays the winners.' },
@@ -1075,7 +1075,7 @@ const Casting: React.FC = () => {
               </h2>
             </div>
             <p style={{ fontSize: 16, lineHeight: 1.55, color: 'var(--sf-fg-2)', maxWidth: 380, paddingBottom: 18 }}>
-              Sixteen people. One house. Forty-two days. $30,000 grand prize, plus weekly challenge cash and direct fan tips while you&apos;re still in the house. Apply yourself, or nominate the friend you know is built for it.
+              One house. Forty-two days. $30,000 grand prize, plus weekly challenge prizes and direct fan tips while you&apos;re in the house. Apply yourself, or nominate the friend you know is built for it.
             </p>
           </div>
         </Reveal>
@@ -1135,7 +1135,7 @@ const Casting: React.FC = () => {
                 The old shows pay you in fame. <span style={{ fontStyle: 'italic' }}>Star Factor pays you while.</span>
               </div>
               <div style={{ fontSize: 13, color: 'var(--sf-fg-2)' }}>
-                18+, Lagos-based or relocatable for six weeks. Apply now — shortlist is rolling.
+                Are you 18+ and available for six weeks? Apply now — shortlist is on a rolling basis.
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -1384,7 +1384,7 @@ const FinalCTA: React.FC = () => {
             fontSize: 19, lineHeight: 1.5, color: 'var(--sf-fg-2)',
             maxWidth: 600, margin: '0 auto 48px',
           }}>
-            The cast hears the chat. The markets clear in real time. The evictions are decided by you. Get on the list — the first 10,000 walk in with ₦500 already in the balance.
+            Get on the waitlist for early access — the first 10,000 get a ₦500 welcome bonus.
           </p>
         </Reveal>
 
@@ -1434,7 +1434,7 @@ const FinalCTA: React.FC = () => {
 
         <Reveal delay={280}>
           <div style={{ marginTop: 24, fontSize: 12, color: 'var(--sf-fg-3)', fontWeight: 600 }}>
-            First 10,000 get a ₦500 starter pot · No platform fees on payouts · 18+
+            ₦500 sign up bonus for early users
           </div>
         </Reveal>
 
@@ -1518,8 +1518,7 @@ const Footer: React.FC = () => {
           <div style={{ minWidth: 240 }}>
             <SFWordmark size={28} />
             <p style={{ fontSize: 14, color: 'var(--sf-fg-2)', lineHeight: 1.55, marginTop: 18, maxWidth: 320 }}>
-              Africa&apos;s first reality show that pays its audience. One house, multi-camera coverage, real-money prediction markets,
-              and transparent wallet-to-bank payouts. Built in Lagos for the room watching.
+              Africa&apos;s first reality show that pays its audience. One house, multi-camera coverage, real-money prediction markets, and transparent wallet-to-bank payouts. Built by Africans for Africans.
             </p>
             <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
               {socialLinks.map(s => (
@@ -1562,7 +1561,7 @@ const Footer: React.FC = () => {
           gap: 24, flexWrap: 'wrap',
         }}>
           <div style={{ fontSize: 12, color: 'var(--sf-fg-3)' }}>
-            © {new Date().getFullYear()} Starfactor TV · Lagos, Nigeria · A Chainfren product · All rights reserved.
+            © {new Date().getFullYear()} Starfactor TV · A <a href="https://www.chainfren.com/" target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>Chainfren</a> product · All rights reserved.
           </div>
           <div style={{ display: 'flex', gap: 24 }}>
             {legalLinks.map(s => (
